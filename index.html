@@ -495,8 +495,15 @@
                 })();
                 const exchRes = (parseFormattedNumber(exchInputs.amount) * EXCHANGE_RATES[exchInputs.base].krw) / EXCHANGE_RATES[exchInputs.target].krw;
                 const pnlRes = parseFormattedNumber(pnlInputs.sell) - parseFormattedNumber(pnlInputs.buy) - ((parseFormattedNumber(pnlInputs.sell) + parseFormattedNumber(pnlInputs.buy)) * (parseFloat(pnlInputs.fee) / 100));
+                
+                // Average Price Calculation (Logic update: Q * P = Row Total)
                 let avgQ = 0, avgCost = 0;
-                avgRows.forEach(r => { const q = parseFormattedNumber(r.q); const p = parseFormattedNumber(r.p); avgQ += q; avgCost += q*p; });
+                avgRows.forEach(r => { 
+                    const q = parseFormattedNumber(r.q); 
+                    const p = parseFormattedNumber(r.p); 
+                    avgQ += q; 
+                    avgCost += q * p; 
+                });
                 
                 // IPO & SPAC Calculation
                 const ipoPrice = parseFormattedNumber(ipoCalcInputs.price);
@@ -505,7 +512,7 @@
                 const ipoDeposit = (ipoPrice * ipoQty) * (ipoCalcInputs.rate / 100);
                 const ipoTotalNeeded = ipoDeposit + ipoFee;
 
-                // Tool Tax Calculation (복구된 부분)
+                // Tool Tax Calculation
                 const toolTaxProfit = parseFormattedNumber(toolTaxInputs.profit);
                 const toolTaxRes = toolTaxInputs.type === 'dividend' ? toolTaxProfit * 0.154 : toolTaxProfit * 0.22;
 
@@ -588,20 +595,40 @@
                             </div>
                         </div>
 
+                        {/* 평단가 계산기: 수량 & 매수가(단가) 입력 시 항목별 금액 및 최종 평단가 계산 */}
                         <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow border dark:border-slate-700 font-bold flex flex-col">
-                            <h3 className="mb-4 text-emerald-600 flex justify-between items-center font-black">
+                            <h3 className="mb-3 text-emerald-600 flex justify-between items-center font-black">
                                 <span><i className="fa-solid fa-scale-balanced mr-2"></i>평단가 계산</span>
-                                <button onClick={()=>setAvgRows([...avgRows, {id:Date.now(), q:'', p:''}])} className="bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded text-[10px]">+ 추가</button>
+                                <button onClick={()=>setAvgRows([...avgRows, {id:Date.now(), q:'', p:''}])} className="bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded text-[10px] hover:bg-emerald-200 transition">+ 행 추가</button>
                             </h3>
-                            <div className="space-y-2 overflow-y-auto max-h-32 mb-2">
+                            <div className="grid grid-cols-12 gap-1 mb-1 text-[9px] text-slate-400 px-1 font-bold uppercase">
+                                <span className="col-span-3">수량</span>
+                                <span className="col-span-4">매수가(단가)</span>
+                                <span className="col-span-4 text-right">금액</span>
+                                <span className="col-span-1"></span>
+                            </div>
+                            <div className="space-y-2 overflow-y-auto max-h-48 mb-3 pr-1">
                                 {avgRows.map((r, i) => (
-                                    <div key={r.id} className="flex gap-2">
-                                        <input type="text" placeholder="수량" className="flex-1 sim-input text-right" value={r.q} onChange={e=>handleCommaChange(e, v=>{const n=[...avgRows]; n[i].q=v; setAvgRows(n);})} />
-                                        <input type="text" placeholder="단가" className="flex-1 sim-input text-right" value={r.p} onChange={e=>handleCommaChange(e, v=>{const n=[...avgRows]; n[i].p=v; setAvgRows(n);})} />
+                                    <div key={r.id} className="grid grid-cols-12 gap-1 items-center group animate-fade-in">
+                                        <input type="text" placeholder="수량" className="col-span-3 sim-input text-right !p-1.5" value={r.q} onChange={e=>handleCommaChange(e, v=>{const n=[...avgRows]; n[i].q=v; setAvgRows(n);})} />
+                                        <input type="text" placeholder="단가" className="col-span-4 sim-input text-right !p-1.5" value={r.p} onChange={e=>handleCommaChange(e, v=>{const n=[...avgRows]; n[i].p=v; setAvgRows(n);})} />
+                                        <div className="col-span-4 text-right text-[11px] text-slate-500 num-font px-1 truncate">
+                                            {formatNumber(parseFormattedNumber(r.q) * parseFormattedNumber(r.p))}
+                                        </div>
+                                        <button onClick={()=>{const n=avgRows.filter(row=>row.id!==r.id); setAvgRows(n);}} className="col-span-1 text-slate-300 hover:text-red-500 transition text-[10px] text-center"><i className="fa-solid fa-trash-can"></i></button>
                                     </div>
                                 ))}
                             </div>
-                            <div className="mt-auto p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded text-right text-emerald-600 num-font font-black">평단: {avgQ?formatNumber(avgCost/avgQ):0}원</div>
+                            <div className="mt-auto p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded border border-emerald-100 dark:border-emerald-800/30">
+                                <div className="flex justify-between items-center text-[10px] text-emerald-600/70 mb-1">
+                                    <span>총 매수금액 합계</span>
+                                    <span className="num-font font-bold">{formatNumber(avgCost)}원</span>
+                                </div>
+                                <div className="flex justify-between items-center text-emerald-600">
+                                    <span className="text-xs">최종 평단가</span>
+                                    <span className="text-lg num-font font-black">{avgQ ? formatNumber(avgCost/avgQ) : 0}원</span>
+                                </div>
+                            </div>
                         </div>
 
                         <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow border dark:border-slate-700 font-bold">
