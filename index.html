@@ -96,7 +96,6 @@
         };
 
         // --- Widgets ---
-        // 개선된 티커 위젯: 스크립트 로딩 실패 시에도 시각적 효과를 유지하도록 폴백 추가
         const TradingViewTicker = memo(({ theme }) => {
             const containerRef = useRef(null);
             const [isLoaded, setIsLoaded] = useState(false);
@@ -105,7 +104,6 @@
                 const container = containerRef.current;
                 if (!container) return;
                 
-                // 컨테이너 초기화 및 위젯 노드 생성
                 container.innerHTML = '';
                 const widgetDiv = document.createElement('div');
                 widgetDiv.className = 'tradingview-widget-container__widget';
@@ -134,11 +132,9 @@
                     "locale": "kr"
                 });
 
-                // 스크립트 로드 성공 여부 감지 시도 (실제 웹에서는 작동)
                 script.onload = () => setIsLoaded(true);
                 container.appendChild(script);
 
-                // 프리뷰 환경 차단 시를 위해 2초 후 로드 체크 (성공 못하면 폴백 표시 유지)
                 const checkTimer = setTimeout(() => {
                     if (container.querySelector('iframe')) setIsLoaded(true);
                 }, 2000);
@@ -752,9 +748,10 @@
                                         <div className="grid grid-cols-2 gap-2">
                                             <div className="flex flex-col"><label className="text-[10px] text-slate-500">본인 현재 나이</label><input type="number" className="sim-input" value={simInputs.currentAge} onChange={e=>setSimInputs({...simInputs, currentAge:parseInt(e.target.value)})}/></div>
                                             <div className="flex flex-col"><label className="text-[10px] text-slate-500">배우자 현재 나이</label><input type="number" className="sim-input" value={simInputs.spouseCurrentAge} onChange={e=>setSimInputs({...simInputs, spouseCurrentAge:parseInt(e.target.value)})}/></div>
+                                            <div className="flex flex-col"><label className="text-[10px] text-indigo-500 font-bold">시뮬레이션 시작나이</label><input type="number" className="sim-input border-indigo-300" value={simInputs.simulationStartAge} onChange={e=>setSimInputs({...simInputs, simulationStartAge:parseInt(e.target.value)})}/></div>
+                                            <div className="flex flex-col"><label className="text-[10px] text-slate-500">간병기 전환 나이</label><input type="number" className="sim-input" value={simInputs.highCostStartAge} onChange={e=>setSimInputs({...simInputs, highCostStartAge:parseInt(e.target.value)})}/></div>
                                             <div className="flex flex-col"><label className="text-[10px] text-indigo-500 font-black">연금 수령(본인)</label><input type="number" className="sim-input border-indigo-300" value={simInputs.pensionStartAgeUser} onChange={e=>setSimInputs({...simInputs, pensionStartAgeUser:parseInt(e.target.value)})}/></div>
                                             <div className="flex flex-col"><label className="text-[10px] text-indigo-500 font-black">연금 수령(배우자)</label><input type="number" className="sim-input border-indigo-300" value={simInputs.pensionStartAgeSpouse} onChange={e=>setSimInputs({...simInputs, pensionStartAgeSpouse:parseInt(e.target.value)})}/></div>
-                                            <div className="flex flex-col col-span-2"><label className="text-[10px] text-slate-500">간병기 전환 나이 (의료비 집중 발생)</label><input type="number" className="sim-input" value={simInputs.highCostStartAge} onChange={e=>setSimInputs({...simInputs, highCostStartAge:parseInt(e.target.value)})}/></div>
                                         </div>
                                     </div>
 
