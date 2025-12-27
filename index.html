@@ -84,13 +84,16 @@
             useEffect(() => {
                 if (!containerRef.current) return;
                 
-                // 기존 내용 제거 (재렌더링 시 중복 방지)
+                // 기존 내용 제거
                 containerRef.current.innerHTML = '';
                 
-                // 새로운 컨테이너 생성
-                const widgetContainer = document.createElement('div');
-                widgetContainer.className = 'tradingview-widget-container__widget';
-                containerRef.current.appendChild(widgetContainer);
+                // TradingView 위젯 컨테이너 표준 구조 생성
+                const innerContainer = document.createElement('div');
+                innerContainer.className = 'tradingview-widget-container';
+                
+                const widgetDiv = document.createElement('div');
+                widgetDiv.className = 'tradingview-widget-container__widget';
+                innerContainer.appendChild(widgetDiv);
 
                 const script = document.createElement('script');
                 script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js';
@@ -111,15 +114,16 @@
                     "showSymbolLogo": true,
                     "colorTheme": theme,
                     "isTransparent": true,
-                    "displayMode": "regular", // adaptive에서 regular로 변경하여 흐름 보장
+                    "displayMode": "adaptive", // 다시 adaptive로 변경하여 유연한 애니메이션 보장
                     "locale": "kr"
                 });
                 
-                containerRef.current.appendChild(script);
+                innerContainer.appendChild(script);
+                containerRef.current.appendChild(innerContainer);
             }, [theme]);
 
             return (
-                <div className="tradingview-widget-container" ref={containerRef}></div>
+                <div ref={containerRef} className="w-full h-full"></div>
             );
         });
 
