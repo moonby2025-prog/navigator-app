@@ -263,7 +263,7 @@
                 inflationRate: 2.0, livingCostInflationRate: 1.5, taxRate1: 6.6, taxRate2: 16.5, taxRate3: 27.5,
                 monthlyLiving: "5,000,000", pensionSelf: "1,000,000", pensionSpouse: "600,000", ipoProfit: "5,000,000", otherIncome: "4,500,000", stockLending: "0", rentalIncome: "850,000",
                 targetLegacy: "200,000,000", extraReserve: "5,000,000",
-                monthlyMedical: "2,000,000"
+                monthlyMedical: ""
             });
             const [simResult, setSimResult] = useState({ history: [], summary: null });
             
@@ -695,6 +695,10 @@
                                 ))}
                             </div>
                             <div className="mt-auto p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded text-right text-emerald-600 font-black num-font">
+                                <div className="flex justify-between items-center text-[10px] opacity-70 border-b border-emerald-100 dark:border-emerald-800 pb-1 mb-1">
+                                    <span>합계 수량</span>
+                                    <span>{formatNumber(avgQ)}</span>
+                                </div>
                                 <div className="text-[10px] opacity-70">최종 평단가</div>
                                 <div className="text-base">{avgQ ? formatNumber(avgCost/avgQ) : 0}원</div>
                             </div>
@@ -876,9 +880,9 @@
                                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2">
                                                 <span className="text-[11px] text-indigo-600 font-black">2. 이자/배당 소득 상세</span>
                                                 <div className="flex gap-1 w-full sm:w-auto">
-                                                    <input id="fD" type="text" placeholder="항목" className="flex-1 sm:w-20 sim-input !mt-0 !p-1 text-[10px]" />
-                                                    <input id="fA" type="number" placeholder="금액" className="flex-1 sm:w-24 sim-input !mt-0 !p-1 text-[10px]" />
-                                                    <button onClick={()=>{const d=document.getElementById('fD').value, a=parseInt(document.getElementById('fA').value); if(d&&a){setFinList([...finList,{id:Date.now(),desc:d,amount:a}]); document.getElementById('fD').value=''; document.getElementById('fA').value='';}}} className="bg-indigo-600 text-white px-2 rounded text-[10px] font-black h-8">추가</button>
+                                                    <input id="fD" type="text" placeholder="항목" className="min-w-0 flex-1 sm:w-20 sim-input !mt-0 !p-1 text-[10px]" />
+                                                    <input id="fA" type="number" placeholder="금액" className="min-w-0 flex-1 sm:w-24 sim-input !mt-0 !p-1 text-[10px]" />
+                                                    <button onClick={()=>{const d=document.getElementById('fD').value, a=parseInt(document.getElementById('fA').value); if(d&&a){setFinList([...finList,{id:Date.now(),desc:d,amount:a}]); document.getElementById('fD').value=''; document.getElementById('fA').value='';}}} className="flex-shrink-0 bg-indigo-600 text-white px-2 rounded text-[10px] font-black h-8">추가</button>
                                                 </div>
                                             </div>
                                             <div className="max-h-40 overflow-y-auto space-y-1">
@@ -1059,7 +1063,7 @@
                                         </div>
                                         <div className="flex flex-col bg-rose-50 dark:bg-rose-900/10 p-2 rounded">
                                             <label className="text-[10px] text-rose-500 font-black">간병기 의료/간병비(월)</label>
-                                            <input type="text" className="sim-input !mt-1 !p-1 text-right text-rose-700" value={simInputs.monthlyMedical} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, monthlyMedical:v}))}/>
+                                            <input type="text" className="sim-input !mt-1 !p-1 text-right text-rose-700" placeholder="0" value={simInputs.monthlyMedical} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, monthlyMedical:v}))}/>
                                         </div>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                                             <div className="flex flex-col"><label className="text-[10px] text-slate-500">본인 월 연금</label><input type="text" className="sim-input text-right" value={simInputs.pensionSelf} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, pensionSelf:v}))}/></div>
