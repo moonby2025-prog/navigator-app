@@ -25,18 +25,15 @@
         .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* 다크모드 입력창 글자색 해결: 배경이 밝으므로 글자는 무조건 검정이어야 함 */
         .sim-input { 
             @apply mt-1 block w-full rounded-md border-gray-300 dark:border-slate-500 shadow-sm p-2 border bg-white dark:bg-slate-100 focus:ring-indigo-500 focus:border-indigo-500 text-sm font-bold !text-black dark:!text-black dark:placeholder-slate-500; 
         }
         .num-font { font-variant-numeric: tabular-nums; }
         .guide-card { @apply p-4 rounded-xl border border-slate-100 dark:border-slate-600 bg-white dark:bg-slate-800 shadow-sm; }
         
-        /* 네비게이션 모바일 스크롤 */
         .nav-container { overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
         .nav-container::-webkit-scrollbar { display: none; }
 
-        /* 티커 애니메이션 폴백 */
         .ticker-fallback {
             display: flex;
             white-space: nowrap;
@@ -54,17 +51,14 @@
             100% { transform: translateX(-100%); }
         }
 
-        /* [도구 및 과세 탭 전용] 입력값 시인성 강화 */
         .tool-input { 
             @apply !bg-slate-100 dark:!bg-slate-100 border border-slate-300 dark:border-slate-500 shadow-sm focus:!bg-white dark:focus:!bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all !text-black dark:!text-black placeholder-slate-400 dark:placeholder-slate-500 font-bold; 
         }
         
-        /* 다크모드에서 입력 글자색 및 즐겨찾기 글자색 강제 적용 */
         .dark input.sim-input, .dark input.tool-input, .dark select.sim-input, .dark select.tool-input, .dark .fav-item-btn {
             color: #000000 !important;
         }
 
-        /* 즐겨찾기 종목 버튼: 검은색 글자가 잘 보이도록 배경을 밝게 고정 */
         .fav-item-btn {
             @apply bg-slate-100 dark:bg-slate-100 border-slate-300 dark:border-slate-400 !text-black;
         }
@@ -82,7 +76,6 @@
     <script type="text/babel">
         const { useState, useEffect, useRef, memo, useCallback, useMemo } = React;
 
-        // --- Global Constants ---
         const ONE_HUNDRED_MILLION = 100000000;
         const TAX_THRESHOLD = 20000000;
         
@@ -96,7 +89,6 @@
             'INR': { krw: 16.5 }
         };
 
-        // --- Helpers ---
         const formatNumber = (num) => {
             if (num === null || num === undefined || isNaN(num)) return '0';
             return Math.round(num).toLocaleString('ko-KR');
@@ -124,7 +116,6 @@
             return Math.max(0, tax);
         };
 
-        // --- Widgets ---
         const TradingViewTicker = memo(({ theme }) => {
             const containerRef = useRef(null);
             const [isLoaded, setIsLoaded] = useState(false);
@@ -202,7 +193,6 @@
             return <div ref={ref} className="h-full"></div>;
         });
 
-        // --- Main Component ---
         function App() {
             const [activeTab, setActiveTab] = useState('dashboard');
             const [isDark, setIsDark] = useState(false);
@@ -292,7 +282,6 @@
             });
             const [simResult, setSimResult] = useState({ history: [], summary: null });
             
-            // --- Financial Tax States ---
             const [earnedIncome, setEarnedIncome] = useState("0");
             const [finList, setFinList] = useState([]);
             const [otherIncomeList, setOtherIncomeList] = useState([]);
@@ -489,7 +478,6 @@
                 return <div className="h-64 md:h-80 w-full"><canvas ref={canvasRef}></canvas></div>;
             });
 
-            // --- Other Tab Handlers ---
             const addFavorite = () => { if (!newFav.name || !newFav.code) return; setFavorites([...favorites, { name: newFav.name, code: newFav.code }]); setNewFav({ name: '', code: '' }); };
             const removeFavorite = (code) => { setFavorites(favorites.filter(f => f.code !== code)); };
             const addRoutineLink = () => { if (!newRoutine.category || !newRoutine.name || !newRoutine.url) return; const updated = { ...routineLinks }; updated[newRoutine.category] = [...updated[newRoutine.category], { name: newRoutine.name, url: newRoutine.url, icon: "fa-link", color: "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-100" }]; setRoutineLinks(updated); setNewRoutine({ category: '', name: '', url: '' }); };
@@ -641,7 +629,6 @@
 
                 return (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in pb-10 font-bold">
-                        {/* 목표 단가 분석 */}
                         <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border dark:border-slate-700 flex flex-col">
                             <h3 className="font-bold mb-4 text-indigo-600 dark:text-indigo-400 font-black flex items-center gap-2">
                                 <i className="fa-solid fa-bullseye"></i> 목표 단가 분석
@@ -671,26 +658,27 @@
                             </div>
                         </div>
 
-                        {/* 환율 계산기 */}
-                        <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border dark:border-slate-700">
+                        {/* 환율 계산기 - 유동적 레이아웃 및 텍스트 줄바꿈 최적화 */}
+                        <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border dark:border-slate-700 overflow-hidden flex flex-col">
                             <div className="flex justify-between items-center mb-4 text-blue-600 dark:text-blue-400">
-                                <h3 className="font-bold font-black flex items-center gap-2"><i className="fa-solid fa-money-bill-transfer"></i> 환율 계산기</h3>
+                                <h3 className="font-bold font-black flex items-center gap-2 flex-shrink-0"><i className="fa-solid fa-money-bill-transfer"></i> 환율 계산기</h3>
                                 <button onClick={fetchRealTimeRates} className={`text-slate-400 dark:text-white hover:text-blue-500 transition-colors ${isFetching ? 'animate-spin' : ''}`}><i className="fa-solid fa-arrows-rotate text-xs"></i></button>
                             </div>
-                            <div className="space-y-4">
-                                <div className="flex gap-2">
-                                    <select className="flex-shrink-0 !w-24 sm:!w-1/3 sim-input tool-input" value={exchInputs.base} onChange={e=>setExchInputs({...exchInputs, base:e.target.value})}>{Object.keys(exchangeRates).map(k=><option key={k} value={k}>{k}</option>)}</select>
-                                    <input type="text" className="flex-1 sim-input tool-input text-right" value={exchInputs.amount} onChange={e=>handleCommaChange(e, v=>setExchInputs({...exchInputs, amount:v}))} />
+                            <div className="space-y-4 flex-1">
+                                <div className="flex flex-wrap sm:flex-nowrap gap-2 w-full">
+                                    <select className="w-full sm:w-24 md:w-1/3 sim-input tool-input flex-shrink-0" value={exchInputs.base} onChange={e=>setExchInputs({...exchInputs, base:e.target.value})}>{Object.keys(exchangeRates).map(k=><option key={k} value={k}>{k}</option>)}</select>
+                                    <input type="text" className="w-full flex-1 min-w-0 sim-input tool-input text-right" value={exchInputs.amount} onChange={e=>handleCommaChange(e, v=>setExchInputs({...exchInputs, amount:v}))} />
                                 </div>
-                                <div className="flex gap-2">
-                                    <select className="flex-shrink-0 !w-24 sm:!w-1/3 sim-input tool-input" value={exchInputs.target} onChange={e=>setExchInputs({...exchInputs, target:e.target.value})}>{Object.keys(exchangeRates).map(k=><option key={k} value={k}>{k}</option>)}</select>
-                                    <div className="flex-1 flex items-center justify-end px-3 rounded-md bg-white dark:bg-slate-700 border-2 border-blue-200 dark:border-blue-900 text-blue-600 dark:text-white font-black text-lg num-font shadow-inner">{formatNumber(exchRes)}</div>
+                                <div className="flex flex-wrap sm:flex-nowrap gap-2 w-full">
+                                    <select className="w-full sm:w-24 md:w-1/3 sim-input tool-input flex-shrink-0" value={exchInputs.target} onChange={e=>setExchInputs({...exchInputs, target:e.target.value})}>{Object.keys(exchangeRates).map(k=><option key={k} value={k}>{k}</option>)}</select>
+                                    <div className="w-full flex-1 min-w-0 flex items-center justify-end px-3 py-2 rounded-md bg-white dark:bg-slate-700 border-2 border-blue-200 dark:border-blue-900 text-blue-600 dark:text-white font-black text-lg num-font shadow-inner overflow-hidden">
+                                        <span className="break-all text-right leading-tight">{formatNumber(exchRes)}</span>
+                                    </div>
                                 </div>
                             </div>
                             <div className="mt-4 p-3 rounded-xl bg-blue-50/50 dark:bg-blue-900/30 text-[10px] text-blue-600 dark:text-white text-center font-bold">실시간 환율 정보를 바탕으로 자동 계산됩니다.</div>
                         </div>
 
-                        {/* 간이 세금 계산기 */}
                         <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border dark:border-slate-700 font-bold">
                             <h3 className="mb-4 text-rose-600 dark:text-rose-400 font-black flex items-center gap-2">
                                 <i className="fa-solid fa-receipt"></i> 간이 세금 계산기
@@ -708,7 +696,6 @@
                             </div>
                         </div>
 
-                        {/* 공모주 청약 계산 */}
                         <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border dark:border-slate-700 font-bold">
                             <h3 className="mb-4 text-purple-600 dark:text-purple-400 font-black flex items-center gap-2">
                                 <i className="fa-solid fa-piggy-bank"></i> 공모주 청약 계산
@@ -725,7 +712,6 @@
                             </div>
                         </div>
 
-                        {/* 평단가 계산기 */}
                         <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border dark:border-slate-700 font-bold flex flex-col">
                             <h3 className="mb-3 text-emerald-600 dark:text-emerald-400 flex justify-between items-center font-black">
                                 <span className="flex items-center gap-2"><i className="fa-solid fa-scale-balanced"></i> 평단가 계산기</span>
@@ -750,7 +736,6 @@
                             </div>
                         </div>
 
-                        {/* 배당금 계산기 */}
                         <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border dark:border-slate-700 font-bold">
                             <h3 className="mb-4 text-amber-600 dark:text-amber-400 font-black flex items-center gap-2">
                                 <i className="fa-solid fa-sack-dollar"></i> 배당금 계산기
@@ -773,7 +758,6 @@
 
             const renderFinancialTax = () => {
                 const totalFinIncome = finList.reduce((a, c) => a + c.amount, 0);
-                const isGlobalTaxTarget = totalFinIncome > TAX_THRESHOLD;
                 const earnedIncomeValue = parseFormattedNumber(earnedIncome);
 
                 const calculateTaxResult = (earned, fin) => {
