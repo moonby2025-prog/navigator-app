@@ -288,7 +288,6 @@
             });
             const [simResult, setSimResult] = useState({ history: [], summary: null });
             
-            // 모바일 항목 선택 상태
             const [simTableVisibleCols, setSimTableVisibleCols] = useState({
                 taxable: true, exempt: true, income: true, expense: true, flow: true, status: true
             });
@@ -759,13 +758,14 @@
                                     </div>
                                 ))}
                             </div>
-                            <div className="tool-result-container bg-emerald-50/50 dark:bg-emerald-900/40 border-emerald-200 dark:border-slate-700 pb-1 mb-2">
-                                <div className="flex justify-between items-center text-[10px] opacity-90 border-b dark:border-slate-700 pb-1 mb-2">
-                                    <span>합계 수량</span>
-                                    <span>{formatNumber(avgQ)}</span>
+                            {/* 결과 섹션: 다크모드 시인성 개선 */}
+                            <div className="tool-result-container bg-emerald-50/50 dark:bg-emerald-900/40 border-emerald-200 dark:border-emerald-700/50 pb-1 mb-2">
+                                <div className="flex justify-between items-center text-[10px] border-b dark:border-slate-700 pb-1 mb-2">
+                                    <span className="text-slate-500 dark:text-slate-200 font-bold">합계 수량</span>
+                                    <span className="text-slate-900 dark:text-white font-black">{formatNumber(avgQ)}</span>
                                 </div>
-                                <div className="text-[10px] opacity-90">최종 평단가</div>
-                                <div className="text-xl text-emerald-700 dark:text-emerald-300">{avgQ ? formatNumber(avgCost/avgQ) : 0}원</div>
+                                <div className="text-[10px] text-slate-500 dark:text-slate-200 font-bold">최종 평단가</div>
+                                <div className="text-xl text-emerald-700 dark:text-emerald-400 font-black">{avgQ ? formatNumber(avgCost/avgQ) : 0}원</div>
                             </div>
                         </div>
 
@@ -866,7 +866,6 @@
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            {/* 입력 영역 (모바일에서 상단 고정) */}
                             <div className="lg:col-span-1 space-y-4">
                                 <div className="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border-2 border-slate-200 dark:border-slate-700 shadow-sm">
                                     <h3 className="text-sm font-black text-indigo-600 dark:text-indigo-300 mb-4 flex items-center gap-2"><i className="fa-solid fa-briefcase"></i> 근로소득 정보</h3>
@@ -912,9 +911,7 @@
                                 </div>
                             </div>
 
-                            {/* 분석 결과 영역 */}
                             <div className="lg:col-span-2 space-y-6">
-                                {/* 1. 합산 세금 영향 우선 표시 */}
                                 <div className="bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-6 border-4 border-indigo-500 shadow-2xl animate-fade-in relative overflow-hidden">
                                     <h3 className="text-lg font-black text-indigo-800 dark:text-indigo-300 mb-6 flex items-center gap-2">
                                         <i className="fa-solid fa-scale-unbalanced-flip"></i> 근로소득 합산 시 실제 세금 증가분
@@ -946,7 +943,6 @@
                                     </div>
                                 </div>
 
-                                {/* 2. 최종 실질 부담액 표시 */}
                                 <div className="bg-indigo-700 p-6 sm:p-8 rounded-3xl text-white shadow-2xl text-center animate-fade-in border-4 border-indigo-300">
                                     <p className="text-sm font-black opacity-90 mb-3 flex items-center justify-center gap-2">
                                         <i className="fa-solid fa-wallet"></i> 최종 실질 추가 부담액 (세금정산 + 건보료인상)
@@ -963,7 +959,6 @@
                                     </p>
                                 </div>
 
-                                {/* 세부 상세 내역 (모바일에서 스크롤 가능하도록 처리) */}
                                 <div className="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
                                     <h3 className="text-sm font-black mb-4 flex items-center gap-2 text-black dark:text-white">
                                         <i className="fa-solid fa-list-check text-indigo-500"></i> 세액 산출 구간별 상세 (합산 기준)
@@ -1140,7 +1135,7 @@
                                         </div>
                                         <div className="grid grid-cols-2 gap-3 pt-2">
                                             <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">본인 월 연금</label><input type="text" className="sim-input text-right" value={simInputs.pensionSelf} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, pensionSelf: v}))}/></div>
-                                            <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">배우자 월 연금</label><input type="text" className="sim-input text-right" value={simInputs.pensionSpouse} onChange={e=>handleCommaChange(v=>setSimInputs({...simInputs, pensionSpouse: v}))}/></div>
+                                            <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">배우자 월 연금</label><input type="text" className="sim-input text-right" value={simInputs.pensionSpouse} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, pensionSpouse: v}))}/></div>
                                         </div>
                                     </div>
                                     
