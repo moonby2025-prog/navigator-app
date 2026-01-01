@@ -68,6 +68,17 @@
         }
 
         .tool-input:hover { @apply border-slate-400 dark:border-slate-400 bg-slate-200 dark:bg-slate-200; }
+
+        /* Insight Design Enhancements */
+        .insight-card {
+            @apply relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-2xl;
+        }
+        .insight-link-item {
+            @apply flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all group border border-transparent hover:border-emerald-200 dark:hover:border-emerald-800 w-full min-w-0;
+        }
+        .insight-icon-box {
+            @apply w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:rotate-6 group-hover:scale-110 flex-shrink-0;
+        }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
@@ -269,19 +280,31 @@
             const [toolTaxInputs, setToolTaxInputs] = useState({ profit: '', type: 'dividend' });
 
             const [simInputs, setSimInputs] = useState({
-                currentAge: 51, spouseCurrentAge: 47, simulationStartAge: 53, 
+                currentAge: 52, spouseCurrentAge: 48, simulationStartAge: 53, 
                 pensionStartAgeUser: 65, pensionStartAgeSpouse: 65,
                 highCostStartAge: 80,
-                capUserNonISA: 3.0, capSpouseNonISA: 2.0, capUserISA: 3.0, capSpouseISA: 2.0, 
-                returnUserNonISA: 3.0, returnSpouseNonISA: 3.0, 
-                returnUserISA: 3.0, returnSpouseISA: 3.0, 
+                capUserNonISA: 2.0, capSpouseNonISA: 0.0, capUserISA: 2.5, capSpouseISA: 1.5, 
+                capIPO: 2.0,
+                returnUserNonISA: 5.0, returnSpouseNonISA: 0.0, 
+                returnUserISA: 5.0, returnSpouseISA: 5.0, 
+                returnIPO: 4.0, 
+                returnCMA: 2.0, 
                 inflationRate: 2.0, livingCostInflationRate: 1.5, taxRate1: 6.6, taxRate2: 16.5, taxRate3: 27.5,
-                monthlyLiving: "5,000,000", pensionSelf: "1,000,000", pensionSpouse: "600,000", ipoProfit: "5,000,000", otherIncome: "4,500,000", stockLending: "0", rentalIncome: "850,000",
-                targetLegacy: "200,000,000", extraReserve: "5,000,000",
-                monthlyMedical: ""
+                monthlyLiving: "4,000,000", pensionSelf: "1,000,000", pensionSpouse: "600,000", 
+                ipoProfit: "5,000,000", 
+                otherIncome: "4,500,000", stockLending: "0", rentalIncome: "850,000",
+                targetLegacy: "200,000,000", 
+                extraReserve: "5,000,000", 
+                monthlyMedical: "1,000,000"
             });
             const [simResult, setSimResult] = useState({ history: [], summary: null });
             
+            // 모바일 항목 선택 상태
+            const [simTableVisibleCols, setSimTableVisibleCols] = useState({
+                taxable: true, exempt: true, income: true, expense: true, flow: true, status: true
+            });
+            const [isSimColMenuOpen, setIsSimColMenuOpen] = useState(false);
+
             const [earnedIncome, setEarnedIncome] = useState("20,000,000"); 
             const [finList, setFinList] = useState([{ id: 1, source: '배당금 합계', amount: 35000000 }]);
 
@@ -347,6 +370,7 @@
                 let cSpouseNon = s.capSpouseNonISA * ONE_HUNDRED_MILLION;
                 let cUserISA = s.capUserISA * ONE_HUNDRED_MILLION;
                 let cSpouseISA = s.capSpouseISA * ONE_HUNDRED_MILLION;
+                let cIPO = (s.capIPO || 0) * ONE_HUNDRED_MILLION;
                 
                 const targetLegacyValue = parseFormattedNumber(s.targetLegacy);
                 const extraReserveValue = parseFormattedNumber(s.extraReserve);
@@ -389,11 +413,24 @@
                     
                     const baseIncomeAtYear = (pension + initOtherTotal) * pInf;
                     
-                    const profUserNon = cUserNon * (s.returnUserNonISA / 100) * 0.846;
-                    const profSpouseNon = cSpouseNon * (s.returnUserNonISA / 100) * 0.846;
-                    const profUserISA = cUserISA * (s.returnUserISA / 100) * 0.901;
-                    const profSpouseISA = cSpouseISA * (s.returnSpouseISA / 100) * 0.901;
-                    const profInvestmentTotal = profUserNon + profSpouseNon + profUserISA + profSpouseISA;
+                    const grossUserNon = cUserNon * (s.returnUserNonISA / 100);
+                    const grossSpouseNon = cSpouseNon * (s.returnSpouseNonISA / 100);
+                    const ipoCmaProfit = cIPO * (s.returnCMA / 100); 
+                    const ipoCapitalProfit = cIPO * (s.returnIPO / 100); 
+                    const grossIPO = ipoCmaProfit + ipoCapitalProfit;
+                    const grossUserISA = cUserISA * (s.returnUserISA / 100);
+                    const grossSpouseISA = cSpouseISA * (s.returnSpouseISA / 100);
+
+                    const taxableProfitAtYear = grossUserNon + grossSpouseNon + ipoCmaProfit;
+                    const separateExemptProfitAtYear = ipoCapitalProfit + grossUserISA + grossSpouseISA;
+
+                    const profUserNon = grossUserNon * 0.846;
+                    const profSpouseNon = grossSpouseNon * 0.846;
+                    const profUserISA = grossUserISA * 0.901;
+                    const profSpouseISA = grossSpouseISA * 0.901;
+                    const profIPO = grossIPO * 0.846;
+                    
+                    const profInvestmentTotal = profUserNon + profSpouseNon + profUserISA + profSpouseISA + profIPO;
                     
                     const incTax = calculateProgressiveIncomeTax(baseIncomeAtYear, { rate1: s.taxRate1, rate2: s.taxRate2, rate3: s.taxRate3 });
                     totalTax += incTax;
@@ -402,25 +439,25 @@
                     const annualExpenseTotal = livingCost + incTax;
                     const netChange = annualProfitTotal - annualExpenseTotal;
 
-                    let withdrawal = netChange < 0 ? Math.abs(netChange) : 0;
                     if (netChange >= 0) {
-                        const tBefore = cUserNon + cSpouseNon + cUserISA + cSpouseISA;
+                        const tBefore = cUserNon + cSpouseNon + cUserISA + cSpouseISA + cIPO;
                         if (tBefore > 0) {
-                            const r1 = cUserNon / tBefore; const r2 = cSpouseNon / tBefore; const r3 = cUserISA / tBefore; const r4 = cSpouseISA / tBefore;
-                            cUserNon += netChange * r1; cSpouseNon += netChange * r2; cUserISA += netChange * r3; cSpouseISA += netChange * r4;
+                            const r1 = cUserNon / tBefore; const r2 = cSpouseNon / tBefore; const r3 = cUserISA / tBefore; const r4 = cSpouseISA / tBefore; const r5 = cIPO / tBefore;
+                            cUserNon += netChange * r1; cSpouseNon += netChange * r2; cUserISA += netChange * r3; cSpouseISA += netChange * r4; cIPO += netChange * r5;
                         } else {
                             cUserNon += netChange;
                         }
                     } else {
-                        let rem = withdrawal;
+                        let rem = Math.abs(netChange);
                         let w1 = Math.min(rem, cUserNon); cUserNon -= w1; rem -= w1;
                         let w2 = Math.min(rem, cSpouseNon); cSpouseNon -= w2; rem -= w2;
+                        let wIPO = Math.min(rem, cIPO); cIPO -= wIPO; rem -= wIPO;
                         let w3 = Math.min(rem, cSpouseISA); cSpouseISA -= w3; rem -= w3;
                         let w4 = Math.min(rem, cUserISA); cUserISA -= w4; rem -= w4;
                         if (rem > 0 && !depletionYear) depletionYear = age;
                     }
 
-                    const currentTotal = cUserNon + cSpouseNon + cUserISA + cSpouseISA;
+                    const currentTotal = cUserNon + cSpouseNon + cUserISA + cSpouseISA + cIPO;
 
                     history.push({ 
                         age, 
@@ -428,13 +465,16 @@
                         tax: incTax, 
                         living: livingCost, 
                         profInvestment: profInvestmentTotal,
+                        taxableProfit: taxableProfitAtYear,
+                        separateExemptProfit: separateExemptProfitAtYear,
                         baseIncome: baseIncomeAtYear,
                         annualProfit: annualProfitTotal,
                         netChange: netChange,
-                        un: cUserNon/ONE_HUNDRED_MILLION, 
-                        sn: cSpouseNon/ONE_HUNDRED_MILLION, 
-                        ui: cUserISA/ONE_HUNDRED_MILLION, 
-                        si: cSpouseISA/ONE_HUNDRED_MILLION,
+                        un: cUserNon, 
+                        sn: cSpouseNon, 
+                        ui: cUserISA, 
+                        si: cSpouseISA,
+                        cip: cIPO,
                         isHighCost,
                         medicalShare: (lateLifeMedicalAnnual / livingCost) * 100, 
                         isWarn: currentTotal < targetLegacyValue 
@@ -442,7 +482,7 @@
                     
                     if (currentTotal <= 0 && year > 1) break;
                 }
-                setSimResult({ history, summary: { initial: s.capUserNonISA + s.capSpouseNonISA + s.capUserISA + s.capSpouseISA, final: (history[history.length-1]?.total * ONE_HUNDRED_MILLION) || 0, tax: totalTax, depletion: depletionYear, isSuccess: (history[history.length-1]?.total * ONE_HUNDRED_MILLION) >= targetLegacyValue } });
+                setSimResult({ history, summary: { initial: s.capUserNonISA + s.capSpouseNonISA + s.capUserISA + s.capSpouseISA + s.capIPO, final: (history[history.length-1]?.total * ONE_HUNDRED_MILLION) || 0, tax: totalTax, depletion: depletionYear, isSuccess: (history[history.length-1]?.total * ONE_HUNDRED_MILLION) >= targetLegacyValue } });
             }, [simInputs]);
 
             useEffect(() => { runSimulation(); }, [runSimulation]);
@@ -460,10 +500,11 @@
                             labels: history.map(h => h.age + "세"),
                             datasets: [
                                 { label: '총 자산(억)', data: history.map(h => h.total), borderColor: '#4f46e5', fill: true, backgroundColor: 'rgba(79, 70, 229, 0.1)', tension: 0.3, pointRadius: 2 },
-                                { label: '본인 일반', data: history.map(h => h.un), borderColor: '#ef4444', borderDash: [2,2], pointRadius: 0 },
-                                { label: '배우자 일반', data: history.map(h => h.sn), borderColor: '#f59e0b', borderDash: [2,2], pointRadius: 0 },
-                                { label: '본인 ISA', data: history.map(h => h.ui), borderColor: '#10b981', pointRadius: 0 },
-                                { label: '배우자 ISA', data: history.map(h => h.si), borderColor: '#3b82f6', pointRadius: 0 }
+                                { label: '본인 일반', data: history.map(h => h.un / ONE_HUNDRED_MILLION), borderColor: '#ef4444', borderDash: [2,2], pointRadius: 0 },
+                                { label: '배우자 일반', data: history.map(h => h.sn / ONE_HUNDRED_MILLION), borderColor: '#f59e0b', borderDash: [2,2], pointRadius: 0 },
+                                { label: '공모주', data: history.map(h => h.cip / ONE_HUNDRED_MILLION), borderColor: '#8b5cf6', borderDash: [4,2], pointRadius: 0 },
+                                { label: '본인 ISA', data: history.map(h => h.ui / ONE_HUNDRED_MILLION), borderColor: '#10b981', pointRadius: 0 },
+                                { label: '배우자 ISA', data: history.map(h => h.si / ONE_HUNDRED_MILLION), borderColor: '#3b82f6', pointRadius: 0 }
                             ]
                         },
                         options: { 
@@ -529,7 +570,7 @@
             );
 
             const renderRoutine = () => (
-                <div className="space-y-6 animate-fade-in pb-10">
+                <div className="space-y-6 animate-fade-in pb-10 overflow-x-hidden">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b dark:border-slate-700 font-bold">
                         <div className="flex items-center gap-4">
                             <h2 className="text-2xl font-black dark:text-white">오늘의 루틴</h2>
@@ -537,11 +578,12 @@
                                 <i className="fa-solid fa-pen-to-square mr-1"></i> {isRoutineEditMode ? '편집 완료' : '링크 편집'}
                             </button>
                         </div>
-                        <div className="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-lg w-full sm:w-auto">
-                            <button onClick={() => setLinkMode('investment')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg ${linkMode === 'investment' ? 'bg-white shadow text-blue-600 dark:bg-slate-600 dark:text-blue-200' : 'text-slate-500 dark:text-slate-300'}`}>투자 & 일상</button>
-                            <button onClick={() => setLinkMode('blogs')} className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-lg ${linkMode === 'blogs' ? 'bg-white shadow text-blue-600 dark:bg-slate-600 dark:text-blue-200' : 'text-slate-500 dark:text-slate-300'}`}>인사이트</button>
+                        <div className="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-lg w-full sm:w-auto shadow-inner">
+                            <button onClick={() => setLinkMode('investment')} className={`flex-1 sm:flex-none px-6 py-2 text-xs font-black rounded-lg transition-all ${linkMode === 'investment' ? 'bg-white shadow text-blue-600 dark:bg-slate-600 dark:text-blue-200' : 'text-slate-500 dark:text-slate-400'}`}>투자 & 일상</button>
+                            <button onClick={() => setLinkMode('blogs')} className={`flex-1 sm:flex-none px-6 py-2 text-xs font-black rounded-lg transition-all ${linkMode === 'blogs' ? 'bg-white shadow text-emerald-600 dark:bg-slate-600 dark:text-emerald-300' : 'text-slate-500 dark:text-slate-400'}`}>인사이트 블로그</button>
                         </div>
                     </div>
+
                     {isRoutineEditMode && (
                         <div className="p-6 bg-indigo-50 dark:bg-indigo-900/10 rounded-2xl border-2 border-indigo-200 dark:border-indigo-800 animate-fade-in mb-6">
                             <h3 className="font-black text-indigo-600 dark:text-indigo-400 mb-4 text-sm"><i className="fa-solid fa-plus-circle mr-2"></i>새 루틴 링크 추가</h3>
@@ -567,38 +609,78 @@
                         </div>
                     )}
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 font-bold">
-                        {Object.entries(linkMode === 'blogs' ? blogInsightLinks : routineLinks).map(([cat, links]) => (
-                            <div key={cat} className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-lg border dark:border-slate-700">
-                                <h3 className={`text-lg font-bold mb-4 border-b dark:border-slate-700 pb-2 ${linkMode === 'blogs' ? 'text-green-600 dark:text-green-400' : 'text-indigo-600 dark:text-indigo-400'}`}>{cat}</h3>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    {links.map((l, i) => (
-                                        <div key={i} className="relative group">
-                                            <a href={l.url} target="_blank" className="block p-3 rounded-xl bg-slate-50 dark:bg-slate-700 hover:shadow-md flex items-center gap-3 group transition-all">
-                                                <div className={`w-8 h-8 rounded flex items-center justify-center ${linkMode === 'blogs' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : l.color} bg-opacity-20 group-hover:scale-110 transition`}>
-                                                    <i className={`fa-solid ${linkMode === 'blogs' ? 'fa-blog' : l.icon}`}></i>
-                                                </div>
-                                                <span className="text-sm truncate pr-6 text-slate-900 dark:text-white font-bold">{l.name}</span>
-                                            </a>
-                                            {isRoutineEditMode && (
-                                                <button onClick={() => {
-                                                    if(linkMode === 'blogs') {
+                    {linkMode === 'blogs' ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 font-bold">
+                            {Object.entries(blogInsightLinks).map(([cat, links], catIdx) => (
+                                <div key={cat} className="insight-card border-l-4 border-l-emerald-500 p-4 sm:p-6 flex flex-col h-full min-w-0">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2 min-w-0">
+                                            <span className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-xs sm:text-sm flex-shrink-0">
+                                                {catIdx === 0 ? <i className="fa-solid fa-dna"></i> : <i className="fa-solid fa-capsules"></i>}
+                                            </span>
+                                            <span className="truncate">{cat}</span>
+                                        </h3>
+                                        <span className="text-[9px] sm:text-[10px] bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-full text-slate-500 dark:text-slate-400 flex-shrink-0 ml-2">{links.length} Insights</span>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 flex-1">
+                                        {links.map((l, i) => (
+                                            <div key={i} className="relative group min-w-0">
+                                                <a href={l.url} target="_blank" className="insight-link-item h-full">
+                                                    <div className={`insight-icon-box ${i % 2 === 0 ? 'bg-emerald-600 text-white' : 'bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-white'}`}>
+                                                        {i % 3 === 0 ? <i className="fa-solid fa-feather-pointed"></i> : i % 3 === 1 ? <i className="fa-solid fa-signature"></i> : <i className="fa-solid fa-lightbulb"></i>}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="text-xs sm:text-sm font-black truncate text-slate-800 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{l.name}</div>
+                                                        <div className="text-[8px] sm:text-[9px] text-slate-400 font-bold truncate group-hover:text-emerald-500/70 transition-colors">Blog Insight <i className="fa-solid fa-chevron-right ml-0.5"></i></div>
+                                                    </div>
+                                                </a>
+                                                {isRoutineEditMode && (
+                                                    <button onClick={() => {
                                                         const updated = { ...blogInsightLinks };
                                                         updated[cat] = updated[cat].filter((_, index) => index !== i);
                                                         setBlogInsightLinks(updated);
-                                                    } else {
-                                                        removeRoutineLink(cat, i);
-                                                    }
-                                                }} className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition">
-                                                    <i className="fa-solid fa-xmark text-[10px]"></i>
-                                                </button>
-                                            )}
+                                                    }} className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition z-10">
+                                                        <i className="fa-solid fa-xmark text-[8px]"></i>
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="mt-6 pt-4 border-t dark:border-slate-700 flex justify-between items-center">
+                                        <div className="flex gap-1 flex-shrink-0">
+                                            {[1,2,3].map(v => <div key={v} className="w-1 h-1 rounded-full bg-emerald-200 dark:bg-emerald-800"></div>)}
                                         </div>
-                                    ))}
+                                        <span className="text-[9px] sm:text-[10px] text-emerald-600 dark:text-emerald-400 font-black cursor-default truncate ml-4 text-right">Deep Analysis Insight <i className="fa-solid fa-check-circle ml-0.5"></i></span>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-bold">
+                            {Object.entries(routineLinks).map(([cat, links]) => (
+                                <div key={cat} className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-lg border dark:border-slate-700">
+                                    <h3 className="text-lg font-bold mb-4 border-b dark:border-slate-700 pb-2 text-indigo-600 dark:text-indigo-400">{cat}</h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {links.map((l, i) => (
+                                            <div key={i} className="relative group">
+                                                <a href={l.url} target="_blank" className="block p-3 rounded-xl bg-slate-50 dark:bg-slate-700 hover:shadow-md flex items-center gap-3 group transition-all">
+                                                    <div className={`w-8 h-8 rounded flex items-center justify-center ${l.color} bg-opacity-20 group-hover:scale-110 transition`}>
+                                                        <i className={`fa-solid ${l.icon}`}></i>
+                                                    </div>
+                                                    <span className="text-sm truncate pr-6 text-slate-900 dark:text-white font-bold">{l.name}</span>
+                                                </a>
+                                                {isRoutineEditMode && (
+                                                    <button onClick={() => removeRoutineLink(cat, i)} className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition">
+                                                        <i className="fa-solid fa-xmark text-[10px]"></i>
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             );
 
@@ -634,7 +716,7 @@
                             </h3>
                             <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-lg mb-4 text-[10px]">
                                 <button onClick={() => setTargetInputs({...targetInputs, mode:'cap'})} className={`flex-1 py-1.5 rounded-md transition-all ${targetInputs.mode==='cap'?'bg-white dark:bg-slate-600 shadow text-indigo-600 dark:text-indigo-100':'text-slate-500 dark:text-slate-300'}`}>시총 비례</button>
-                                <button onClick={() => setTargetInputs({...targetInputs, mode:'rate'})} className={`flex-1 py-1.5 rounded-md transition-all ${targetInputs.mode==='rate'?'bg-white dark:bg-slate-600 shadow text-indigo-600 dark:text-indigo-100':'text-slate-500 dark:text-slate-300'}`}>가격 직접</button>
+                                <button onClick={() => setTargetInputs({...targetInputs, mode:'rate'})} className={`flex-1 py-1.5 rounded-md transition-all ${targetInputs.mode==='rate'?'bg-white shadow text-indigo-600 dark:text-indigo-100':'text-slate-500 dark:text-slate-300'}`}>가격 직접</button>
                             </div>
                             <div className="space-y-4 flex-1">
                                 <div className="grid grid-cols-2 gap-3">
@@ -725,8 +807,8 @@
                                     </div>
                                 ))}
                             </div>
-                            <div className="tool-result-container bg-emerald-50/50 dark:bg-emerald-900/40 border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-white mt-auto num-font font-black">
-                                <div className="flex justify-between items-center text-[10px] opacity-90 border-b border-emerald-100 dark:border-emerald-700 pb-1 mb-2">
+                            <div className="tool-result-container bg-emerald-50/50 dark:bg-emerald-900/40 border-emerald-200 dark:border-slate-700 pb-1 mb-2">
+                                <div className="flex justify-between items-center text-[10px] opacity-90 border-b dark:border-slate-700 pb-1 mb-2">
                                     <span>합계 수량</span>
                                     <span>{formatNumber(avgQ)}</span>
                                 </div>
@@ -1029,7 +1111,7 @@
                             <div className="animate-fade-in pb-10 font-bold space-y-6">
                                 <h2 className="text-xl sm:text-2xl font-black mb-4 border-b dark:border-slate-700 pb-2 flex flex-col sm:flex-row sm:items-center gap-3 dark:text-white">
                                     노후 자금 시뮬레이션
-                                    <span className="text-[10px] sm:text-xs bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-200 px-2 py-1 rounded font-black w-max">v2.4 시인성 개선</span>
+                                    <span className="text-[10px] sm:text-xs bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-200 px-2 py-1 rounded font-black w-max">v3.1 상세 분석 강화</span>
                                 </h2>
 
                                 <div className="guide-card border-l-4 border-l-amber-500 flex gap-4 items-start mb-6">
@@ -1044,41 +1126,56 @@
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 font-bold">
                                     <div className="bg-white dark:bg-slate-800 p-5 rounded-xl border dark:border-slate-700 shadow-sm space-y-4">
                                         <h3 className="text-indigo-600 dark:text-indigo-300 text-sm border-b dark:border-slate-700 pb-1 font-black"><i className="fa-solid fa-calendar-day mr-1"></i> 1. 연령 및 수령 시기</h3>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                            <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">본인 현재 나이</label><input type="number" className="sim-input" value={simInputs.currentAge} onChange={e=>setSimInputs({...simInputs, currentAge:parseInt(e.target.value)})}/></div>
-                                            <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">배우자 현재 나이</label><input type="number" className="sim-input" value={simInputs.spouseCurrentAge} onChange={e=>setSimInputs({...simInputs, spouseCurrentAge:parseInt(e.target.value)})}/></div>
-                                            <div className="flex flex-col"><label className="text-[10px] text-indigo-500 dark:text-indigo-300 font-bold">시뮬레이션 시작나이</label><input type="number" className="sim-input border-indigo-300 dark:border-indigo-600" value={simInputs.simulationStartAge} onChange={e=>setSimInputs({...simInputs, simulationStartAge:parseInt(e.target.value)})}/></div>
-                                            <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">간병기 전환 나이</label><input type="number" className="sim-input" value={simInputs.highCostStartAge} onChange={e=>setSimInputs({...simInputs, highCostStartAge:parseInt(e.target.value)})}/></div>
-                                            <div className="flex flex-col"><label className="text-[10px] text-indigo-500 dark:text-indigo-300 font-bold">연금 수령(본인)</label><input type="number" className="sim-input border-indigo-300 dark:border-indigo-600" value={simInputs.pensionStartAgeUser} onChange={e=>setSimInputs({...simInputs, pensionStartAgeUser:parseInt(e.target.value)})}/></div>
-                                            <div className="flex flex-col"><label className="text-[10px] text-indigo-500 dark:text-indigo-300 font-bold">연금 수령(배우자)</label><input type="number" className="sim-input border-indigo-300 dark:border-indigo-600" value={simInputs.pensionStartAgeSpouse} onChange={e=>setSimInputs({...simInputs, pensionStartAgeSpouse:parseInt(e.target.value)})}/></div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">본인 현재</label><input type="number" className="sim-input" value={simInputs.currentAge} onChange={e=>setSimInputs({...simInputs, currentAge:parseInt(e.target.value)})}/></div>
+                                            <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">배우자 현재</label><input type="number" className="sim-input" value={simInputs.spouseCurrentAge} onChange={e=>setSimInputs({...simInputs, spouseCurrentAge:parseInt(e.target.value)})}/></div>
+                                            <div className="flex flex-col"><label className="text-[10px] text-indigo-500 dark:text-indigo-300 font-bold">시작 나이</label><input type="number" className="sim-input border-indigo-300 dark:border-indigo-600" value={simInputs.simulationStartAge} onChange={e=>setSimInputs({...simInputs, simulationStartAge:parseInt(e.target.value)})}/></div>
+                                            <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">간병기 전환</label><input type="number" className="sim-input" value={simInputs.highCostStartAge} onChange={e=>setSimInputs({...simInputs, highCostStartAge:parseInt(e.target.value)})}/></div>
+                                            <div className="flex flex-col"><label className="text-[10px] text-indigo-500 dark:text-indigo-300 font-bold">연금(본인)</label><input type="number" className="sim-input border-indigo-300 dark:border-indigo-600" value={simInputs.pensionStartAgeUser} onChange={e=>setSimInputs({...simInputs, pensionStartAgeUser:parseInt(e.target.value)})}/></div>
+                                            <div className="flex flex-col"><label className="text-[10px] text-indigo-500 dark:text-indigo-300 font-bold">연금(배우자)</label><input type="number" className="sim-input border-indigo-300 dark:border-indigo-600" value={simInputs.pensionStartAgeSpouse} onChange={e=>setSimInputs({...simInputs, pensionStartAgeSpouse:parseInt(e.target.value)})}/></div>
                                         </div>
                                     </div>
+                                    
                                     <div className="bg-white dark:bg-slate-800 p-5 rounded-xl border dark:border-slate-700 shadow-sm space-y-4">
-                                        <h3 className="text-emerald-600 dark:text-emerald-300 text-sm border-b dark:border-slate-700 pb-1 font-black"><i className="fa-solid fa-vault mr-1"></i> 2. 기초 자산(억) 및 수익률(%)</h3>
+                                        <h3 className="text-emerald-600 dark:text-emerald-300 text-sm border-b dark:border-slate-700 pb-1 font-black"><i className="fa-solid fa-vault mr-1"></i> 2. 기초 자산 및 수익률</h3>
                                         <div className="grid grid-cols-2 gap-x-3 gap-y-4">
-                                            <div className="flex flex-col"><label className="text-[9px] text-blue-500 dark:text-blue-200 font-black">본인 일반(억)</label><input type="number" step="0.1" className="sim-input" value={simInputs.capUserNonISA} onChange={e=>setSimInputs({...simInputs, capUserNonISA:parseFloat(e.target.value)})}/></div>
-                                            <div className="flex flex-col"><label className="text-[9px] text-blue-400 dark:text-blue-100 font-black">수익률(%)</label><input type="number" step="0.1" className="sim-input" value={simInputs.returnUserNonISA} onChange={e=>setSimInputs({...simInputs, returnUserNonISA:parseFloat(e.target.value)})}/></div>
-                                            <div className="flex flex-col"><label className="text-[9px] text-blue-500 dark:text-blue-200 font-black">배우자 일반(억)</label><input type="number" step="0.1" className="sim-input" value={simInputs.capSpouseNonISA} onChange={e=>setSimInputs({...simInputs, capSpouseNonISA:parseFloat(e.target.value)})}/></div>
-                                            <div className="flex flex-col"><label className="text-[9px] text-blue-400 dark:text-blue-100 font-black">수익률(%)</label><input type="number" step="0.1" className="sim-input" value={simInputs.returnSpouseNonISA} onChange={e=>setSimInputs({...simInputs, returnSpouseNonISA:parseFloat(e.target.value)})}/></div>
-                                            <div className="flex flex-col border-t dark:border-slate-700 pt-3"><label className="text-[9px] text-emerald-500 dark:text-emerald-200 font-black">본인 ISA(억)</label><input type="number" step="0.1" className="sim-input" value={simInputs.capUserISA} onChange={e=>setSimInputs({...simInputs, capUserISA:parseFloat(e.target.value)})}/></div>
-                                            <div className="flex flex-col border-t dark:border-slate-700 pt-3"><label className="text-[9px] text-emerald-400 dark:text-emerald-100 font-black">수익률(%)</label><input type="number" step="0.1" className="sim-input" value={simInputs.returnUserISA} onChange={e=>setSimInputs({...simInputs, returnUserISA:parseFloat(e.target.value)})}/></div>
-                                            <div className="flex flex-col border-t dark:border-slate-700 pt-3"><label className="text-[9px] text-emerald-500 dark:text-emerald-200 font-black">배우자 ISA(억)</label><input type="number" step="0.1" className="sim-input" value={simInputs.capSpouseISA} onChange={e=>setSimInputs({...simInputs, capSpouseISA:parseFloat(e.target.value)})}/></div>
-                                            <div className="flex flex-col border-t dark:border-slate-700 pt-3"><label className="text-[9px] text-emerald-400 dark:text-emerald-100 font-black">수익률(%)</label><input type="number" step="0.1" className="sim-input" value={simInputs.returnSpouseISA} onChange={e=>setSimInputs({...simInputs, returnSpouseISA:parseFloat(e.target.value)})}/></div>
+                                            <div className="flex flex-col"><label className="text-[9px] text-blue-500 font-black">본인 일반(억)</label><input type="number" step="0.1" className="sim-input" value={simInputs.capUserNonISA} onChange={e=>setSimInputs({...simInputs, capUserNonISA:parseFloat(e.target.value)})}/></div>
+                                            <div className="flex flex-col"><label className="text-[9px] text-blue-400 font-black">수익률(%)</label><input type="number" step="0.1" className="sim-input" value={simInputs.returnUserNonISA} onChange={e=>setSimInputs({...simInputs, returnUserNonISA:parseFloat(e.target.value)})}/></div>
+                                            <div className="flex flex-col"><label className="text-[9px] text-blue-500 font-black">배우자 일반(억)</label><input type="number" step="0.1" className="sim-input" value={simInputs.capSpouseNonISA} onChange={e=>setSimInputs({...simInputs, capSpouseNonISA:parseFloat(e.target.value)})}/></div>
+                                            <div className="flex flex-col"><label className="text-[9px] text-blue-400 font-black">수익률(%)</label><input type="number" step="0.1" className="sim-input" value={simInputs.returnSpouseNonISA} onChange={e=>setSimInputs({...simInputs, returnSpouseNonISA:parseFloat(e.target.value)})}/></div>
+                                            
+                                            <div className="col-span-2 border-t-2 border-indigo-100 dark:border-slate-700 pt-3">
+                                                <div className="grid grid-cols-2 gap-x-3">
+                                                    <div className="flex flex-col"><label className="text-[9px] text-purple-600 font-black">공모주 자산(억)</label><input type="number" step="0.1" className="sim-input border-indigo-200" value={simInputs.capIPO} onChange={e=>setSimInputs({...simInputs, capIPO:parseFloat(e.target.value)})}/></div>
+                                                    <div className="flex flex-col"><label className="text-[9px] text-purple-500 font-black">공모주 수익률(%)</label><input type="number" step="0.1" className="sim-input border-indigo-200" value={simInputs.returnIPO} onChange={e=>setSimInputs({...simInputs, returnIPO:parseFloat(e.target.value)})}/></div>
+                                                    <div className="flex flex-col col-span-2 mt-2 bg-indigo-50 dark:bg-indigo-900/30 p-2 rounded">
+                                                        <label className="text-[9px] text-indigo-700 dark:text-indigo-200 font-black">공모주 대기자금 CMA 이자율(%)</label>
+                                                        <input type="number" step="0.1" className="sim-input !mt-1 !p-1 border-indigo-200" value={simInputs.returnCMA} onChange={e=>setSimInputs({...simInputs, returnCMA:parseFloat(e.target.value)})}/>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex flex-col border-t dark:border-slate-700 pt-3"><label className="text-[9px] text-emerald-600 font-black">본인 ISA(억)</label><input type="number" step="0.1" className="sim-input" value={simInputs.capUserISA} onChange={e=>setSimInputs({...simInputs, capUserISA:parseFloat(e.target.value)})}/></div>
+                                            <div className="flex flex-col border-t dark:border-slate-700 pt-3"><label className="text-[9px] text-emerald-500 font-black">수익률(%)</label><input type="number" step="0.1" className="sim-input" value={simInputs.returnUserISA} onChange={e=>setSimInputs({...simInputs, returnUserISA:parseFloat(e.target.value)})}/></div>
+                                            <div className="flex flex-col border-t dark:border-slate-700 pt-3"><label className="text-[9px] text-emerald-600 font-black">배우자 ISA(억)</label><input type="number" step="0.1" className="sim-input" value={simInputs.capSpouseISA} onChange={e=>setSimInputs({...simInputs, capSpouseISA:parseFloat(e.target.value)})}/></div>
+                                            <div className="flex flex-col border-t dark:border-slate-700 pt-3"><label className="text-[9px] text-emerald-500 font-black">수익률(%)</label><input type="number" step="0.1" className="sim-input" value={simInputs.returnSpouseISA} onChange={e=>setSimInputs({...simInputs, returnSpouseISA:parseFloat(e.target.value)})}/></div>
                                         </div>
                                     </div>
+
                                     <div className="bg-white dark:bg-slate-800 p-5 rounded-xl border dark:border-slate-700 shadow-sm space-y-4">
                                         <h3 className="text-orange-600 dark:text-orange-300 text-sm border-b dark:border-slate-700 pb-1 font-black"><i className="fa-solid fa-chart-line mr-1"></i> 3. 물가 및 세율 설정(%)</h3>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div className="grid grid-cols-2 gap-3">
                                             <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">물가 상승률</label><input type="number" step="0.1" className="sim-input" value={simInputs.inflationRate} onChange={e=>setSimInputs({...simInputs, inflationRate:parseFloat(e.target.value)})}/></div>
                                             <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">생활비 상승률</label><input type="number" step="0.1" className="sim-input" value={simInputs.livingCostInflationRate} onChange={e=>setSimInputs({...simInputs, livingCostInflationRate:parseFloat(e.target.value)})}/></div>
-                                            <div className="flex flex-col"><label className="text-[10px] text-red-500 dark:text-red-300 font-black">세율1(기본)</label><input type="number" step="0.1" className="sim-input" value={simInputs.taxRate1} onChange={e=>setSimInputs({...simInputs, taxRate1:parseFloat(e.target.value)})}/></div>
-                                            <div className="flex flex-col"><label className="text-[10px] text-red-700 dark:text-red-400 font-black">세율2(누진)</label><input type="number" step="0.1" className="sim-input" value={simInputs.taxRate2} onChange={e=>setSimInputs({...simInputs, taxRate2:parseFloat(e.target.value)})}/></div>
+                                            <div className="flex flex-col"><label className="text-[10px] text-red-500 font-black">세율1(기본)</label><input type="number" step="0.1" className="sim-input" value={simInputs.taxRate1} onChange={e=>setSimInputs({...simInputs, taxRate1:parseFloat(e.target.value)})}/></div>
+                                            <div className="flex flex-col"><label className="text-[10px] text-red-700 font-black">세율2(누진)</label><input type="number" step="0.1" className="sim-input" value={simInputs.taxRate2} onChange={e=>setSimInputs({...simInputs, taxRate2:parseFloat(e.target.value)})}/></div>
                                         </div>
-                                        <div className="flex flex-col border-t dark:border-slate-700 pt-3 mt-1">
+                                        <div className="flex flex-col border-t dark:border-slate-700 pt-3 mt-1 bg-indigo-50 dark:bg-indigo-900/20 p-2 rounded">
                                             <label className="text-[10px] text-indigo-500 dark:text-indigo-400 font-black">95세 목표 잔액 (상속 등)</label>
-                                            <input type="text" className="sim-input border-indigo-200 dark:border-indigo-700" value={simInputs.targetLegacy} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, targetLegacy:v}))}/>
+                                            <input type="text" className="sim-input !mt-1 !p-1 border-indigo-200 dark:border-indigo-700 text-right" value={simInputs.targetLegacy} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, targetLegacy:v}))}/>
                                         </div>
                                     </div>
+                                    
                                     <div className="bg-white dark:bg-slate-800 p-5 rounded-xl border dark:border-slate-700 shadow-sm space-y-4">
                                         <h3 className="text-rose-600 dark:text-rose-300 text-sm border-b dark:border-slate-700 pb-1 font-black"><i className="fa-solid fa-money-check-dollar mr-1"></i> 4. 월 수입 및 지출(원)</h3>
                                         <div className="flex flex-col">
@@ -1089,27 +1186,29 @@
                                             <label className="text-[10px] text-rose-500 dark:text-rose-400 font-black">간병기 의료/간병비(월)</label>
                                             <input type="text" className="sim-input !mt-1 !p-1 text-right text-rose-700 dark:text-white" placeholder="0" value={simInputs.monthlyMedical} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, monthlyMedical:v}))}/>
                                         </div>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                                        <div className="grid grid-cols-2 gap-3 pt-2">
                                             <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">본인 월 연금</label><input type="text" className="sim-input text-right" value={simInputs.pensionSelf} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, pensionSelf: v}))}/></div>
                                             <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">배우자 월 연금</label><input type="text" className="sim-input text-right" value={simInputs.pensionSpouse} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, pensionSpouse: v}))}/></div>
                                         </div>
                                     </div>
+                                    
                                     <div className="bg-white dark:bg-slate-800 p-5 rounded-xl border dark:border-slate-700 shadow-sm space-y-4">
                                         <h3 className="text-blue-600 dark:text-blue-300 text-sm border-b dark:border-slate-700 pb-1 font-black"><i className="fa-solid fa-hand-holding-dollar mr-1"></i> 5. 기타 연간 수입(원)</h3>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div className="grid grid-cols-2 gap-3">
                                             <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">공모주 수익</label><input type="text" className="sim-input text-right" value={simInputs.ipoProfit} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, ipoProfit: v}))}/></div>
                                             <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">임대 소득</label><input type="text" className="sim-input text-right" value={simInputs.rentalIncome} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, rentalIncome: v}))}/></div>
                                             <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">기타 사업</label><input type="text" className="sim-input text-right" value={simInputs.otherIncome} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, otherIncome: v}))}/></div>
                                             <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">대여 수수료</label><input type="text" className="sim-input text-right" value={simInputs.stockLending} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, stockLending: v}))}/></div>
                                         </div>
-                                        <div className="flex flex-col border-t dark:border-slate-700 pt-2">
+                                        <div className="flex flex-col border-t dark:border-slate-700 pt-2 bg-blue-50 dark:bg-blue-900/20 p-2 rounded">
                                             <label className="text-[10px] text-slate-500 dark:text-white font-black">연간 비상금</label>
-                                            <input type="text" className="sim-input text-right" value={simInputs.extraReserve} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, extraReserve: v}))}/>
+                                            <input type="text" className="sim-input !mt-1 !p-1 text-right" value={simInputs.extraReserve} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, extraReserve: v}))}/>
                                         </div>
                                     </div>
+                                    
                                     <div className={`${simResult.summary?.isSuccess ? 'bg-indigo-600' : 'bg-rose-600'} text-white p-5 rounded-xl shadow-lg flex flex-col justify-center text-center transition-colors duration-500 h-full`}>
                                         <p className="text-xs opacity-90 mb-2 font-black">95세 예측 자산</p>
-                                        <h3 className={`text-xl sm:text-2xl font-black ${simResult.summary?.depletion ? 'text-yellow-300' : 'text-white'}`}>
+                                        <h3 className={`text-xl sm:text-2xl font-black ${simResult.summary?.depletion ? 'text-yellow-300' : 'text-white'} break-all`}>
                                             {simResult.summary?.depletion ? `${simResult.summary.depletion}세 자산 고갈` : formatNumber(simResult.summary?.final) + '원'}
                                         </h3>
                                         <div className="mt-3 py-1 px-3 bg-white/20 rounded-full text-[10px] inline-block mx-auto font-black">
@@ -1122,72 +1221,173 @@
                                     <SimulationChart history={simResult.history} />
                                 </div>
 
-                                <div className="mt-6 bg-white dark:bg-slate-800 p-4 rounded-xl border dark:border-slate-700 shadow-sm overflow-x-auto">
-                                    <h3 className="text-sm font-black mb-4 text-slate-900 dark:text-white">
-                                        <i className="fa-solid fa-table mr-2 text-indigo-500"></i>
-                                        연령별 상세 자금 흐름 분석
-                                    </h3>
-                                    <table className="w-full text-[10px] text-left border-collapse min-w-[1100px]">
-                                        <thead className="bg-slate-100 dark:bg-slate-900 sticky top-0">
-                                            <tr className="text-slate-900 dark:text-white font-black">
-                                                <th className="p-3 border-b dark:border-slate-700">나이</th>
-                                                <th className="p-3 border-b dark:border-slate-700">총자산(억)</th>
-                                                <th className="p-3 border-b dark:border-slate-700 text-indigo-600 dark:text-indigo-400">투자 수익(원)</th>
-                                                <th className="p-3 border-b dark:border-slate-700 text-blue-600 dark:text-blue-400">기타/연금(원)</th>
-                                                <th className="p-3 border-b dark:border-slate-700 text-rose-600 dark:text-rose-400 text-right">총 지출(원)</th>
-                                                <th className="p-3 border-b dark:border-slate-700 text-center">현금흐름 지수</th>
-                                                <th className="p-3 border-b dark:border-slate-700 text-center">증감분(원)</th>
-                                                <th className="p-3 border-b dark:border-slate-700 text-center">자산 상태</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="bg-white dark:bg-slate-800">
-                                            {simResult.history.map((h, idx) => {
-                                                const totalExpense = h.living + h.tax;
-                                                const cashFlowIndex = (h.annualProfit / totalExpense) * 100;
-                                                
-                                                const rowBgClass = h.isHighCost 
-                                                    ? 'bg-amber-50 dark:bg-amber-900/30' 
-                                                    : h.isWarn 
-                                                    ? 'bg-rose-50/70 dark:bg-rose-900/60' 
-                                                    : '';
+                                <div className="mt-6 bg-white dark:bg-slate-800 p-3 rounded-xl border dark:border-slate-700 shadow-sm relative">
+                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+                                        <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                                            <i className="fa-solid fa-table text-indigo-500"></i>
+                                            연령별 상세 자금 흐름 분석
+                                        </h3>
+                                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                                            <span className="hidden sm:block text-[9px] text-slate-400 font-normal">컬럼 선택으로 가독성을 조절하세요.</span>
+                                            <div className="relative w-full sm:w-auto">
+                                                <button 
+                                                    onClick={() => setIsSimColMenuOpen(!isSimColMenuOpen)}
+                                                    className="w-full sm:w-auto bg-slate-100 dark:bg-slate-700 border dark:border-slate-600 px-3 py-1.5 rounded-lg text-xs font-black flex items-center justify-center gap-2 hover:bg-slate-200 dark:text-white"
+                                                >
+                                                    <i className="fa-solid fa-gear"></i> 항목 선택
+                                                </button>
+                                                {isSimColMenuOpen && (
+                                                    <div className="absolute right-0 bottom-12 sm:bottom-auto sm:top-10 z-20 w-48 bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-xl shadow-2xl p-4 animate-fade-in">
+                                                        <h4 className="text-[10px] font-black mb-3 border-b pb-2 dark:text-white">표시할 항목 (체크 해제 시 숨김)</h4>
+                                                        <div className="space-y-2">
+                                                            {[
+                                                                {id: 'taxable', l: '종합과세 대상'},
+                                                                {id: 'exempt', l: '비과세/분리수익'},
+                                                                {id: 'income', l: '기타수입/연금'},
+                                                                {id: 'expense', l: '총 지출'},
+                                                                {id: 'flow', l: '현금흐름/증감'},
+                                                                {id: 'status', l: '상태'}
+                                                            ].map(col => (
+                                                                <label key={col.id} className="flex items-center gap-2 cursor-pointer group">
+                                                                    <input 
+                                                                        type="checkbox" 
+                                                                        className="w-3 h-3 rounded text-indigo-600 focus:ring-indigo-500" 
+                                                                        checked={simTableVisibleCols[col.id]} 
+                                                                        onChange={() => setSimTableVisibleCols({...simTableVisibleCols, [col.id]: !simTableVisibleCols[col.id]})}
+                                                                    />
+                                                                    <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 group-hover:text-indigo-600">{col.l}</span>
+                                                                </label>
+                                                            ))}
+                                                        </div>
+                                                        <button 
+                                                            onClick={() => setIsSimColMenuOpen(false)}
+                                                            className="mt-4 w-full bg-indigo-600 text-white py-1.5 rounded-lg text-[10px] font-black"
+                                                        >
+                                                            확인
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-[11px] sm:text-[12px] text-left border-collapse table-auto min-w-max">
+                                            <thead className="bg-slate-100 dark:bg-slate-900 sticky top-0 z-10">
+                                                <tr className="text-slate-900 dark:text-white font-black leading-tight">
+                                                    <th className="px-2 py-3 border-b dark:border-slate-700 text-center sticky left-0 bg-slate-100 dark:bg-slate-900 z-20">나이</th>
+                                                    <th className="px-2 py-3 border-b dark:border-slate-700 text-center">총자산(억)</th>
+                                                    <th className="px-2 py-3 border-b dark:border-slate-700 text-center">잔액상태</th>
+                                                    
+                                                    {simTableVisibleCols.taxable && (
+                                                        <th className="px-2 py-3 border-b dark:border-slate-700 text-indigo-600 dark:text-indigo-400 text-right">
+                                                            종합과세 대상(원)<br/>
+                                                            <span className="text-[9px] font-normal opacity-70">(일반자산수익 + CMA이자)</span>
+                                                        </th>
+                                                    )}
+                                                    {simTableVisibleCols.exempt && (
+                                                        <th className="px-2 py-3 border-b dark:border-slate-700 text-emerald-600 dark:text-emerald-400 text-right">
+                                                            비과세/분리수익(원)<br/>
+                                                            <span className="text-[9px] font-normal opacity-70">(공모주차익 + ISA전체)</span>
+                                                        </th>
+                                                    )}
+                                                    {simTableVisibleCols.income && (
+                                                        <th className="px-2 py-3 border-b dark:border-slate-700 text-blue-600 dark:text-blue-400 text-right">
+                                                            기타수입/연금(원)<br/>
+                                                            <span className="text-[9px] font-normal opacity-70">(연금 + 연간 기타소득)</span>
+                                                        </th>
+                                                    )}
+                                                    {simTableVisibleCols.expense && (
+                                                        <th className="px-2 py-3 border-b dark:border-slate-700 text-rose-600 dark:text-rose-400 text-right">
+                                                            총 지출(원)<br/>
+                                                            <span className="text-[9px] font-normal opacity-70">(생활+간병+세금+비상)</span>
+                                                        </th>
+                                                    )}
+                                                    {simTableVisibleCols.flow && (
+                                                        <>
+                                                            <th className="px-2 py-3 border-b dark:border-slate-700 text-center">흐름%</th>
+                                                            <th className="px-2 py-3 border-b dark:border-slate-700 text-right">연간증감(원)</th>
+                                                        </>
+                                                    )}
+                                                    {simTableVisibleCols.status && (
+                                                        <th className="px-2 py-3 border-b dark:border-slate-700 text-center">상태</th>
+                                                    )}
+                                                </tr>
+                                            </thead>
+                                            <tbody className="bg-white dark:bg-slate-800">
+                                                {simResult.history.map((h, idx) => {
+                                                    const totalExpense = h.living + h.tax;
+                                                    const cashFlowIndex = (h.annualProfit / totalExpense) * 100;
+                                                    const rowBgClass = h.isHighCost ? 'bg-amber-50 dark:bg-amber-900/30' : h.isWarn ? 'bg-rose-50/70 dark:bg-rose-900/60' : '';
 
-                                                return (
-                                                    <tr key={idx} className={`hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors border-b dark:border-slate-700 ${rowBgClass}`}>
-                                                        <td className={`p-3 font-black text-slate-900 dark:text-white`}>
-                                                            {h.age}세
-                                                        </td>
-                                                        <td className={`p-3 font-black ${h.isWarn ? 'text-rose-600 dark:text-rose-300' : 'text-indigo-600 dark:text-indigo-300'}`}>
-                                                            {h.total.toFixed(2)}
-                                                        </td>
-                                                        <td className="p-3 text-indigo-600 dark:text-indigo-200 font-black num-font">{formatNumber(h.profInvestment)}</td>
-                                                        <td className="p-3 text-blue-600 dark:text-blue-300 font-black num-font">{formatNumber(h.baseIncome)}</td>
-                                                        <td className="p-3 num-font text-rose-600 dark:text-rose-300 font-black text-right">{formatNumber(totalExpense)}</td>
-                                                        
-                                                        <td className="p-3 text-center text-slate-900 dark:text-white">
-                                                            <div className="flex flex-col items-center">
-                                                                <div className={`text-[10px] font-black px-2 py-0.5 rounded ${cashFlowIndex >= 100 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'}`}>
-                                                                    {cashFlowIndex.toFixed(0)}%
+                                                    return (
+                                                        <tr key={idx} className={`hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors border-b dark:border-slate-700 ${rowBgClass}`}>
+                                                            <td className="px-2 py-2.5 font-black text-slate-900 dark:text-white text-center sticky left-0 bg-inherit z-10 border-r dark:border-slate-700">
+                                                                {h.age}
+                                                            </td>
+                                                            <td className={`px-2 py-2.5 font-black text-center ${h.isWarn ? 'text-rose-600 dark:text-rose-300' : 'text-indigo-600 dark:text-indigo-300'}`}>
+                                                                {h.total.toFixed(2)}
+                                                            </td>
+                                                            <td className="px-2 py-2.5">
+                                                                <div className="flex justify-center gap-1">
+                                                                    <div title="본인 일반" className={`w-2 h-2 rounded-full ${h.un > 0 ? 'bg-red-500 shadow-sm' : 'bg-slate-200 dark:bg-slate-700'}`}></div>
+                                                                    <div title="배우자 일반" className={`w-2 h-2 rounded-full ${h.sn > 0 ? 'bg-amber-500 shadow-sm' : 'bg-slate-200 dark:bg-slate-700'}`}></div>
+                                                                    <div title="공모주" className={`w-2 h-2 rounded-full ${h.cip > 0 ? 'bg-purple-500 shadow-sm' : 'bg-slate-200 dark:bg-slate-700'}`}></div>
+                                                                    <div title="배우자 ISA" className={`w-2 h-2 rounded-full ${h.si > 0 ? 'bg-blue-500 shadow-sm' : 'bg-slate-200 dark:bg-slate-700'}`}></div>
+                                                                    <div title="본인 ISA" className={`w-2 h-2 rounded-full ${h.ui > 0 ? 'bg-emerald-500 shadow-sm' : 'bg-slate-200 dark:bg-slate-700'}`}></div>
                                                                 </div>
-                                                                <div className="w-16 bg-slate-200 dark:bg-slate-700 h-1 mt-1 rounded-full overflow-hidden">
-                                                                    <div className={`h-full ${cashFlowIndex >= 100 ? 'bg-emerald-500' : 'bg-rose-500'}`} style={{width: `${Math.min(cashFlowIndex, 100)}%`}}></div>
-                                                                </div>
-                                                            </div>
-                                                        </td>
+                                                            </td>
 
-                                                        <td className={`p-3 text-center font-bold num-font ${h.netChange >= 0 ? 'text-emerald-600 dark:text-emerald-300' : 'text-rose-500 dark:text-rose-200'}`}>
-                                                            {h.netChange >= 0 ? '+' : ''}{formatNumber(h.netChange)}
-                                                        </td>
-                                                        
-                                                        <td className="p-3 text-center text-slate-900 dark:text-white">
-                                                            <span className={`px-2 py-1 rounded-md text-[9px] font-black ${h.isHighCost ? 'bg-amber-100 text-amber-700 dark:bg-amber-800 dark:text-amber-100' : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-white'}`}>
-                                                                {h.isHighCost ? '간병기' : '활동기'}
-                                                            </span>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
+                                                            {simTableVisibleCols.taxable && (
+                                                                <td className={`px-2 py-2.5 font-black num-font text-right ${h.taxableProfit > 20000000 ? 'text-red-500 underline' : 'text-indigo-600 dark:text-indigo-200'}`}>
+                                                                    {formatNumber(h.taxableProfit)}
+                                                                </td>
+                                                            )}
+                                                            {simTableVisibleCols.exempt && (
+                                                                <td className="px-2 py-2.5 text-emerald-600 dark:text-emerald-200 font-black num-font text-right">{formatNumber(h.separateExemptProfit)}</td>
+                                                            )}
+                                                            {simTableVisibleCols.income && (
+                                                                <td className="px-2 py-2.5 text-blue-600 dark:text-blue-300 font-black num-font text-right">{formatNumber(h.baseIncome)}</td>
+                                                            )}
+                                                            {simTableVisibleCols.expense && (
+                                                                <td className="px-2 py-2.5 num-font text-rose-600 dark:text-rose-300 font-black text-right">{formatNumber(totalExpense)}</td>
+                                                            )}
+                                                            {simTableVisibleCols.flow && (
+                                                                <>
+                                                                    <td className="px-2 py-2.5 text-center text-slate-900 dark:text-white">
+                                                                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${cashFlowIndex >= 100 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'}`}>
+                                                                            {cashFlowIndex.toFixed(0)}%
+                                                                        </span>
+                                                                    </td>
+                                                                    <td className={`px-2 py-2.5 text-right font-bold num-font ${h.netChange >= 0 ? 'text-emerald-600 dark:text-emerald-300' : 'text-rose-500 dark:text-rose-200'}`}>
+                                                                        {h.netChange >= 0 ? '+' : ''}{formatNumber(h.netChange)}
+                                                                    </td>
+                                                                </>
+                                                            )}
+                                                            {simTableVisibleCols.status && (
+                                                                <td className="px-2 py-2.5 text-center text-slate-900 dark:text-white">
+                                                                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-black ${h.isHighCost ? 'bg-amber-100 text-amber-700 dark:bg-amber-800 dark:text-amber-100' : 'bg-slate-100 text-slate-500 dark:text-slate-700 dark:text-white'}`}>
+                                                                        {h.isHighCost ? '간병' : '활동'}
+                                                                    </span>
+                                                                </td>
+                                                            )}
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-dashed dark:border-slate-700">
+                                        <h4 className="text-[10px] font-black text-slate-500 mb-2">자산별 잔액 상태 가이드</h4>
+                                        <div className="flex flex-wrap gap-4 text-[9px] font-bold">
+                                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-red-500"></div><span className="dark:text-slate-300">본인 일반</span></div>
+                                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-amber-500"></div><span className="dark:text-slate-300">배우자 일반</span></div>
+                                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-purple-500"></div><span className="dark:text-slate-300">공모주</span></div>
+                                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-blue-500"></div><span className="dark:text-slate-300">배우자 ISA</span></div>
+                                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500"></div><span className="dark:text-slate-300">본인 ISA</span></div>
+                                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-slate-200 dark:bg-slate-700"></div><span className="dark:text-slate-400">자산 고갈</span></div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         )}
