@@ -68,17 +68,6 @@
         }
 
         .tool-input:hover { @apply border-slate-400 dark:border-slate-400 bg-slate-200 dark:bg-slate-200; }
-
-        /* Insight Design Enhancements */
-        .insight-card {
-            @apply relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-2xl;
-        }
-        .insight-link-item {
-            @apply flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all group border border-transparent hover:border-emerald-200 dark:hover:border-emerald-800 w-full min-w-0;
-        }
-        .insight-icon-box {
-            @apply w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:rotate-6 group-hover:scale-110 flex-shrink-0;
-        }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
@@ -260,15 +249,15 @@
 
             const [blogInsightLinks, setBlogInsightLinks] = useState({
                 "🧬 큐리옥스바이오시스템즈": [
-                    {name: "한계를 깨는 사람", url: "https://blog.naver.com/unlimitedi"},
-                    {name: "나는 전설이다", url: "https://blog.naver.com/legendyu"},
-                    {name: "이공계", url: "https://blog.naver.com/shyny38"},
-                    {name: "공대생 주접노트", url: "https://blog.naver.com/b_g-duck"}
+                    {name: "한계를 깨는 사람", url: "https://blog.naver.com/unlimitedi", icon: "fa-dna", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"},
+                    {name: "나는 전설이다", url: "https://blog.naver.com/legendyu", icon: "fa-star", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"},
+                    {name: "이공계", url: "https://blog.naver.com/shyny38", icon: "fa-flask", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"},
+                    {name: "공대생 주접노트", url: "https://blog.naver.com/b_g-duck", icon: "fa-pen-clip", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"}
                 ],
                 "💊 에스티팜": [
-                    {name: "오재복", url: "https://blog.naver.com/hym090206"},
-                    {name: "왠지상쾌한사람", url: "https://blog.naver.com/aphorism86"},
-                    {name: "Chan", url: "https://blog.naver.com/chany2do"}
+                    {name: "오재복", url: "https://blog.naver.com/hym090206", icon: "fa-user-tie", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"},
+                    {name: "왠지상쾌한사람", url: "https://blog.naver.com/aphorism86", icon: "fa-wind", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"},
+                    {name: "Chan", url: "https://blog.naver.com/chany2do", icon: "fa-bolt", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"}
                 ]
             });
 
@@ -598,7 +587,7 @@
                                     if(linkMode === 'blogs') {
                                         if (!newRoutine.category || !newRoutine.name || !newRoutine.url) return;
                                         const updated = { ...blogInsightLinks };
-                                        updated[newRoutine.category] = [...updated[newRoutine.category], { name: newRoutine.name, url: newRoutine.url }];
+                                        updated[newRoutine.category] = [...updated[newRoutine.category], { name: newRoutine.name, url: newRoutine.url, icon: "fa-link", color: "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-100" }];
                                         setBlogInsightLinks(updated);
                                         setNewRoutine({ category: '', name: '', url: '' });
                                     } else {
@@ -609,78 +598,41 @@
                         </div>
                     )}
                     
-                    {linkMode === 'blogs' ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 font-bold">
-                            {Object.entries(blogInsightLinks).map(([cat, links], catIdx) => (
-                                <div key={cat} className="insight-card border-l-4 border-l-emerald-500 p-4 sm:p-6 flex flex-col h-full min-w-0">
-                                    <div className="flex items-center justify-between mb-6">
-                                        <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2 min-w-0">
-                                            <span className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-xs sm:text-sm flex-shrink-0">
-                                                {catIdx === 0 ? <i className="fa-solid fa-dna"></i> : <i className="fa-solid fa-capsules"></i>}
-                                            </span>
-                                            <span className="truncate">{cat}</span>
-                                        </h3>
-                                        <span className="text-[9px] sm:text-[10px] bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-full text-slate-500 dark:text-slate-400 flex-shrink-0 ml-2">{links.length} Insights</span>
-                                    </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 flex-1">
-                                        {links.map((l, i) => (
-                                            <div key={i} className="relative group min-w-0">
-                                                <a href={l.url} target="_blank" className="insight-link-item h-full">
-                                                    <div className={`insight-icon-box ${i % 2 === 0 ? 'bg-emerald-600 text-white' : 'bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-white'}`}>
-                                                        {i % 3 === 0 ? <i className="fa-solid fa-feather-pointed"></i> : i % 3 === 1 ? <i className="fa-solid fa-signature"></i> : <i className="fa-solid fa-lightbulb"></i>}
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="text-xs sm:text-sm font-black truncate text-slate-800 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{l.name}</div>
-                                                        <div className="text-[8px] sm:text-[9px] text-slate-400 font-bold truncate group-hover:text-emerald-500/70 transition-colors">Blog Insight <i className="fa-solid fa-chevron-right ml-0.5"></i></div>
-                                                    </div>
-                                                </a>
-                                                {isRoutineEditMode && (
-                                                    <button onClick={() => {
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-bold">
+                        {Object.entries(linkMode === 'blogs' ? blogInsightLinks : routineLinks).map(([cat, links]) => (
+                            <div key={cat} className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-lg border dark:border-slate-700 transition-all hover:shadow-xl">
+                                <h3 className={`text-lg font-black mb-4 border-b dark:border-slate-700 pb-2 flex items-center gap-2 ${linkMode === 'blogs' ? 'text-emerald-600 dark:text-emerald-400' : 'text-indigo-600 dark:text-indigo-400'}`}>
+                                    {linkMode === 'blogs' ? (cat.includes('큐리옥스') ? <i className="fa-solid fa-dna"></i> : <i className="fa-solid fa-capsules"></i>) : null}
+                                    {cat}
+                                </h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {links.map((l, i) => (
+                                        <div key={i} className="relative group">
+                                            <a href={l.url} target="_blank" className="block p-3 rounded-xl bg-slate-50 dark:bg-slate-900/40 hover:shadow-md flex items-center gap-3 group transition-all border border-transparent dark:border-slate-700 dark:hover:border-emerald-500/50">
+                                                <div className={`w-8 h-8 rounded flex items-center justify-center ${l.color || 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-100'} bg-opacity-20 group-hover:scale-110 transition`}>
+                                                    <i className={`fa-solid ${l.icon || 'fa-link'}`}></i>
+                                                </div>
+                                                <span className="text-sm truncate pr-6 text-slate-900 dark:text-slate-100 font-bold">{l.name}</span>
+                                            </a>
+                                            {isRoutineEditMode && (
+                                                <button onClick={() => {
+                                                    if(linkMode === 'blogs') {
                                                         const updated = { ...blogInsightLinks };
                                                         updated[cat] = updated[cat].filter((_, index) => index !== i);
                                                         setBlogInsightLinks(updated);
-                                                    }} className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition z-10">
-                                                        <i className="fa-solid fa-xmark text-[8px]"></i>
-                                                    </button>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="mt-6 pt-4 border-t dark:border-slate-700 flex justify-between items-center">
-                                        <div className="flex gap-1 flex-shrink-0">
-                                            {[1,2,3].map(v => <div key={v} className="w-1 h-1 rounded-full bg-emerald-200 dark:bg-emerald-800"></div>)}
+                                                    } else {
+                                                        removeRoutineLink(cat, i);
+                                                    }
+                                                }} className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition">
+                                                    <i className="fa-solid fa-xmark text-[10px]"></i>
+                                                </button>
+                                            )}
                                         </div>
-                                        <span className="text-[9px] sm:text-[10px] text-emerald-600 dark:text-emerald-400 font-black cursor-default truncate ml-4 text-right">Deep Analysis Insight <i className="fa-solid fa-check-circle ml-0.5"></i></span>
-                                    </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-bold">
-                            {Object.entries(routineLinks).map(([cat, links]) => (
-                                <div key={cat} className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-lg border dark:border-slate-700">
-                                    <h3 className="text-lg font-bold mb-4 border-b dark:border-slate-700 pb-2 text-indigo-600 dark:text-indigo-400">{cat}</h3>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        {links.map((l, i) => (
-                                            <div key={i} className="relative group">
-                                                <a href={l.url} target="_blank" className="block p-3 rounded-xl bg-slate-50 dark:bg-slate-700 hover:shadow-md flex items-center gap-3 group transition-all">
-                                                    <div className={`w-8 h-8 rounded flex items-center justify-center ${l.color} bg-opacity-20 group-hover:scale-110 transition`}>
-                                                        <i className={`fa-solid ${l.icon}`}></i>
-                                                    </div>
-                                                    <span className="text-sm truncate pr-6 text-slate-900 dark:text-white font-bold">{l.name}</span>
-                                                </a>
-                                                {isRoutineEditMode && (
-                                                    <button onClick={() => removeRoutineLink(cat, i)} className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition">
-                                                        <i className="fa-solid fa-xmark text-[10px]"></i>
-                                                    </button>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                            </div>
+                        ))}
+                    </div>
                 </div>
             );
 
@@ -783,7 +735,7 @@
                             </h3>
                             <div className="grid grid-cols-2 gap-3 mb-4">
                                 <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">공모가</label><input type="text" className="sim-input tool-input text-right" value={ipoCalcInputs.price} onChange={e=>handleCommaChange(e, v=>setIpoCalcInputs({...ipoCalcInputs, price:v}))} /></div>
-                                <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">청약수량</label><input type="text" className="sim-input tool-input text-right" value={ipoCalcInputs.qty} onChange={e=>handleCommaChange(e, v=>setIpoCalcInputs({...ipoCalcInputs, qty:v}))} /></div>
+                                <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">청약수량</label><input type="text" className="sim-input tool-input text-right" value={ipoCalcInputs.qty} onChange={e=>setIpoCalcInputs({...ipoCalcInputs, qty:parseFormattedNumber(e.target.value).toLocaleString()})} /></div>
                                 <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">증거금율</label><select className="sim-input tool-input" value={ipoCalcInputs.rate} onChange={e=>setIpoCalcInputs({...ipoCalcInputs, rate:parseInt(e.target.value)})}><option value={50}>50%</option><option value={100}>100%</option></select></div>
                                 <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">수수료</label><input type="text" className="sim-input tool-input text-right" value={ipoCalcInputs.fee} onChange={e=>handleCommaChange(e, v=>setIpoCalcInputs({...ipoCalcInputs, fee:v}))} /></div>
                             </div>
@@ -1092,7 +1044,7 @@
                 <div className={`min-h-screen flex flex-col transition-colors duration-200 ${isDark ? 'dark bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-800'}`}>
                     <header className="sticky top-0 z-50 bg-white dark:bg-slate-800 border-b dark:border-slate-700 shadow h-16">
                         <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
-                            <div className="flex items-center gap-2 font-black text-lg flex-shrink-0"><i className="fa-solid fa-compass text-blue-600"></i> <span className="hidden sm:inline dark:text-white font-black">Navigator</span></div>
+                            <div className="flex items-center gap-2 font-black text-lg flex-shrink-0"><i className="fa-solid fa-compass text-blue-600"></i> <span className="hidden sm:inline text-black font-black">Navigator</span></div>
                             <div className="nav-container flex-1 mx-4">
                                 <nav className="inline-flex bg-slate-100 dark:bg-slate-700 p-1 rounded-xl gap-1">
                                     {[{id:'dashboard',l:'대시보드'},{id:'routine',l:'루틴'},{id:'tools',l:'도구'},{id:'simulation',l:'노후자금'},{id:'tax',l:'금융과세'}].map(t => (
@@ -1188,7 +1140,7 @@
                                         </div>
                                         <div className="grid grid-cols-2 gap-3 pt-2">
                                             <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">본인 월 연금</label><input type="text" className="sim-input text-right" value={simInputs.pensionSelf} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, pensionSelf: v}))}/></div>
-                                            <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">배우자 월 연금</label><input type="text" className="sim-input text-right" value={simInputs.pensionSpouse} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, pensionSpouse: v}))}/></div>
+                                            <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">배우자 월 연금</label><input type="text" className="sim-input text-right" value={simInputs.pensionSpouse} onChange={e=>handleCommaChange(v=>setSimInputs({...simInputs, pensionSpouse: v}))}/></div>
                                         </div>
                                     </div>
                                     
@@ -1377,15 +1329,15 @@
                                             </tbody>
                                         </table>
                                     </div>
-                                    <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-dashed dark:border-slate-700">
-                                        <h4 className="text-[10px] font-black text-slate-500 mb-2">자산별 잔액 상태 가이드</h4>
+                                    <div className="mt-4 p-4 bg-slate-100 dark:bg-slate-100 rounded-xl border border-dashed border-slate-300 dark:border-slate-400">
+                                        <h4 className="text-[10px] font-black !text-black mb-2">자산별 잔액 상태 가이드</h4>
                                         <div className="flex flex-wrap gap-4 text-[9px] font-bold">
-                                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-red-500"></div><span className="dark:text-slate-300">본인 일반</span></div>
-                                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-amber-500"></div><span className="dark:text-slate-300">배우자 일반</span></div>
-                                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-purple-500"></div><span className="dark:text-slate-300">공모주</span></div>
-                                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-blue-500"></div><span className="dark:text-slate-300">배우자 ISA</span></div>
-                                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500"></div><span className="dark:text-slate-300">본인 ISA</span></div>
-                                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-slate-200 dark:bg-slate-700"></div><span className="dark:text-slate-400">자산 고갈</span></div>
+                                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-red-500"></div><span className="!text-black">본인 일반</span></div>
+                                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-amber-500"></div><span className="!text-black">배우자 일반</span></div>
+                                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-purple-500"></div><span className="!text-black">공모주</span></div>
+                                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-blue-500"></div><span className="!text-black">배우자 ISA</span></div>
+                                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500"></div><span className="!text-black">본인 ISA</span></div>
+                                            <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-slate-200 dark:bg-slate-700"></div><span className="!text-black">자산 고갈</span></div>
                                         </div>
                                     </div>
                                 </div>
