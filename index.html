@@ -522,8 +522,8 @@
 
             const renderDashboard = () => (
                 <div className="space-y-6 animate-fade-in pb-10">
-                    {/* 티커창: 가려짐 개선을 위해 높이를 세로로 확장 (h-24) */}
-                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow h-24 sm:h-24 overflow-hidden border dark:border-slate-700 relative flex items-center">
+                    {/* 티커창: 모바일 가려짐 개선을 위해 모바일에서 높이를 h-32로 더 확장, 데스크톱은 h-24 유지 */}
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow h-32 sm:h-24 overflow-hidden border dark:border-slate-700 relative flex items-center">
                         <TradingViewTicker theme={isDark ? 'dark' : 'light'} />
                     </div>
                     
