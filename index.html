@@ -34,17 +34,21 @@
         .nav-container { overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
         .nav-container::-webkit-scrollbar { display: none; }
 
+        /* 티커 모바일 줄바꿈 방지 및 최적화 */
         .ticker-fallback {
             display: flex;
             white-space: nowrap;
             overflow: hidden;
             align-items: center;
             height: 100%;
+            width: 100%;
         }
         .ticker-scroll {
-            display: inline-block;
-            animation: tickerScroll 30s linear infinite;
-            padding-left: 100%;
+            display: inline-flex;
+            gap: 2rem;
+            animation: tickerScroll 40s linear infinite;
+            padding-left: 20px;
+            white-space: nowrap;
         }
         @keyframes tickerScroll {
             0% { transform: translateX(0); }
@@ -154,22 +158,22 @@
 
                 const checkTimer = setTimeout(() => {
                     if (container.querySelector('iframe')) setIsLoaded(true);
-                }, 2000);
+                }, 2500);
 
                 return () => clearTimeout(checkTimer);
             }, [theme]);
 
             return (
-                <div className="relative w-full h-full overflow-hidden">
-                    <div className={`tradingview-widget-container ${isLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500`} ref={containerRef}></div>
+                <div className="relative w-full h-full overflow-hidden flex items-center">
+                    <div className={`tradingview-widget-container w-full ${isLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500`} ref={containerRef}></div>
                     {!isLoaded && (
-                        <div className="absolute inset-0 ticker-fallback text-xs font-bold text-slate-400 dark:text-white">
-                            <div className="ticker-scroll flex gap-8">
-                                <span><i className="fa-solid fa-chart-line mr-1"></i> S&P 500: 데이터 연결 중...</span>
-                                <span><i className="fa-solid fa-money-bill-1-wave mr-1"></i> USD/KRW: 1,380.00</span>
-                                <span><i className="fa-brands fa-bitcoin mr-1"></i> BTC/USDT: 실시간 연결 중</span>
-                                <span><i className="fa-solid fa-coins mr-1"></i> GOLD: 시세 로딩 중...</span>
-                                <span><i className="fa-solid fa-chart-line mr-1"></i> KOSPI: 정보 수신 중</span>
+                        <div className="absolute inset-0 ticker-fallback text-[11px] font-bold text-slate-500 dark:text-slate-300">
+                            <div className="ticker-scroll">
+                                <span><i className="fa-solid fa-chart-line mr-1 text-blue-500"></i> S&P 500: 지수 로딩 중...</span>
+                                <span><i className="fa-solid fa-money-bill-1-wave mr-1 text-emerald-500"></i> USD/KRW: 1,380.00</span>
+                                <span><i className="fa-brands fa-bitcoin mr-1 text-orange-500"></i> BTC/USDT: 실시간 연결 중</span>
+                                <span><i className="fa-solid fa-coins mr-1 text-yellow-500"></i> GOLD: 시세 수신 중...</span>
+                                <span><i className="fa-solid fa-chart-line mr-1 text-red-500"></i> KOSPI: 정보 로딩 중...</span>
                             </div>
                         </div>
                     )}
@@ -345,9 +349,14 @@
                 else document.documentElement.classList.remove('dark');
             }, [isDark]);
 
+            // 종목 검색 함수: 빈 검색어 시 네이버 증권으로 연결
             const searchSymbol = (query) => {
-                if(!query) return;
-                const url = /[a-zA-Z]/.test(query) ? `https://finance.naver.com/world/sise.naver?symbol=${query.trim().toUpperCase()}` : `https://finance.naver.com/item/main.naver?code=${query.trim()}`;
+                if(!query || query.trim() === "") {
+                    window.open('https://stock.naver.com/', '_blank');
+                    return;
+                }
+                const trimmed = query.trim();
+                const url = /[a-zA-Z]/.test(trimmed) ? `https://finance.naver.com/world/sise.naver?symbol=${trimmed.toUpperCase()}` : `https://finance.naver.com/item/main.naver?code=${trimmed}`;
                 window.open(url, '_blank');
             };
 
@@ -513,9 +522,11 @@
 
             const renderDashboard = () => (
                 <div className="space-y-6 animate-fade-in pb-10">
-                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow h-16 overflow-hidden border dark:border-slate-700">
+                    {/* 티커창: 줄바꿈 방지 및 높이 고정 */}
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow h-16 sm:h-20 overflow-hidden border dark:border-slate-700 relative flex items-center">
                         <TradingViewTicker theme={isDark ? 'dark' : 'light'} />
                     </div>
+                    
                     <div className="bg-white dark:bg-slate-800 p-1 rounded-xl shadow h-[400px] border dark:border-slate-700 flex flex-col">
                         <div className="p-3 border-b dark:border-slate-700 flex justify-between items-center font-bold">
                             <span className="dark:text-white">S&P 500 히트맵</span>
@@ -529,7 +540,7 @@
                         <div className="bg-white dark:bg-slate-800 rounded-xl shadow border dark:border-slate-700 p-5 font-bold">
                             <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-indigo-500 dark:text-indigo-400"><i className="fa-solid fa-magnifying-glass-chart"></i> 종목 검색</h3>
                             <div className="flex flex-col sm:flex-row gap-2 mb-4">
-                                <input type="text" id="mainSearch" placeholder="종목명 또는 코드" className="flex-1 p-3 border-2 border-indigo-200 dark:border-indigo-900 rounded-lg dark:bg-slate-700 outline-none w-full dark:text-white dark:placeholder-slate-300" onKeyPress={e=>e.key==='Enter'&&searchSymbol(e.target.value)} />
+                                <input type="text" id="mainSearch" placeholder="종목명 또는 코드 (공백 시 네이버 증권)" className="flex-1 p-3 border-2 border-indigo-200 dark:border-indigo-900 rounded-lg dark:bg-slate-700 outline-none w-full dark:text-white dark:placeholder-slate-300" onKeyPress={e=>e.key==='Enter'&&searchSymbol(e.target.value)} />
                                 <button onClick={() => searchSymbol(document.getElementById('mainSearch').value)} className="bg-indigo-600 text-white px-6 py-3 sm:py-0 rounded-lg font-bold w-full sm:w-auto">검색</button>
                             </div>
                             <div className="flex flex-wrap gap-2 mb-6">
@@ -758,7 +769,6 @@
                                     </div>
                                 ))}
                             </div>
-                            {/* 결과 섹션: 다크모드 시인성 개선 */}
                             <div className="tool-result-container bg-emerald-50/50 dark:bg-emerald-900/40 border-emerald-200 dark:border-emerald-700/50 pb-1 mb-2">
                                 <div className="flex justify-between items-center text-[10px] border-b dark:border-slate-700 pb-1 mb-2">
                                     <span className="text-slate-500 dark:text-slate-200 font-bold">합계 수량</span>
@@ -918,7 +928,7 @@
                                     </h3>
                                     
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700">
+                                        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 shadow-sm">
                                             <p className="text-[11px] font-black text-black dark:text-white mb-2 flex items-center gap-1">
                                                 <i className="fa-solid fa-circle text-[6px] text-slate-400"></i> 금융소득만 있을 때 정산액
                                             </p>
@@ -1131,7 +1141,7 @@
                                         </div>
                                         <div className="flex flex-col bg-rose-50 dark:bg-rose-900/20 p-2 rounded">
                                             <label className="text-[10px] text-rose-500 dark:text-rose-400 font-black">간병기 의료/간병비(월)</label>
-                                            <input type="text" className="sim-input !mt-1 !p-1 text-right text-rose-700 dark:text-white" placeholder="0" value={simInputs.monthlyMedical} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, monthlyMedical:v}))}/>
+                                            <input type="text" className="sim-input !mt-1 !p-1 text-right text-rose-700 dark:white" placeholder="0" value={simInputs.monthlyMedical} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, monthlyMedical:v}))}/>
                                         </div>
                                         <div className="grid grid-cols-2 gap-3 pt-2">
                                             <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">본인 월 연금</label><input type="text" className="sim-input text-right" value={simInputs.pensionSelf} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, pensionSelf: v}))}/></div>
@@ -1324,7 +1334,7 @@
                                             </tbody>
                                         </table>
                                     </div>
-                                    <div className="mt-4 p-4 bg-slate-100 dark:bg-slate-100 rounded-xl border border-dashed border-slate-300 dark:border-slate-400">
+                                    <div className="mt-4 p-4 bg-slate-100 rounded-xl border border-dashed border-slate-300">
                                         <h4 className="text-[10px] font-black !text-black mb-2">자산별 잔액 상태 가이드</h4>
                                         <div className="flex flex-wrap gap-4 text-[9px] font-bold">
                                             <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-red-500"></div><span className="!text-black">본인 일반</span></div>
