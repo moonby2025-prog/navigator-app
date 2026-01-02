@@ -227,7 +227,7 @@
                     { name: "은시세(순수한금)", url: "https://blog.naver.com/wolfkickbox", icon: "fa-blog", color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300" }
                 ],
                 "💰 공모주 & 실적 (IPO & Earnings)": [
-                    { name: "38 커뮤니케이션", url: "http://www.38.co.kr/html/fund/index.htm?gjbcd=1460", icon: "fa-building", color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300" },
+                    { name: "38 커뮤니케이션", url: "http://www.38.co.kr/html/fund/index.htm?gjbcd=1460", icon: "fa-building", color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-blue-300" },
                     { name: "DART (전자공시)", url: "https://dart.fss.or.kr/", icon: "fa-file-signature", color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300" },
                     { name: "KIND (기업공시)", url: "https://kind.krx.co.kr/", icon: "fa-file-invoice", color: "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-300" },
                     { name: "KRX 정보데이터시스템", url: "http://data.krx.co.kr/", icon: "fa-database", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300" },
@@ -522,8 +522,8 @@
 
             const renderDashboard = () => (
                 <div className="space-y-6 animate-fade-in pb-10">
-                    {/* 티커창: 모바일 가려짐 개선을 위해 모바일에서 높이를 h-32로 더 확장, 데스크톱은 h-24 유지 */}
-                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow h-32 sm:h-24 overflow-hidden border dark:border-slate-700 relative flex items-center">
+                    {/* 티커창: 모바일 가려짐 개선을 위해 모바일에서 높이를 h-[120px](약 h-30)로 조정, 데스크톱은 h-24 유지 */}
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow h-[120px] sm:h-24 overflow-hidden border dark:border-slate-700 relative flex items-center">
                         <TradingViewTicker theme={isDark ? 'dark' : 'light'} />
                     </div>
                     
@@ -1187,9 +1187,10 @@
                                         <div className="flex items-center gap-2 w-full sm:w-auto">
                                             <span className="hidden sm:block text-[9px] text-slate-400 font-normal">컬럼 선택으로 가독성을 조절하세요.</span>
                                             <div className="relative w-full sm:w-auto">
+                                                {/* 다크모드에서 시인성을 위해 배경색을 밝은 회색(bg-slate-100/200)으로 고정하고 글자색을 검정으로 강제함 */}
                                                 <button 
                                                     onClick={() => setIsSimColMenuOpen(!isSimColMenuOpen)}
-                                                    className="w-full sm:w-auto bg-slate-100 dark:bg-slate-700 border dark:border-slate-600 px-3 py-1.5 rounded-lg text-xs font-black flex items-center justify-center gap-2 hover:bg-slate-200 dark:text-white"
+                                                    className="w-full sm:w-auto bg-slate-100 dark:bg-slate-200 border border-slate-300 dark:border-slate-400 px-3 py-1.5 rounded-lg text-xs font-black flex items-center justify-center gap-2 hover:bg-slate-200 !text-black"
                                                 >
                                                     <i className="fa-solid fa-gear"></i> 항목 선택
                                                 </button>
