@@ -93,6 +93,67 @@
             'INR': { krw: 16.5 }
         };
 
+        // 초기 즐겨찾기 데이터 정의 (LocalStorage 복구용)
+        const DEFAULT_FAVORITES = [
+            { code: "005930", name: "삼성전자" }, { code: "005380", name: "현대차" }, 
+            { code: "237690", name: "에스티팜" }, { code: "445680", name: "큐리옥스" }
+        ];
+
+        // 초기 데이터 정의 (LocalStorage 복구용)
+        const DEFAULT_ROUTINE_LINKS = {
+            "🌅 아침 필수 체크 (Morning Routine)": [
+                { name: "미국 시장 점검", url: "https://kr.investing.com/portfolio/?portfolioID=OT4%2BZDRrZTFjM2thYTthYg%3D%3D", icon: "fa-list-check", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" },
+                { name: "Finviz (미국 맵)", url: "https://finviz.com/map.ashx", icon: "fa-map", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" },
+                { name: "필라델피아 반도체", url: "https://kr.investing.com/indices/phlx-semiconductor", icon: "fa-microchip", color: "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300" },
+                { name: "공포 탐욕 지수 (CNN)", url: "https://edition.cnn.com/markets/fear-and-greed", icon: "fa-gauge-high", color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300" },
+                { name: "크립토 지표 (MVRV)", url: "https://www.bitcoinmagazinepro.com/charts/mvrv-zscore/", icon: "fa-chart-area", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300" },
+                { name: "SILVER (은 실시간)", url: "https://kr.investing.com/currencies/xag-usd", icon: "fa-coins", color: "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-100" },
+                { name: "은시세(순수한금)", url: "https://blog.naver.com/wolfkickbox", icon: "fa-blog", color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300" },
+                { name: "실버팩토리 (카페)", url: "https://cafe.naver.com/7silverfactory7", icon: "fa-comments", color: "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-100" }
+            ],
+            "💰 공모주 & 실적 (IPO & Earnings)": [
+                { name: "38 커뮤니케이션", url: "http://www.38.co.kr/html/fund/index.htm?gjbcd=1460", icon: "fa-building", color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-blue-300" },
+                { name: "DART (전자공시)", url: "https://dart.fss.or.kr/", icon: "fa-file-signature", color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300" },
+                { name: "KIND (기업공시)", url: "https://kind.krx.co.kr/", icon: "fa-file-invoice", color: "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-300" },
+                { name: "KRX 정보데이터시스템", url: "http://data.krx.co.kr/", icon: "fa-database", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300" },
+                { name: "Seibro (증권정보포털)", url: "https://seibro.or.kr/", icon: "fa-server", color: "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-blue-300" },
+                { name: "종목별 외국인 국적분류", url: "https://data.krx.co.kr/contents/MDC/HARD/hardController/MDCHARD053.cmd", icon: "fa-globe", color: "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300" }
+            ],
+            "📈 국내 시장 심층 (Korea Market)": [
+                { name: "Npay 증권", url: "https://stock.naver.com/", icon: "fa-n", color: "bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-300" },
+                { name: "버틀러 (Butler)", url: "https://www.butler.works/ko/home", icon: "fa-chart-line", color: "bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-300" },
+                { name: "한경 컨센서스", url: "https://markets.hankyung.com/consensus", icon: "fa-book-open", color: "bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-300" },
+                { name: "SMIC (서울대 리서치)", url: "http://snusmic.com/research/", icon: "fa-graduation-cap", color: "bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-100" },
+                { name: "FDA 승인 실시간", url: "https://www.youtube.com/user/USFoodandDrugAdmin", icon: "fa-video", color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300" },
+                { name: "주식/부동산 모아봐", url: "http://moabbs.com/blogs/lists", icon: "fa-users", color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300" },
+                { name: "전자잡지 (모아진)", url: "https://lib.ice.go.kr/elib/module/elib/moazine.do?menu_idx=37", icon: "fa-book-open", color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300" }
+            ],
+            "🏡 일상 & 부동산 (Daily Life)": [
+                { name: "호갱노노", url: "https://hogangnono.com/", icon: "fa-map-pin", color: "bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-300" },
+                { name: "네이버 부동산", url: "https://land.naver.com/", icon: "fa-building", color: "bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-300" },
+                { name: "밸류맵 (토지/건물)", url: "https://www.valueupmap.com/", icon: "fa-map", color: "bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-300" },
+                { name: "대법원 인터넷등기소", url: "http://www.iros.go.kr/", icon: "fa-scale-balanced", color: "bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-100" },
+                { name: "민원24 (정부24)", url: "https://www.gov.kr/", icon: "fa-id-card", color: "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-300" },
+                { name: "국세청 홈택스", url: "https://www.hometax.go.kr/", icon: "fa-file-invoice-dollar", color: "bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-100" },
+                { name: "네이버 지도", url: "https://map.naver.com/", icon: "fa-location-dot", color: "bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-300" },
+                { name: "구글 지도", url: "https://maps.google.com/", icon: "fa-location-dot", color: "bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-300" }
+            ]
+        };
+
+        const DEFAULT_BLOG_LINKS = {
+            "🧬 큐리옥스바이오시스템즈": [
+                {name: "한계를 깨는 사람", url: "https://blog.naver.com/unlimitedi", icon: "fa-dna", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"},
+                {name: "나는 전설이다", url: "https://blog.naver.com/legendyu", icon: "fa-star", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"},
+                {name: "이공계", url: "https://blog.naver.com/shyny38", icon: "fa-flask", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"},
+                {name: "공대생 주접노트", url: "https://blog.naver.com/b_g-duck", icon: "fa-pen-clip", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"}
+            ],
+            "💊 에스티팜": [
+                {name: "오재복", url: "https://blog.naver.com/hym090206", icon: "fa-user-tie", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"},
+                {name: "왠지상쾌한사람", url: "https://blog.naver.com/aphorism86", icon: "fa-wind", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"},
+                {name: "Chan", url: "https://blog.naver.com/chany2do", icon: "fa-bolt", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"}
+            ]
+        };
+
         const formatNumber = (num) => {
             if (num === null || num === undefined || isNaN(num)) return '0';
             return Math.round(num).toLocaleString('ko-KR');
@@ -211,59 +272,49 @@
             const [newFav, setNewFav] = useState({ name: '', code: '' });
             const [newRoutine, setNewRoutine] = useState({ category: '', name: '', url: '' });
 
-            const [favorites, setFavorites] = useState([
-                { code: "005930", name: "삼성전자" }, { code: "005380", name: "현대차" }, 
-                { code: "237690", name: "에스티팜" }, { code: "445680", name: "큐리옥스" }
-            ]);
-
-            const [routineLinks, setRoutineLinks] = useState({
-                "🌅 아침 필수 체크 (Morning Routine)": [
-                    { name: "미국 시장 점검", url: "https://kr.investing.com/portfolio/?portfolioID=OT4%2BZDRrZTFjM2thYTthYg%3D%3D", icon: "fa-list-check", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" },
-                    { name: "Finviz (미국 맵)", url: "https://finviz.com/map.ashx", icon: "fa-map", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" },
-                    { name: "필라델피아 반도체", url: "https://kr.investing.com/indices/phlx-semiconductor", icon: "fa-microchip", color: "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300" },
-                    { name: "공포 탐욕 지수 (CNN)", url: "https://edition.cnn.com/markets/fear-and-greed", icon: "fa-gauge-high", color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300" },
-                    { name: "크립토 지표 (MVRV)", url: "https://www.bitcoinmagazinepro.com/charts/mvrv-zscore/", icon: "fa-chart-area", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300" },
-                    { name: "SILVER (은 실시간)", url: "https://kr.investing.com/currencies/xag-usd", icon: "fa-coins", color: "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-100" },
-                    { name: "은시세(순수한금)", url: "https://blog.naver.com/wolfkickbox", icon: "fa-blog", color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300" }
-                ],
-                "💰 공모주 & 실적 (IPO & Earnings)": [
-                    { name: "38 커뮤니케이션", url: "http://www.38.co.kr/html/fund/index.htm?gjbcd=1460", icon: "fa-building", color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-blue-300" },
-                    { name: "DART (전자공시)", url: "https://dart.fss.or.kr/", icon: "fa-file-signature", color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300" },
-                    { name: "KIND (기업공시)", url: "https://kind.krx.co.kr/", icon: "fa-file-invoice", color: "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-300" },
-                    { name: "KRX 정보데이터시스템", url: "http://data.krx.co.kr/", icon: "fa-database", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300" },
-                    { name: "Seibro (증권정보포털)", url: "https://seibro.or.kr/", icon: "fa-server", color: "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-blue-300" },
-                    { name: "종목별 외국인 국적분류", url: "https://data.krx.co.kr/contents/MDC/HARD/hardController/MDCHARD053.cmd", icon: "fa-globe", color: "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300" }
-                ],
-                "📈 국내 시장 심층 (Korea Market)": [
-                    { name: "네이버 금융", url: "https://finance.naver.com/", icon: "fa-n", color: "bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-300" },
-                    { name: "버틀러 (Butler)", url: "https://www.butler.works/ko/home", icon: "fa-chart-line", color: "bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-300" },
-                    { name: "한경 컨센서스", url: "https://markets.hankyung.com/consensus", icon: "fa-book-open", color: "bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-300" },
-                    { name: "SMIC (서울대 리서치)", url: "http://snusmic.com/research/", icon: "fa-graduation-cap", color: "bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-100" },
-                    { name: "FDA 승인 실시간", url: "https://www.youtube.com/user/USFoodandDrugAdmin", icon: "fa-video", color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300" },
-                    { name: "주식/부동산 모아봐", url: "http://moabbs.com/blogs/lists", icon: "fa-users", color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300" },
-                    { name: "전자잡지 (모아진)", url: "https://lib.ice.go.kr/elib/module/elib/moazine.do?menu_idx=37", icon: "fa-book-open", color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300" }
-                ],
-                "🏡 일상 & 부동산 (Daily Life)": [
-                    { name: "호갱노노", url: "https://hogangnono.com/", icon: "fa-map-pin", color: "bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-300" },
-                    { name: "네이버 부동산", url: "https://land.naver.com/", icon: "fa-building", color: "bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-300" },
-                    { name: "네이버 지도", url: "https://map.naver.com/", icon: "fa-location-dot", color: "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-300" },
-                    { name: "구글 지도", url: "https://maps.google.com/", icon: "fa-location-dot", color: "bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-300" }
-                ]
+            // [수정됨] LocalStorage에서 즐겨찾기 불러오기, 없으면 기본값 사용
+            const [favorites, setFavorites] = useState(() => {
+                try {
+                    const saved = localStorage.getItem('invNav_favorites');
+                    return saved ? JSON.parse(saved) : DEFAULT_FAVORITES;
+                } catch (e) {
+                    return DEFAULT_FAVORITES;
+                }
             });
 
-            const [blogInsightLinks, setBlogInsightLinks] = useState({
-                "🧬 큐리옥스바이오시스템즈": [
-                    {name: "한계를 깨는 사람", url: "https://blog.naver.com/unlimitedi", icon: "fa-dna", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"},
-                    {name: "나는 전설이다", url: "https://blog.naver.com/legendyu", icon: "fa-star", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"},
-                    {name: "이공계", url: "https://blog.naver.com/shyny38", icon: "fa-flask", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"},
-                    {name: "공대생 주접노트", url: "https://blog.naver.com/b_g-duck", icon: "fa-pen-clip", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"}
-                ],
-                "💊 에스티팜": [
-                    {name: "오재복", url: "https://blog.naver.com/hym090206", icon: "fa-user-tie", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"},
-                    {name: "왠지상쾌한사람", url: "https://blog.naver.com/aphorism86", icon: "fa-wind", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"},
-                    {name: "Chan", url: "https://blog.naver.com/chany2do", icon: "fa-bolt", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"}
-                ]
+            // [수정됨] LocalStorage에서 루틴 링크 불러오기, 없으면 기본값 사용
+            const [routineLinks, setRoutineLinks] = useState(() => {
+                try {
+                    const saved = localStorage.getItem('invNav_routineLinks');
+                    return saved ? JSON.parse(saved) : DEFAULT_ROUTINE_LINKS;
+                } catch (e) {
+                    return DEFAULT_ROUTINE_LINKS;
+                }
             });
+
+            // [수정됨] LocalStorage에서 블로그 링크 불러오기, 없으면 기본값 사용
+            const [blogInsightLinks, setBlogInsightLinks] = useState(() => {
+                try {
+                    const saved = localStorage.getItem('invNav_blogLinks');
+                    return saved ? JSON.parse(saved) : DEFAULT_BLOG_LINKS;
+                } catch (e) {
+                    return DEFAULT_BLOG_LINKS;
+                }
+            });
+
+            // [추가됨] 즐겨찾기 변경 시 LocalStorage에 자동 저장
+            useEffect(() => {
+                localStorage.setItem('invNav_favorites', JSON.stringify(favorites));
+            }, [favorites]);
+
+            // [추가됨] 데이터 변경 시 LocalStorage에 자동 저장
+            useEffect(() => {
+                localStorage.setItem('invNav_routineLinks', JSON.stringify(routineLinks));
+            }, [routineLinks]);
+
+            useEffect(() => {
+                localStorage.setItem('invNav_blogLinks', JSON.stringify(blogInsightLinks));
+            }, [blogInsightLinks]);
 
             const [targetInputs, setTargetInputs] = useState({ mode: 'cap', price: '', shares: '', currentCap: '', targetCap: '', targetRate: '' });
             const [ipoCalcInputs, setIpoCalcInputs] = useState({ price: '', qty: '', fee: '', rate: 50 });
@@ -276,9 +327,9 @@
                 currentAge: 52, spouseCurrentAge: 48, simulationStartAge: 53, 
                 pensionStartAgeUser: 65, pensionStartAgeSpouse: 65,
                 highCostStartAge: 80,
-                capUserNonISA: 2.0, capSpouseNonISA: 0.0, capUserISA: 2.5, capSpouseISA: 1.5, 
-                capIPO: 2.0,
-                returnUserNonISA: 5.0, returnSpouseNonISA: 0.0, 
+                capUserNonISA: 0.0, capSpouseNonISA: 0.0, capUserISA: 2.0, capSpouseISA: 1.0, 
+                capIPO: 5.0,
+                returnUserNonISA: 0.0, returnSpouseNonISA: 0.0, 
                 returnUserISA: 5.0, returnSpouseISA: 5.0, 
                 returnIPO: 4.0, 
                 returnCMA: 2.0, 
@@ -446,11 +497,23 @@
                         }
                     } else {
                         let rem = Math.abs(netChange);
-                        let w1 = Math.min(rem, cUserNon); cUserNon -= w1; rem -= w1;
-                        let w2 = Math.min(rem, cSpouseNon); cSpouseNon -= w2; rem -= w2;
+                        // 요청된 자산 사용 순서: 공모주 -> 배우자 일반 -> 본인 일반 -> 배우자 ISA -> 본인 ISA
+                        
+                        // 1순위: 공모주 자산
                         let wIPO = Math.min(rem, cIPO); cIPO -= wIPO; rem -= wIPO;
+                        
+                        // 2순위: 배우자 일반
+                        let w2 = Math.min(rem, cSpouseNon); cSpouseNon -= w2; rem -= w2;
+                        
+                        // 3순위: 본인 일반
+                        let w1 = Math.min(rem, cUserNon); cUserNon -= w1; rem -= w1;
+                        
+                        // 4순위: 배우자 ISA
                         let w3 = Math.min(rem, cSpouseISA); cSpouseISA -= w3; rem -= w3;
+                        
+                        // 5순위: 본인 ISA
                         let w4 = Math.min(rem, cUserISA); cUserISA -= w4; rem -= w4;
+                        
                         if (rem > 0 && !depletionYear) depletionYear = age;
                     }
 
