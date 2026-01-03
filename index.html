@@ -101,6 +101,7 @@
             "🌅 아침 필수 체크 (Morning Routine)": [
                 { name: "미국 시장 점검", url: "https://kr.investing.com/portfolio/?portfolioID=OT4%2BZDRrZTFjM2thYTthYg%3D%3D", icon: "fa-list-check", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" },
                 { name: "Finviz (미국 맵)", url: "https://finviz.com/map.ashx", icon: "fa-map", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" },
+                { name: "글로벌마켓캡", url: "https://companiesmarketcap.com/", icon: "fa-chart-pie", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300" },
                 { name: "필라델피아 반도체", url: "https://kr.investing.com/indices/phlx-semiconductor", icon: "fa-microchip", color: "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300" },
                 { name: "공포 탐욕 지수 (CNN)", url: "https://edition.cnn.com/markets/fear-and-greed", icon: "fa-gauge-high", color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300" },
                 { name: "크립토 지표 (MVRV)", url: "https://www.bitcoinmagazinepro.com/charts/mvrv-zscore/", icon: "fa-chart-area", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300" },
@@ -388,9 +389,10 @@
                     ageAdj = -years;
                     amountMult = 1 - (years * 0.06);
                 } else if (strategy.startsWith('defer')) {
-                    const years = parseInt(strategy.replace('defer', ''));
-                    ageAdj = years;
-                    amountMult = 1 + (years * 0.072);
+                    const years = parseInt(strategy.replace('early', '')); // Fixed logic: should handle defer properly
+                    const deferYears = parseInt(strategy.replace('defer', ''));
+                    ageAdj = deferYears;
+                    amountMult = 1 + (deferYears * 0.072);
                 }
                 return { startAge: 65 + ageAdj, monthlyAmount: baseAmount * amountMult };
             };
@@ -436,7 +438,10 @@
                     if (age >= userPenInfo.startAge) pension += userPenInfo.monthlyAmount * 12; 
                     if (spouseAge >= spousePenInfo.startAge) pension += spousePenInfo.monthlyAmount * 12;
                     
-                    const baseIncomeAtYear = (pension + initOtherTotal) * pInf;
+                    const annualPension = pension * pInf;
+                    const annualOthers = initOtherTotal * pInf;
+                    const baseIncomeAtYear = annualPension + annualOthers;
+                    
                     const grossUserNon = cUserNon * (s.returnUserNonISA / 100);
                     const grossSpouseNon = cSpouseNon * (s.returnSpouseNonISA / 100);
                     const ipoCmaProfit = cIPO * (s.returnCMA / 100); 
@@ -485,7 +490,12 @@
                         separateExemptProfit: separateExemptProfitAtYear, baseIncome: baseIncomeAtYear,
                         annualProfit: annualProfitTotal, netChange: netChange, un: cUserNon, sn: cSpouseNon, 
                         ui: cUserISA, si: cSpouseISA, cip: cIPO, isHighCost,
-                        medicalShare: (lateLifeMedicalAnnual / livingCost) * 100, isWarn: currentTotal < targetLegacyValue 
+                        medicalShare: (lateLifeMedicalAnnual / livingCost) * 100, isWarn: currentTotal < targetLegacyValue,
+                        details: {
+                            taxable: { u: grossUserNon, s: grossSpouseNon, c: ipoCmaProfit },
+                            exempt: { i: ipoCapitalProfit, ui: grossUserISA, si: grossSpouseISA },
+                            income: { p: annualPension, o: annualOthers }
+                        }
                     });
                     if (currentTotal <= 0 && year > 1) break;
                 }
@@ -833,25 +843,36 @@
                             <div className="animate-fade-in pb-10 font-bold space-y-6">
                                 <h2 className="text-xl sm:text-2xl font-black mb-4 border-b dark:border-slate-700 pb-2 flex flex-col sm:flex-row sm:items-center gap-3 dark:text-white">
                                     노후 자금 시뮬레이션
-                                    <span className="text-[10px] sm:text-xs bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-200 px-2 py-1 rounded font-black w-max">v3.3 연금 전략 옵션 추가</span>
+                                    <span className="text-[10px] sm:text-xs bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-200 px-2 py-1 rounded font-black w-max">v3.5 수익 분석 체계 고도화</span>
                                 </h2>
 
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                                     <div className="guide-card border-l-4 border-l-blue-500 bg-blue-50 dark:bg-blue-900/10 flex gap-4 items-start h-full">
                                         <div className="bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 p-3 rounded-lg flex-shrink-0"><i className="fa-solid fa-clock-rotate-left text-xl"></i></div>
                                         <div className="text-[10px] sm:text-xs space-y-1">
-                                            <h3 className="font-black text-blue-700 dark:text-blue-300 mb-1">국민연금 수령 전략 가이드</h3>
-                                            <p className="text-slate-500 dark:text-white font-bold">• <strong>조기 수령:</strong> 1년 일찍 받을 때마다 6% 감액 (최대 5년, 70% 지급)</p>
-                                            <p className="text-slate-500 dark:text-white font-bold">• <strong>연기 수령:</strong> 1년 늦게 받을 때마다 7.2% 증액 (최대 5년, 136% 지급)</p>
-                                            <p className="text-slate-500 dark:text-white font-bold">• 본 시뮬레이션은 65세를 기준점으로 전략에 따라 시점과 금액을 자동 산출합니다.</p>
+                                            <h3 className="font-black text-blue-700 dark:text-blue-300 mb-1">국민연금 수령 전략</h3>
+                                            <p className="text-slate-500 dark:text-white font-bold">• <strong>조기 수령:</strong> 1년당 6% 감액 (최대 -30%)</p>
+                                            <p className="text-slate-500 dark:text-white font-bold">• <strong>연기 수령:</strong> 1년당 7.2% 증액 (최대 +36%)</p>
+                                            <p className="text-slate-500 dark:text-white font-bold">• 하단 입력창에서 본인/배우자 전략을 선택하세요.</p>
                                         </div>
                                     </div>
                                     <div className="guide-card border-l-4 border-l-amber-500 flex gap-4 items-start h-full">
                                         <div className="bg-amber-100 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 p-3 rounded-lg flex-shrink-0"><i className="fa-solid fa-lightbulb text-xl"></i></div>
                                         <div className="text-[10px] sm:text-xs space-y-1">
-                                            <h3 className="font-black text-amber-700 dark:text-amber-300 mb-1">지출 곡선 시뮬레이션 원리 (U-Shape)</h3>
-                                            <p className="text-slate-500 dark:text-white font-bold">• <strong>활동기:</strong> 기본 생활비의 110% 지출 / <strong>쇠퇴기:</strong> 90% 수준 하락</p>
-                                            <p className="text-slate-500 dark:text-white font-bold">• <strong>간병기:</strong> 생활비 70% 급감 + 입력하신 <strong>의료/간병비</strong> 추가 합산 (황금색 배경 표시)</p>
+                                            <h3 className="font-black text-amber-700 dark:text-amber-300 mb-1">지출 곡선 (U-Shape)</h3>
+                                            <p className="text-slate-500 dark:text-white font-bold">• <strong>활동기:</strong> 생활비 110% / <strong>쇠퇴기:</strong> 90% 하락</p>
+                                            <p className="text-slate-500 dark:text-white font-bold">• <strong>간병기:</strong> 생활비 70% + <strong>의료/간병비</strong> 추가</p>
+                                            <p className="text-slate-500 dark:text-white font-bold">• 테이블에서 황금색 배경으로 자동 표시됩니다.</p>
+                                        </div>
+                                    </div>
+                                    {/* 신규 추가: 수익 구성 요소 가이드 */}
+                                    <div className="guide-card border-l-4 border-l-indigo-500 flex gap-4 items-start h-full">
+                                        <div className="bg-indigo-100 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 p-3 rounded-lg flex-shrink-0"><i className="fa-solid fa-layer-group text-xl"></i></div>
+                                        <div className="text-[10px] sm:text-xs space-y-1">
+                                            <h3 className="font-black text-indigo-700 dark:text-indigo-300 mb-1">수익 구성 요소 가이드</h3>
+                                            <p className="font-bold flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> <strong>종합과세:</strong> 일반 자산 수익 + CMA 이자</p>
+                                            <p className="font-bold flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> <strong>비과세:</strong> 공모주 매각 차익 + ISA 계좌 전체</p>
+                                            <p className="font-bold flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> <strong>기타:</strong> 국민연금 + 연간 기타 소득(임대 등)</p>
                                         </div>
                                     </div>
                                 </div>
@@ -864,8 +885,6 @@
                                             <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">배우자 현재</label><input type="number" className="sim-input" value={simInputs.spouseCurrentAge} onChange={e=>setSimInputs({...simInputs, spouseCurrentAge:parseInt(e.target.value)})}/></div>
                                             <div className="flex flex-col col-span-2"><label className="text-[10px] text-indigo-500 dark:text-indigo-300 font-bold">시뮬레이션 시작 나이</label><input type="number" className="sim-input border-indigo-300 dark:border-indigo-600" value={simInputs.simulationStartAge} onChange={e=>setSimInputs({...simInputs, simulationStartAge:parseInt(e.target.value)})}/></div>
                                             <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">간병기 전환</label><input type="number" className="sim-input" value={simInputs.highCostStartAge} onChange={e=>setSimInputs({...simInputs, highCostStartAge:parseInt(e.target.value)})}/></div>
-                                            
-                                            {/* 수정된 부분: 연금 기준점 가독성 개선 */}
                                             <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">연금 기준점</label><div className="sim-input bg-slate-100 dark:bg-slate-100 border-none flex items-center justify-center text-xs !text-black font-bold">65세</div></div>
                                             
                                             <div className="flex flex-col col-span-2 border-t dark:border-slate-700 pt-2">
@@ -995,7 +1014,6 @@
                                             연령별 상세 자금 흐름 분석
                                         </h3>
                                         <div className="flex items-center gap-2 w-full sm:w-auto">
-                                            <span className="hidden sm:block text-[9px] text-slate-400 font-normal">컬럼 선택으로 가독성을 조절하세요.</span>
                                             <div className="relative w-full sm:w-auto">
                                                 <button 
                                                     onClick={() => setIsSimColMenuOpen(!isSimColMenuOpen)}
@@ -1048,26 +1066,22 @@
                                                     
                                                     {simTableVisibleCols.taxable && (
                                                         <th className="px-2 py-3 border-b dark:border-slate-700 text-indigo-600 dark:text-indigo-400 text-right">
-                                                            종합과세 대상(원)<br/>
-                                                            <span className="text-[9px] font-normal opacity-70">(일반자산수익 + CMA이자)</span>
+                                                            종합과세 대상(원)
                                                         </th>
                                                     )}
                                                     {simTableVisibleCols.exempt && (
                                                         <th className="px-2 py-3 border-b dark:border-slate-700 text-emerald-600 dark:text-emerald-400 text-right">
-                                                            비과세/분리수익(원)<br/>
-                                                            <span className="text-[9px] font-normal opacity-70">(공모주차익 + ISA전체)</span>
+                                                            비과세/분리수익(원)
                                                         </th>
                                                     )}
                                                     {simTableVisibleCols.income && (
                                                         <th className="px-2 py-3 border-b dark:border-slate-700 text-blue-600 dark:text-blue-400 text-right">
-                                                            기타수입/연금(원)<br/>
-                                                            <span className="text-[9px] font-normal opacity-70">(연금 + 연간 기타소득)</span>
+                                                            기타수입/연금(원)
                                                         </th>
                                                     )}
                                                     {simTableVisibleCols.expense && (
                                                         <th className="px-2 py-3 border-b dark:border-slate-700 text-rose-600 dark:text-rose-400 text-right">
-                                                            총 지출(원)<br/>
-                                                            <span className="text-[9px] font-normal opacity-70">(생활+간병+세금+비상)</span>
+                                                            총 지출(원)
                                                         </th>
                                                     )}
                                                     {simTableVisibleCols.flow && (
@@ -1107,14 +1121,32 @@
 
                                                             {simTableVisibleCols.taxable && (
                                                                 <td className={`px-2 py-2.5 font-black num-font text-right ${h.taxableProfit > 20000000 ? 'text-red-500 underline' : 'text-indigo-600 dark:text-indigo-200'}`}>
-                                                                    {formatNumber(h.taxableProfit)}
+                                                                    <div className="text-[10px] mb-1">{formatNumber(h.taxableProfit)}</div>
+                                                                    <div className="text-[8px] opacity-70 leading-tight border-t dark:border-slate-600 mt-1 pt-1 font-normal">
+                                                                        본인: {formatNumber(h.details.taxable.u)}<br/>
+                                                                        배우자: {formatNumber(h.details.taxable.s)}<br/>
+                                                                        CMA: {formatNumber(h.details.taxable.c)}
+                                                                    </div>
                                                                 </td>
                                                             )}
                                                             {simTableVisibleCols.exempt && (
-                                                                <td className="px-2 py-2.5 text-emerald-600 dark:text-emerald-200 font-black num-font text-right">{formatNumber(h.separateExemptProfit)}</td>
+                                                                <td className="px-2 py-2.5 text-emerald-600 dark:text-emerald-200 font-black num-font text-right">
+                                                                    <div className="text-[10px] mb-1">{formatNumber(h.separateExemptProfit)}</div>
+                                                                    <div className="text-[8px] opacity-70 leading-tight border-t dark:border-slate-600 mt-1 pt-1 font-normal">
+                                                                        공모주: {formatNumber(h.details.exempt.i)}<br/>
+                                                                        본인ISA: {formatNumber(h.details.exempt.ui)}<br/>
+                                                                        배우자ISA: {formatNumber(h.details.exempt.si)}
+                                                                    </div>
+                                                                </td>
                                                             )}
                                                             {simTableVisibleCols.income && (
-                                                                <td className="px-2 py-2.5 text-blue-600 dark:text-blue-300 font-black num-font text-right">{formatNumber(h.baseIncome)}</td>
+                                                                <td className="px-2 py-2.5 text-blue-600 dark:text-blue-300 font-black num-font text-right">
+                                                                    <div className="text-[10px] mb-1">{formatNumber(h.baseIncome)}</div>
+                                                                    <div className="text-[8px] opacity-70 leading-tight border-t dark:border-slate-600 mt-1 pt-1 font-normal">
+                                                                        공적연금: {formatNumber(h.details.income.p)}<br/>
+                                                                        기타수입: {formatNumber(h.details.income.o)}
+                                                                    </div>
+                                                                </td>
                                                             )}
                                                             {simTableVisibleCols.expense && (
                                                                 <td className="px-2 py-2.5 num-font text-rose-600 dark:text-rose-300 font-black text-right">{formatNumber(totalExpense)}</td>
