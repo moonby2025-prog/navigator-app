@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Investment Navigator (투자 비서 - 은 투자 강화형)</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,69 +15,106 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
-        body { font-family: 'Noto Sans KR', sans-serif; letter-spacing: -0.02em; overflow-x: hidden; }
+        
+        body { font-family: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; letter-spacing: -0.01em; overflow-x: hidden; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
         .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        
+        /* Navigation Tabs */
         .nav-tab.active { background-color: #eff6ff; color: #2563eb; font-weight: 700; box-shadow: 0 1px 2px rgba(37,99,235,0.2); }
         .dark .nav-tab.active { background-color: #1e293b; color: #60a5fa; }
-        .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
+        .animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Legacy Styles for Other Tabs (Preserved) */
         .sim-input { 
             @apply mt-1 block w-full rounded-md border-gray-300 dark:border-slate-500 shadow-sm p-2 border bg-white dark:bg-slate-100 focus:ring-indigo-500 focus:border-indigo-500 text-sm font-bold !text-black dark:!text-black dark:placeholder-slate-500; 
         }
         .num-font { font-variant-numeric: tabular-nums; }
         .guide-card { @apply p-4 rounded-xl border border-slate-100 dark:border-slate-600 bg-white dark:bg-slate-800 shadow-sm; }
-        
         .nav-container { overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
         .nav-container::-webkit-scrollbar { display: none; }
-
-        .ticker-fallback {
-            display: flex; white-space: nowrap; overflow: hidden; align-items: center; height: 100%; width: 100%;
-        }
-        .ticker-scroll {
-            display: inline-flex; gap: 2rem; animation: tickerScroll 40s linear infinite; padding-left: 20px; white-space: nowrap;
-        }
+        .ticker-fallback { display: flex; white-space: nowrap; overflow: hidden; align-items: center; height: 100%; width: 100%; }
+        .ticker-scroll { display: inline-flex; gap: 2rem; animation: tickerScroll 40s linear infinite; padding-left: 20px; white-space: nowrap; }
         @keyframes tickerScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
-
         .tool-input { 
             @apply !bg-slate-100 dark:!bg-slate-100 border border-slate-300 dark:border-slate-500 shadow-sm focus:!bg-white dark:focus:!bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all !text-black dark:!text-black placeholder-slate-400 dark:placeholder-slate-500 font-bold; 
         }
-        
-        .dark input.sim-input, .dark input.tool-input, .dark select.sim-input, .dark select.tool-input, .dark .fav-item-btn {
-            color: #000000 !important;
-        }
-
-        .fav-item-btn {
-            @apply bg-slate-100 dark:bg-slate-100 border-slate-300 dark:border-slate-400 !text-black transition-all;
-        }
-
-        .tool-result-container {
-            @apply mt-4 p-4 rounded-xl border-2 transition-all text-right shadow-sm;
-        }
-
+        .dark input.sim-input, .dark input.tool-input, .dark select.sim-input, .dark select.tool-input, .dark .fav-item-btn { color: #000000 !important; }
+        .fav-item-btn { @apply bg-slate-100 dark:bg-slate-100 border-slate-300 dark:border-slate-400 !text-black transition-all; }
+        .tool-result-container { @apply mt-4 p-4 rounded-xl border-2 transition-all text-right shadow-sm; }
         .tool-input:hover { @apply border-slate-400 dark:border-slate-400 bg-slate-200 dark:bg-slate-200; }
         
-        .db-card {
-            @apply bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-700 p-6 sm:p-10 font-bold transition-all flex flex-col;
+        /* --- Apple Style Dashboard CSS --- */
+        .apple-card {
+            background-color: #ffffff;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
-        .db-card-title {
-            /* mb-16으로 콘텐츠와의 거리를 대폭 넓힘. pb-6으로 제목과 아래 선 사이 여백 확보 */
-            @apply text-xl font-black text-slate-900 dark:text-white mb-16 flex items-center gap-3 border-b-2 border-slate-200 dark:border-slate-700 pb-6;
+        .dark .apple-card {
+            background-color: #1C1C1E;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .apple-input {
+            width: 100%;
+            background-color: #F2F2F7;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #1D1D1F;
+            text-align: right;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .dark .apple-input {
+            background-color: #2C2C2E;
+            color: #FFFFFF;
+        }
+        .apple-input:focus {
+            box-shadow: 0 0 0 2px #0071E3;
+            background-color: #FFFFFF;
+        }
+        .dark .apple-input:focus {
+            background-color: #3A3A3C;
         }
 
-        .silver-card {
-            @apply border-slate-200 dark:border-slate-700 bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900;
+        .apple-stat-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #86868B;
+            margin-bottom: 4px;
         }
+        .apple-stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: #1D1D1F;
+        }
+        .dark .apple-stat-value { color: #FFFFFF; }
 
-        .stat-card {
-            @apply p-4 rounded-2xl border transition-all duration-300 flex flex-col items-center justify-center;
+        .apple-list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
         }
+        .dark .apple-list-item { border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .apple-list-item:last-child { border-bottom: none; }
     </style>
 </head>
-<body class="bg-slate-100 dark:bg-slate-950 transition-colors duration-200">
+<body class="bg-[#F5F5F7] dark:bg-[#000000] transition-colors duration-200">
     <div id="root"></div>
 
     <script type="text/babel">
@@ -163,7 +200,8 @@
 
         const formatManwon = (num) => {
             if (num === null || num === undefined || isNaN(num)) return '0';
-            return (num / 10000).toLocaleString('ko-KR', { minimumFractionDigits: 0, maximumFractionDigits: 1 }) + ' 만원';
+            // 자연수로 표현 (Math.round)
+            return Math.round(num / 10000).toLocaleString('ko-KR') + '만원';
         };
 
         const parseFormattedNumber = (value) => {
@@ -239,11 +277,11 @@
                 script.innerHTML = JSON.stringify({
                     "symbols": [
                         { "proName": "FX_IDC:XAGUSD", "title": "실시간 은(Silver)" },
+                        { "proName": "TVC:GOLD", "title": "금 현물 (XAU/USD)" },
+                        { "proName": "FX_IDC:USDKRW", "title": "원달러 환율" },
                         { "proName": "FOREXCOM:SPXUSD", "title": "S&P 500" },
                         { "proName": "NASDAQ:QQQ", "title": "나스닥 QQQ" },
-                        { "proName": "FX_IDC:USDKRW", "title": "원달러 환율" },
                         { "proName": "BINANCE:BTCUSDT", "title": "비트코인" },
-                        { "proName": "TVC:GOLD", "title": "금 현물 (XAU/USD)" },
                         { "proName": "FX_IDC:JPYKRW", "title": "엔화 환율" }
                     ],
                     "showSymbolLogo": true,
@@ -270,9 +308,9 @@
                         <div className="absolute inset-0 ticker-fallback text-[11px] font-bold text-slate-500 dark:text-slate-300">
                             <div className="ticker-scroll">
                                 <span><i className="fa-solid fa-coins mr-1 text-slate-400"></i> 은(Silver): 연결 중...</span>
-                                <span><i className="fa-solid fa-chart-line mr-1 text-blue-500"></i> S&P 500: 지수 로딩 중...</span>
+                                <span><i className="fa-solid fa-crown mr-1 text-yellow-500"></i> 금(Gold): 로딩 중...</span>
                                 <span><i className="fa-solid fa-money-bill-1-wave mr-1 text-emerald-500"></i> USD/KRW: 1,380.00</span>
-                                <span><i className="fa-solid fa-chart-line mr-1 text-orange-500"></i> BTC/USDT: 실시간 연결 중</span>
+                                <span><i className="fa-solid fa-chart-line mr-1 text-blue-500"></i> S&P 500: 지수 로딩 중...</span>
                             </div>
                         </div>
                     )}
@@ -320,7 +358,7 @@
             return <div ref={ref} className="h-full"></div>;
         });
 
-        const SilverContributionChart = memo(({ profitData, isDark }) => {
+        const SilverPerformanceBridgeChart = memo(({ profitData, isDark }) => {
             const canvasRef = useRef(null);
             const chartInstance = useRef(null);
 
@@ -329,83 +367,202 @@
                 const ctx = canvasRef.current.getContext('2d');
                 if (chartInstance.current) chartInstance.current.destroy();
 
-                const percentages = [
-                    profitData.exchPerc.toFixed(1) + '%',
-                    profitData.pricePerc.toFixed(1) + '%',
-                    profitData.residPerc.toFixed(1) + '%'
-                ];
+                const MAN_WON = 10000;
+                // 모든 값을 만원 단위의 자연수(반올림 정수)로 변환
+                const buyPriceMan = Math.round(FIXED_BUY_PRICE_KG / MAN_WON);
+                const actualPriceMan = Math.round(profitData.actualPrice / MAN_WON);
+                const theoPriceMan = Math.round(profitData.theoreticalKrwPrice / MAN_WON);
+                
+                // Stacked Bar 계산을 위한 프리미엄 (반올림된 값 기준 재계산하여 스택 합이 맞도록 함)
+                const premiumMan = actualPriceMan - theoPriceMan; 
+                const isPremiumPositive = premiumMan > 0;
+                
+                // 차트 데이터 구성
+                const baseBarVal = isPremiumPositive ? theoPriceMan : actualPriceMan;
+                const premiumBarVal = isPremiumPositive ? premiumMan : 0;
+                
+                const profitColor = '#34C759'; 
+                const lossColor = '#FF3B30'; 
+                const premiumColor = '#FF9500'; 
+                const buyColor = isDark ? '#48484A' : '#D1D1D6';
+                const mainColor = profitData.actualRate >= 0 ? profitColor : lossColor;
 
-                const alwaysShowLabels = {
-                    id: 'alwaysShowLabels',
-                    afterDatasetsDraw(chart) {
-                        const { ctx } = chart;
-                        chart.data.datasets.forEach((dataset, i) => {
-                            chart.getDatasetMeta(i).data.forEach((bar, index) => {
-                                const label = percentages[index];
+                const customPlugin = {
+                    id: 'customPlugin',
+                    afterDraw(chart) {
+                        const { ctx, scales: { x, y } } = chart;
+                        
+                        // --- 1. Growth Line (상승률 표시 직선 차트) ---
+                        const meta0 = chart.getDatasetMeta(0);
+                        const barBuy = meta0.data[0];
+                        
+                        if(barBuy) {
+                            const x1 = barBuy.x;
+                            const y1 = barBuy.y; // 매입가 Bar 상단
+                            
+                            const meta1 = chart.getDatasetMeta(1);
+                            const barCurrentBase = meta0.data[1];
+                            const x2 = barCurrentBase.x;
+                            // 현재가 Bar의 전체 높이 상단 (Base + Premium)
+                            const y2 = y.getPixelForValue(actualPriceMan);
+
+                            ctx.save();
+                            
+                            // 직선 그리기 (점선)
+                            ctx.beginPath();
+                            ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)';
+                            ctx.lineWidth = 2;
+                            ctx.setLineDash([4, 4]);
+                            ctx.moveTo(x1, y1);
+                            ctx.lineTo(x2, y2);
+                            ctx.stroke();
+
+                            // 중앙 배지 (수익률 표시)
+                            const midX = (x1 + x2) / 2;
+                            const midY = (y1 + y2) / 2;
+                            const rate = profitData.actualRate;
+                            const rateText = `${rate >= 0 ? '+' : ''}${Math.round(rate)}%`;
+                            
+                            ctx.font = 'bold 12px Pretendard';
+                            const textMetrics = ctx.measureText(rateText);
+                            const textW = textMetrics.width;
+                            const pad = 6;
+                            const bgH = 20;
+
+                            // 배지 배경
+                            ctx.fillStyle = rate >= 0 ? profitColor : lossColor;
+                            
+                            if (ctx.roundRect) {
+                                ctx.beginPath();
+                                ctx.setLineDash([]);
+                                ctx.roundRect(midX - textW/2 - pad, midY - bgH/2, textW + pad*2, bgH, 10);
+                                ctx.fill();
+                            } else {
+                                ctx.fillRect(midX - textW/2 - pad, midY - bgH/2, textW + pad*2, bgH);
+                            }
+
+                            // 배지 텍스트
+                            ctx.fillStyle = '#FFFFFF';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(rateText, midX, midY);
+                            
+                            ctx.restore();
+                        }
+
+                        // --- 2. Premium Label (기존 로직 유지) ---
+                        if (isPremiumPositive) {
+                            const metaPrem = chart.getDatasetMeta(1);
+                            const barPrem = metaPrem.data[1];
+                            if (barPrem && !metaPrem.hidden) {
                                 ctx.save();
-                                ctx.fillStyle = isDark ? '#cbd5e1' : '#475569';
-                                ctx.font = 'bold 11px Noto Sans KR';
-                                ctx.textAlign = 'left';
-                                ctx.textBaseline = 'middle';
-                                ctx.fillText(label, bar.x + 8, bar.y);
+                                ctx.font = 'bold 11px Pretendard';
+                                ctx.fillStyle = isDark ? '#FF9500' : '#d97706'; 
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'bottom';
+                                
+                                const amountText = `+${Math.round(premiumMan).toLocaleString()}만`;
+                                const percentText = `(${profitData.kPremiumPercent.toFixed(1)}%)`;
+                                
+                                ctx.fillText(amountText, barPrem.x, barPrem.y - 25);
+                                ctx.font = '10px Pretendard';
+                                ctx.fillText(percentText, barPrem.x, barPrem.y - 14);
                                 ctx.restore();
-                            });
-                        });
+                            }
+                        }
                     }
                 };
 
                 chartInstance.current = new Chart(ctx, {
                     type: 'bar',
                     data: {
-                        labels: ['환율 기여', '가격 기여', '프리미엄/기타'],
-                        datasets: [{
-                            label: '수익 기여액 (만원/kg)',
-                            data: [profitData.exchContrib / 10000, profitData.priceContrib / 10000, profitData.residualContrib / 10000],
-                            backgroundColor: [
-                                profitData.exchContrib >= 0 ? 'rgba(59, 130, 246, 0.7)' : 'rgba(239, 68, 68, 0.7)',
-                                profitData.priceContrib >= 0 ? 'rgba(99, 102, 241, 0.7)' : 'rgba(239, 68, 68, 0.7)',
-                                profitData.residualContrib >= 0 ? 'rgba(16, 185, 129, 0.7)' : 'rgba(239, 68, 68, 0.7)'
-                            ],
-                            borderColor: ['#3b82f6', '#6366f1', '#10b981'],
-                            borderWidth: 1.5,
-                            borderRadius: 6
-                        }]
+                        labels: ['매입가', '현재가'],
+                        datasets: [
+                            {
+                                label: '기본가', 
+                                data: [buyPriceMan, baseBarVal],
+                                backgroundColor: [buyColor, mainColor],
+                                borderRadius: 6,
+                                borderSkipped: false,
+                                order: 2
+                            },
+                            {
+                                label: '김치프리미엄', 
+                                data: [0, premiumBarVal],
+                                backgroundColor: [buyColor, premiumColor], 
+                                borderRadius: 6,
+                                borderSkipped: false,
+                                order: 1
+                            }
+                        ]
                     },
-                    plugins: [alwaysShowLabels],
+                    plugins: [customPlugin],
                     options: {
-                        indexAxis: 'y',
                         responsive: true,
                         maintainAspectRatio: false,
-                        layout: {
-                            padding: {
-                                right: 50 
+                        layout: { padding: { top: 50 } }, // 상단 여백 확보
+                        scales: {
+                            x: { 
+                                stacked: true, 
+                                grid: { display: false },
+                                ticks: { font: { weight: 'bold' }, color: isDark ? '#aaa' : '#555' }
+                            },
+                            y: { 
+                                stacked: true, 
+                                display: false, 
+                                beginAtZero: false 
                             }
                         },
                         plugins: {
                             legend: { display: false },
-                            tooltip: {
+                            tooltip: { 
                                 callbacks: {
-                                    label: (ctx) => `기여: ${ctx.raw.toFixed(1)} 만원`
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' + context.raw.toLocaleString() + '만원';
+                                    }
                                 }
-                            }
-                        },
-                        scales: {
-                            x: { 
-                                grid: { color: 'rgba(0,0,0,0.05)' },
-                                ticks: { font: { size: 10, weight: 'bold' } }
-                            },
-                            y: {
-                                grid: { display: false },
-                                ticks: { font: { size: 11, weight: 'bold' } }
                             }
                         }
                     }
                 });
+
                 return () => { if (chartInstance.current) chartInstance.current.destroy(); };
             }, [profitData, isDark]);
 
-            return <div className="h-40 w-full"><canvas ref={canvasRef}></canvas></div>;
+            return <div className="h-full w-full"><canvas ref={canvasRef}></canvas></div>;
         });
+
+        // --- APPLE STYLE COMPONENTS (Internal) ---
+        const AppleCard = ({ title, subTitle, children, className = "" }) => (
+            <div className={`apple-card flex flex-col ${className}`}>
+                {(title || subTitle) && (
+                    <div className="flex justify-between items-end mb-5">
+                        <div className="flex flex-col">
+                            {title && <h3 className="text-lg font-bold dark:text-white tracking-tight leading-none">{title}</h3>}
+                            {subTitle && <span className="text-xs font-semibold text-gray-400 mt-1">{subTitle}</span>}
+                        </div>
+                    </div>
+                )}
+                <div className="flex-1">{children}</div>
+            </div>
+        );
+
+        const AppleStatBox = ({ label, value, subValue, type = "neutral", valueClassName }) => {
+            const defaultValClass = type === 'up' ? 'text-[#34C759]' : type === 'down' ? 'text-[#FF3B30]' : 'text-[#1D1D1F] dark:text-white';
+            
+            // Allow override of value class (e.g., for Warning Red)
+            const finalValueClass = valueClassName || defaultValClass;
+
+            return (
+                <div className="flex flex-col">
+                    <span className="apple-stat-label">{label}</span>
+                    <div className="flex items-baseline gap-2">
+                        <span className={`apple-stat-value ${finalValueClass}`}>{value}</span>
+                        {subValue && <span className="text-sm font-medium text-gray-400">{subValue}</span>}
+                    </div>
+                </div>
+            );
+        };
 
         function App() {
             const [activeTab, setActiveTab] = useState('dashboard');
@@ -749,169 +906,134 @@
                 };
             }, [silverAnalysisInputs]);
 
+            // --- 1. NEW APPLE STYLE DASHBOARD ---
             const renderDashboard = () => (
-                <div className="space-y-6 sm:space-y-8 animate-fade-in pb-10">
-                    <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl h-20 overflow-hidden border border-slate-200 dark:border-slate-700 relative flex items-center px-4 sm:px-6">
+                <div className="animate-fade-in space-y-6">
+                    <div className="flex justify-between items-end px-1">
+                        <div>
+                            <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">자산 현황</h2>
+                            <p className="text-sm font-medium text-slate-500 mt-1">포트폴리오 및 시장 데이터</p>
+                        </div>
+                        <div className="flex items-center gap-2 bg-white dark:bg-[#1C1C1E] px-3 py-1.5 rounded-full border border-slate-100 dark:border-white/10 shadow-sm">
+                            <span className={`w-2 h-2 rounded-full ${isFetching ? 'bg-yellow-400 animate-pulse' : 'bg-[#34C759]'}`}></span>
+                            <span className="text-xs font-bold text-slate-600 dark:text-slate-400">{lastUpdated}</span>
+                        </div>
+                    </div>
+
+                    {/* Ticker - Minimal */}
+                    <div className="apple-card h-14 !p-0 overflow-hidden relative flex items-center bg-white dark:bg-[#1C1C1E]">
                         <TradingViewTicker theme={isDark ? 'dark' : 'light'} />
                     </div>
-                    
-                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-8 items-stretch">
-                        <div className="lg:col-span-1 db-card silver-card order-2 lg:order-1 flex flex-col min-h-[400px]">
-                            <h3 className="db-card-title">
-                                <i className="fa-solid fa-coins text-slate-400"></i> 실시간 시세
-                            </h3>
-                            <div className="flex-1 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-inner min-h-[300px]">
-                                <SilverMiniChart theme={isDark ? 'dark' : 'light'} />
-                            </div>
-                        </div>
 
-                        <div className="lg:col-span-3 db-card silver-card order-1 lg:order-2">
-                            <h3 className="db-card-title">
-                                <i className="fa-solid fa-gauge-high text-indigo-600"></i> 은(Silver) 자산 포트폴리오 분석
-                            </h3>
-                            
-                            <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                                <div className="stat-card bg-indigo-50/50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800">
-                                    <p className="text-[10px] text-indigo-500 font-black mb-1">예상 수익률</p>
-                                    <h4 className={`text-xl font-black ${silverProfitData.actualRate >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                        {silverProfitData.actualRate.toFixed(2)}%
-                                    </h4>
-                                </div>
-                                <div className={`stat-card ${silverProfitData.kPremiumPercent >= 20 ? 'bg-red-50 border-red-200 animate-pulse' : 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800'}`}>
-                                    <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-black mb-1">김치 프리미엄</p>
-                                    <h4 className={`text-xl font-black ${silverProfitData.kPremiumPercent >= 20 ? 'text-red-600' : 'text-blue-600'}`}>
-                                        {silverProfitData.kPremiumPercent.toFixed(2)}%
-                                    </h4>
-                                </div>
-                                <div className="stat-card bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600">
-                                    <p className="text-[10px] text-slate-400 font-black mb-1">이론가 (Prem 0%)</p>
-                                    <h4 className="text-sm font-black text-slate-700 dark:text-slate-200">
-                                        {formatNumber(silverProfitData.theoreticalKrwPrice)} 원/kg
-                                    </h4>
-                                </div>
-                                <div className="stat-card bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800">
-                                    <p className="text-[10px] text-blue-500 font-black mb-1">현재 총 수익액</p>
-                                    <h4 className="text-sm font-black text-blue-700 dark:text-blue-300">
-                                        {formatManwon(silverProfitData.totalProfit)}
-                                    </h4>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-                                <div className="space-y-5">
-                                    <div className="flex justify-between items-center px-1 border-l-4 border-indigo-500 pl-3 mb-4">
-                                        <p className="text-xs text-slate-500 font-black uppercase tracking-tight">마켓 데이터 입력</p>
+                    {/* Bento Grid Layout */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        
+                        {/* 1. Silver Analysis (Large Block) */}
+                        <AppleCard title="은(Silver) 분석" subTitle="실시간 프리미엄 및 수익률" className="lg:col-span-8 h-full min-h-[320px]">
+                            <div className="flex flex-col md:flex-row gap-8 h-full">
+                                {/* Inputs - Clean Apple Style */}
+                                <div className="w-full md:w-1/3 space-y-5">
+                                    <div>
+                                        <label className="text-xs font-bold text-slate-400 pl-1 mb-1 block">국제 시세 (USD/oz)</label>
+                                        <input className="apple-input" value={silverAnalysisInputs.currentUsdPrice} onChange={e=>handleCommaChange(e, v=>setSilverAnalysisInputs({...silverAnalysisInputs, currentUsdPrice:v}))} />
                                     </div>
-                                    <div className="space-y-4">
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div className="space-y-1">
-                                                <label className="text-[10px] text-slate-400 font-bold ml-1">매입 평단가 (원/kg)</label>
-                                                <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-700/50 border dark:border-slate-600 text-sm font-black text-center text-slate-800 dark:text-slate-200">1,530,000</div>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <label className="text-[10px] text-slate-400 font-bold ml-1">현재 환율 ($/₩)</label>
-                                                <input readOnly type="text" className="w-full p-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-right font-black opacity-60" value={silverAnalysisInputs.currentExch} />
-                                            </div>
+                                    <div>
+                                        <label className="text-xs font-bold text-slate-400 pl-1 mb-1 block">원달러 환율 ($/₩)</label>
+                                        <div className="apple-input flex justify-between items-center text-slate-400 cursor-default bg-slate-50 dark:bg-white/5">
+                                            <span className="text-xs">실시간</span>
+                                            <span className="text-slate-900 dark:text-white">{silverAnalysisInputs.currentExch}</span>
                                         </div>
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] text-slate-400 font-bold ml-1">국제 시세 (XAG/USD)</label>
-                                            <input type="text" className="w-full p-2.5 text-sm rounded-xl border-2 border-indigo-100 dark:border-slate-600 bg-white dark:bg-slate-900 text-right font-black focus:border-indigo-500 outline-none transition-all shadow-sm" value={silverAnalysisInputs.currentUsdPrice} onChange={e=>handleCommaChange(e, v=>setSilverAnalysisInputs({...silverAnalysisInputs, currentUsdPrice: v}))} />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] text-slate-400 font-bold ml-1">국내 매도시세 (만원/kg)</label>
-                                            <input type="text" className="w-full p-2.5 text-sm rounded-xl border-2 border-indigo-100 dark:border-slate-600 bg-white dark:bg-slate-900 text-right font-black focus:border-indigo-500 outline-none transition-all shadow-sm" value={silverAnalysisInputs.currentDomesticPrice} onChange={e=>handleCommaChange(e, v=>setSilverAnalysisInputs({...silverAnalysisInputs, currentDomesticPrice: v}))} />
-                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-bold text-slate-400 pl-1 mb-1 block">국내 매도가 (만/kg)</label>
+                                        <input className="apple-input" value={silverAnalysisInputs.currentDomesticPrice} onChange={e=>handleCommaChange(e, v=>setSilverAnalysisInputs({...silverAnalysisInputs, currentDomesticPrice:v}))} />
                                     </div>
                                 </div>
 
-                                <div className="flex flex-col">
-                                    <div className="px-1 border-l-4 border-blue-500 pl-3 mb-4">
-                                        <p className="text-xs text-slate-500 font-black uppercase tracking-tight">수익 원천 분석 (% 상시 노출)</p>
-                                    </div>
-                                    <div className="bg-slate-50 dark:bg-slate-900/40 rounded-3xl p-5 border dark:border-slate-700 flex-1 flex flex-col justify-center">
-                                        <SilverContributionChart profitData={silverProfitData} isDark={isDark} />
-                                        <div className="mt-6 grid grid-cols-3 gap-2 px-1">
-                                            <div className="text-center">
-                                                <p className="text-[9px] text-blue-500 font-black uppercase mb-1">환율</p>
-                                                <p className="text-xs font-black text-slate-700 dark:text-slate-200">{silverProfitData.exchPerc.toFixed(1)}%</p>
-                                            </div>
-                                            <div className="text-center border-x dark:border-slate-700">
-                                                <p className="text-[9px] text-indigo-500 font-black uppercase mb-1">가격</p>
-                                                <p className="text-xs font-black text-slate-700 dark:text-slate-200">{silverProfitData.pricePerc.toFixed(1)}%</p>
-                                            </div>
-                                            <div className="text-center">
-                                                <p className="text-[9px] text-emerald-500 font-black uppercase mb-1">프리미엄</p>
-                                                <p className="text-xs font-black text-slate-700 dark:text-slate-200">{silverProfitData.residPerc.toFixed(1)}%</p>
-                                            </div>
+                                {/* Stats & Mini Chart */}
+                                <div className="w-full md:w-2/3 flex flex-col gap-6">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-2xl p-5">
+                                            <AppleStatBox 
+                                                label="총 손익 (수익률)" 
+                                                value={`${silverProfitData.totalProfit >= 0 ? '+' : ''}${formatNumber(silverProfitData.totalProfit)} (${silverProfitData.actualRate >= 0 ? '+' : ''}${silverProfitData.actualRate.toFixed(2)}%)`} 
+                                                type={silverProfitData.actualRate >= 0 ? 'up' : 'down'}
+                                                valueClassName={`text-lg sm:text-2xl font-bold ${silverProfitData.actualRate >= 0 ? 'text-[#FF3B30]' : 'text-[#0071E3]'}`}
+                                            />
+                                        </div>
+                                        <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-2xl p-5 relative overflow-hidden">
+                                            <AppleStatBox 
+                                                label="김치 프리미엄" 
+                                                value={`${silverProfitData.kPremiumPercent.toFixed(2)}%`} 
+                                                type={silverProfitData.kPremiumPercent > 5 ? 'up' : 'neutral'}
+                                                subValue={`이론가 ${formatNumber(silverProfitData.theoreticalKrwPrice)}원`}
+                                                // Highlight logic for > 20%
+                                                valueClassName={silverProfitData.kPremiumPercent >= 20 ? 'text-[#FF3B30] font-black animate-pulse' : undefined}
+                                            />
                                         </div>
                                     </div>
+                                    {/* Chart Aspect Ratio Fix: Increased min-height to 280px */}
+                                    <div className="flex-1 min-h-[280px] rounded-2xl overflow-hidden border border-slate-100 dark:border-white/5 relative">
+                                         <SilverMiniChart theme={isDark ? 'dark' : 'light'} />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
+                        </AppleCard>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-                        <div className="lg:col-span-2 db-card">
-                            <div className="db-card-title flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                                <h3 className="flex items-center gap-3">
-                                    <i className="fa-solid fa-map text-rose-500"></i> S&P 500 섹터 히트맵
-                                </h3>
-                                <div className="flex items-center gap-3 w-full sm:w-auto justify-between">
-                                    <span className="text-[10px] text-slate-400 font-black uppercase hidden sm:inline">Market:</span>
-                                    <span className={`px-4 py-1 rounded-full text-[11px] text-white font-black shadow-md ${marketStatus.color}`}>{marketStatus.text}</span>
+                        {/* 2. Bridge Chart (Side Block) */}
+                        <AppleCard title="성과 브릿지" subTitle="매입가 vs 이론가 vs 거품" className="lg:col-span-4 h-full">
+                            <div className="h-full min-h-[250px] flex flex-col justify-between">
+                                <div className="flex-1 w-full relative">
+                                    {/* Updated stacked bar chart */}
+                                    <SilverPerformanceBridgeChart profitData={silverProfitData} isDark={isDark} />
+                                </div>
+                                <div className="mt-4 p-4 rounded-2xl bg-[#F2F2F7] dark:bg-[#2C2C2E] flex justify-between items-center">
+                                    <span className="text-xs font-semibold text-gray-500">현재 평가금액</span>
+                                    <span className="text-lg font-bold text-slate-900 dark:text-white">{formatManwon(silverProfitData.actualPrice)}</span>
                                 </div>
                             </div>
-                            <div className="flex-1 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner bg-slate-50 dark:bg-slate-900 h-[500px]">
-                                <TradingViewHeatmap theme={isDark ? 'dark' : 'light'} />
-                            </div>
-                        </div>
+                        </AppleCard>
 
-                        <div className="lg:col-span-1 db-card">
-                            <div className="db-card-title justify-between items-center">
-                                <h3 className="flex items-center gap-3">
-                                    <i className="fa-solid fa-star text-amber-500"></i> 종목 즐겨찾기
-                                </h3>
-                                <button onClick={() => setIsFavEditMode(!isFavEditMode)} className={`px-3 py-1.5 rounded-xl text-[11px] transition-all font-black shadow-sm ${isFavEditMode ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-white'}`}>
-                                    {isFavEditMode ? '완료' : '편집'}
+                        {/* 3. Heatmap (Wide Block) */}
+                        <AppleCard className="lg:col-span-8 min-h-[400px] !p-0 overflow-hidden relative">
+                            <div className="absolute top-4 left-4 z-10 bg-white/80 dark:bg-black/80 backdrop-blur px-3 py-1 rounded-full text-xs font-bold border border-slate-200 dark:border-white/10">S&P 500 섹터 맵</div>
+                            <TradingViewHeatmap theme={isDark ? 'dark' : 'light'} />
+                        </AppleCard>
+
+                        {/* 4. Favorites (Side List) */}
+                        <AppleCard title="관심 종목" subTitle="빠른 시세 조회" className="lg:col-span-4">
+                            <div className="relative mb-4">
+                                <i className="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                                <input 
+                                    type="text" 
+                                    placeholder="종목명 또는 코드..." 
+                                    className="w-full bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-xl py-2.5 pl-8 pr-4 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all dark:text-white placeholder-gray-400"
+                                    onKeyDown={(e) => e.key === 'Enter' && searchSymbol(e.target.value)}
+                                />
+                            </div>
+                            <div className="flex flex-col">
+                                {favorites.map((f, i) => (
+                                    <div key={i} onClick={() => searchSymbol(f.code)} className="apple-list-item cursor-pointer group hover:bg-gray-50 dark:hover:bg-white/5 px-2 rounded-lg transition-colors">
+                                        <div className="flex flex-col">
+                                            <span className="font-bold text-sm text-[#1D1D1F] dark:text-white">{f.name}</span>
+                                            <span className="text-[11px] font-semibold text-gray-400 group-hover:text-blue-500">{f.code}</span>
+                                        </div>
+                                        <i className="fa-solid fa-chevron-right text-[10px] text-gray-300 group-hover:text-blue-500"></i>
+                                    </div>
+                                ))}
+                                <button onClick={()=>{
+                                    const n = prompt("종목명"); const c = prompt("코드");
+                                    if(n&&c) setFavorites([...favorites, {name:n, code:c}]);
+                                }} className="mt-3 w-full py-3 text-xs font-bold text-[#0071E3] bg-blue-50 dark:bg-blue-900/20 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors">
+                                    + 종목 추가
                                 </button>
                             </div>
-                            <div className="space-y-6">
-                                <div className="relative">
-                                    <input type="text" placeholder="종목명 또는 코드 검색" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full p-4 pl-4 pr-14 rounded-2xl border-2 border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-black shadow-inner focus:border-indigo-500 outline-none transition-all dark:text-white" onKeyDown={(e) => e.key === 'Enter' && searchSymbol(searchQuery)} />
-                                    <button onClick={() => searchSymbol(searchQuery)} className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 shadow-lg transition-colors">
-                                        <i className="fa-solid fa-magnifying-glass text-xs"></i>
-                                    </button>
-                                </div>
-                                <div className="flex flex-wrap gap-2.5">
-                                    {favorites.map(s => (
-                                        <div key={s.code} className="flex items-center group shadow-sm">
-                                            <button onClick={() => searchSymbol(s.code)} className={`px-4 py-2 bg-white dark:bg-slate-700 border dark:border-slate-600 border-r-0 rounded-l-xl text-[11px] hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-slate-800 dark:text-slate-200 font-black transition-all ${!isFavEditMode ? 'rounded-r-xl border-r' : ''}`}>
-                                                {s.name}
-                                            </button>
-                                            {isFavEditMode && (
-                                                <button onClick={() => removeFavorite(s.code)} className="px-2.5 py-2 bg-white dark:bg-slate-700 border dark:border-slate-600 rounded-r-xl text-[11px] text-red-500 hover:text-red-600 transition-all">
-                                                    <i className="fa-solid fa-xmark"></i>
-                                                </button>
-                                            )}
-                                        </div>
-                                    ))}
-                                    {isFavEditMode && (
-                                        <button onClick={() => {
-                                            const name = prompt("종목 이름을 입력하세요");
-                                            const code = prompt("종목 코드를 입력하세요");
-                                            if(name && code) setFavorites([...favorites, {name, code}]);
-                                        }} className="px-4 py-2 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-[11px] text-slate-400 font-black hover:text-indigo-500 hover:border-indigo-500 transition-all">+ 추가</button>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="mt-8 pt-4 border-t border-slate-100 dark:border-slate-700">
-                                <p className="text-[10px] text-slate-400 leading-tight font-medium italic">* 종목명을 클릭하면 네이버 증권으로 연결됩니다.</p>
-                            </div>
-                        </div>
+                        </AppleCard>
                     </div>
                 </div>
             );
 
+            // --- LEGACY TABS (PRESERVED EXACTLY AS IS) ---
             const renderRoutine = () => (
                 <div className="space-y-6 animate-fade-in pb-10 overflow-x-hidden">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b dark:border-slate-700 font-bold">
@@ -1136,7 +1258,7 @@
                                 </div>
                             </div>
                             <div className="lg:col-span-2 space-y-6">
-                                <div className="bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-6 border-4 border-indigo-500 shadow-2xl animate-fade-in relative overflow-hidden">
+                                <div className="bg-white dark:bg-slate-800 p-5 sm:p-6 border-4 border-indigo-500 shadow-2xl animate-fade-in relative overflow-hidden">
                                     <h3 className="text-lg font-black text-indigo-800 dark:text-indigo-300 mb-6 flex items-center gap-2"><i className="fa-solid fa-scale-unbalanced-flip"></i> 근로소득 합산 시 실제 세금 증가분</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                         <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 shadow-sm"><p className="text-[11px] font-black text-slate-900 dark:text-slate-300 mb-2 flex items-center gap-1"><i className="fa-solid fa-circle text-[6px] text-slate-400"></i> 금융소득만 있을 때 정산액</p><p className="text-lg font-black text-slate-900 dark:text-slate-100">{formatNumber(resNoEarned.additionalPayable)}원</p><p className="text-[9px] text-slate-500 dark:text-slate-400 mt-1 font-bold">※ 금융 원천징수분(15.4%) 차감 후 정산액</p></div>
@@ -1402,18 +1524,18 @@
             );
 
             return (
-                <div className={`min-h-screen flex flex-col transition-colors duration-200 ${isDark ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-100 text-slate-800'}`}>
-                    <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b dark:border-slate-800 shadow-sm h-16">
+                <div className={`min-h-screen flex flex-col transition-colors duration-200 ${isDark ? 'dark bg-black text-white' : 'bg-[#F5F5F7] text-slate-800'}`}>
+                    <header className="sticky top-0 z-50 bg-white/80 dark:bg-[#1C1C1E]/80 backdrop-blur-xl border-b dark:border-white/10 shadow-sm h-16">
                         <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
-                            <div className="flex items-center gap-2 font-black text-xl flex-shrink-0 tracking-tighter"><i className="fa-solid fa-layer-group text-blue-600"></i> <span className="hidden sm:inline text-black dark:text-white">INVESTMENT NAVIGATOR</span></div>
+                            <div className="flex items-center gap-2 font-black text-xl flex-shrink-0 tracking-tighter"><i className="fa-solid fa-layer-group text-[#0071E3]"></i> <span className="hidden sm:inline text-black dark:text-white">INVESTMENT NAVIGATOR</span></div>
                             <div className="nav-container flex-1 mx-4">
-                                <nav className="inline-flex bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl gap-1">
+                                <nav className="inline-flex bg-[#F2F2F7] dark:bg-[#2C2C2E] p-1 rounded-full gap-1">
                                     {[{id:'dashboard',l:'대시보드'},{id:'routine',l:'루틴'},{id:'tools',l:'도구'},{id:'simulation',l:'노후자금'},{id:'tax',l:'금융과세'}].map(t => (
-                                        <button key={t.id} onClick={()=>setActiveTab(t.id)} className={`nav-tab px-3 sm:px-6 py-2 text-xs rounded-xl transition-all ${activeTab === t.id ? 'active' : 'text-slate-500 dark:text-slate-400 font-black hover:text-indigo-500'}`}>{t.l}</button>
+                                        <button key={t.id} onClick={()=>setActiveTab(t.id)} className={`nav-tab px-4 py-1.5 text-xs rounded-full transition-all duration-300 ${activeTab === t.id ? 'active bg-white dark:bg-[#1C1C1E] text-black dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 font-bold hover:text-black dark:hover:text-white'}`}>{t.l}</button>
                                     ))}
                                 </nav>
                             </div>
-                            <button onClick={()=>setIsDark(!isDark)} className="p-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex-shrink-0"><i className={`fa-solid ${isDark?'fa-sun text-amber-400':'fa-moon text-indigo-600 dark:text-white'}`}></i></button>
+                            <button onClick={()=>setIsDark(!isDark)} className="w-9 h-9 rounded-full bg-[#F2F2F7] dark:bg-[#2C2C2E] hover:bg-gray-200 dark:hover:bg-gray-700 transition flex items-center justify-center flex-shrink-0"><i className={`fa-solid ${isDark?'fa-sun text-yellow-400':'fa-moon text-[#0071E3]'}`}></i></button>
                         </div>
                     </header>
                     <main className="max-w-7xl w-full mx-auto px-4 py-8 flex-1 overflow-x-hidden">
