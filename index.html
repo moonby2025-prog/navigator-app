@@ -97,9 +97,7 @@
             font-size: 24px; 
             font-weight: 700; 
             letter-spacing: -0.5px; 
-            /* REMOVED FIXED COLOR HERE TO ALLOW UTILITY CLASSES & INLINE STYLES TO WORK */ 
         }
-        /* .dark .apple-stat-value { color: #FFFFFF; }  <-- THIS LINE CAUSED THE ISSUE (DELETED) */ 
         .apple-list-item { 
             display: flex; 
             align-items: center; 
@@ -110,19 +108,11 @@
         .dark .apple-list-item { border-bottom: 1px solid rgba(255,255,255,0.1); }
         .apple-list-item:last-child { border-bottom: none; }
         /* --- STRONG OVERRIDES FOR DARK MODE (CRITICAL FIX) --- */
-        /* 대제목 강제 흰색 고정 */
         html.dark .force-dark-white { color: #FFFFFF !important; }
-        
-        /* 수익률/프리미엄 숫자 색상 강제 고정 */
-        /* 상승(빨강) - 다크모드에서 더 밝은 빨강 */
         .text-stat-up { color: #FF3B30; }
         html.dark .text-stat-up { color: #FF453A !important; }
-        
-        /* 하락(파랑) - 다크모드에서 더 밝은 파랑 */
         .text-stat-down { color: #0071E3; }
         html.dark .text-stat-down { color: #0A84FF !important; }
-        
-        /* 중립/기본(검정->흰색) */
         .text-stat-neutral { color: #1D1D1F; }
         html.dark .text-stat-neutral { color: #FFFFFF !important; }
     </style>
@@ -203,7 +193,6 @@
         };
         const formatManwon = (num) => {
             if (num === null || num === undefined || isNaN(num)) return '0';
-            // 자연수로 표현 (Math.round)
             return Math.round(num / 10000).toLocaleString('ko-KR') + '만원';
         };
         const parseFormattedNumber = (value) => {
@@ -273,7 +262,6 @@
                 script.innerHTML = JSON.stringify({
                     "symbols": [
                         { "proName": "FX_IDC:XAGUSD", "title": "실시간 은(Silver)" },
-                        // 상하이 은(SHFE) 제거됨 (이전 상태 복구)
                         { "proName": "TVC:GOLD", "title": "금 현물 (XAU/USD)" },
                         { "proName": "FX_IDC:USDKRW", "title": "원달러 환율" },
                         { "proName": "FOREXCOM:SPXUSD", "title": "S&P 500" },
@@ -301,7 +289,6 @@
                         <div className="absolute inset-0 ticker-fallback text-[11px] font-bold text-slate-500 dark:text-slate-300">
                             <div className="ticker-scroll">
                                 <span><i className="fa-solid fa-coins mr-1 text-slate-400"></i> 은(Silver): 연결 중...</span>
-                                {/* 상하이 은 제거됨 */}
                                 <span><i className="fa-solid fa-crown mr-1 text-yellow-500"></i> 금(Gold): 로딩 중...</span>
                                 <span><i className="fa-solid fa-money-bill-1-wave mr-1 text-emerald-500"></i> USD/KRW: 1,380.00</span>
                             </div>
@@ -363,7 +350,6 @@
         });
 
         // --- UPDATED: Shanghai Silver Link Panel ---
-        // 위젯 데이터 제한 문제를 해결하기 위해, 사용자가 찾은 가장 확실한 SMM(상하이 금속 거래소) 공식 사이트로 연결
         const TradingViewShanghaiChart = memo(({ theme }) => {
             return (
                 <div className="h-full w-full flex flex-col items-center justify-center p-6 bg-[#F9F9F9] dark:bg-[#2C2C2E] rounded-2xl border border-dashed border-gray-300 dark:border-gray-600">
@@ -404,7 +390,6 @@
         });
 
         // --- NEW WIDGET: Gold Chart ---
-        // VIX, DXY 등 지수 데이터가 제한되므로, 은 가격의 기준점이 되는 '국제 금 시세'로 대체
         const TradingViewGoldChart = memo(({ theme }) => {
             const ref = useRef(null);
             useEffect(() => {
@@ -426,7 +411,7 @@
                 script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
                 script.async = true;
                 script.innerHTML = JSON.stringify({
-                    "symbol": "TVC:GOLD", // 금 시세 (은 투자의 나침반)
+                    "symbol": "TVC:GOLD", 
                     "width": "100%",
                     "height": "100%",
                     "locale": "kr",
@@ -479,7 +464,7 @@
             return <div ref={ref} className="h-full w-full"></div>;
         });
 
-        // --- UPDATED SILVER BRIDGE CHART (Waterfall Logic) ---
+        // --- UPDATED SILVER BRIDGE CHART (Waterfall Logic with Trend Line) ---
         const SilverPerformanceBridgeChart = memo(({ profitData, isDark }) => {
             const canvasRef = useRef(null);
             const chartInstance = useRef(null);
@@ -497,7 +482,6 @@
                 // Residual captures Premium + Interaction
                 const premiumEffect = currentPriceMan - (buyPriceMan + priceEffect + exchEffect);
                 // Waterfall Data Construction (Floating Bars)
-                // Format: [min, max]
                 const bar1 = [0, buyPriceMan]; // Base
                 const bar2 = [buyPriceMan, buyPriceMan + priceEffect]; // Price Effect
                 const step2End = buyPriceMan + priceEffect;
@@ -510,36 +494,21 @@
                 const baseColor = isDark ? '#48484A' : '#D1D1D6';
                 const finalColor = profitData.totalProfit >= 0 ? upColor : downColor;
                 const getColor = (val) => val >= 0 ? upColor : downColor;
+                
                 chartInstance.current = new Chart(ctx, {
                     type: 'bar',
                     data: {
                         labels: ['매입가', '국제시세', '환율효과', '프리미엄', '현재가'],
                         datasets: [{
                             label: '가격 변동',
-                            data: [
-                                bar1,
-                                bar2,
-                                bar3,
-                                bar4,
-                                bar5
-                            ],
-                            backgroundColor: [
-                                baseColor,
-                                getColor(priceEffect),
-                                getColor(exchEffect),
-                                getColor(premiumEffect),
-                                finalColor
-                            ],
+                            data: [ bar1, bar2, bar3, bar4, bar5 ],
+                            backgroundColor: [ baseColor, getColor(priceEffect), getColor(exchEffect), getColor(premiumEffect), finalColor ],
                             borderRadius: 4,
                             borderSkipped: false
                         }]
                     },
                     options: {
-                        layout: {
-                            padding: {
-                                top: 30 // 상단 여백 추가: 텍스트 잘림 방지
-                            }
-                        },
+                        layout: { padding: { top: 30 } },
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
@@ -549,55 +518,106 @@
                                     label: function(context) {
                                         const raw = context.raw;
                                         const val = raw[1] - raw[0];
-                                        if(context.dataIndex === 0 || context.dataIndex === 4) {
-                                            return `금액: ${raw[1].toLocaleString()}만원`;
-                                        }
+                                        if(context.dataIndex === 0 || context.dataIndex === 4) return `금액: ${raw[1].toLocaleString()}만원`;
                                         return `변동: ${val > 0 ? '+' : ''}${val.toLocaleString()}만원`;
                                     }
                                 }
                             }
                         },
                         scales: {
-                            x: {
-                                grid: { display: false },
-                                ticks: { font: { size: 11, weight: 'bold' }, color: isDark ? '#aaa' : '#555' }
-                            },
-                            y: {
-                                display: false,
-                                min: Math.min(buyPriceMan, currentPriceMan) * 0.5 // Dynamic scale start
-                            }
+                            x: { grid: { display: false }, ticks: { font: { size: 11, weight: 'bold' }, color: isDark ? '#aaa' : '#555' } },
+                            y: { display: false, min: Math.min(buyPriceMan, currentPriceMan) * 0.5 }
                         }
                     },
-                    plugins: [{
-                        id: 'customLabels',
-                        afterDraw(chart) {
-                            const { ctx, scales: { x, y } } = chart;
-                            chart.data.datasets[0].data.forEach((datapoint, index) => {
-                                const value = datapoint[1] - datapoint[0];
-                                const isTotal = index === 0 || index === 4;
-                                const meta = chart.getDatasetMeta(0);
-                                const bar = meta.data[index];
+                    plugins: [
+                        {
+                            id: 'customLabels',
+                            afterDraw(chart) {
+                                const { ctx, scales: { x, y } } = chart;
                                 
-                                if (bar) {
+                                // 1. Draw existing bar labels
+                                chart.data.datasets[0].data.forEach((datapoint, index) => {
+                                    const value = datapoint[1] - datapoint[0];
+                                    const isTotal = index === 0 || index === 4;
+                                    const meta = chart.getDatasetMeta(0);
+                                    const bar = meta.data[index];
+                                    if (bar) {
+                                        ctx.save();
+                                        ctx.textAlign = 'center';
+                                        ctx.textBaseline = 'bottom';
+                                        ctx.font = isTotal ? 'bold 12px Pretendard' : '11px Pretendard';
+                                        ctx.fillStyle = isDark ? '#fff' : '#000';
+                                        let label = isTotal ? `${datapoint[1].toLocaleString()}` : `${value > 0 ? '+' : ''}${value.toLocaleString()}`;
+                                        const yPos = y.getPixelForValue(Math.max(datapoint[0], datapoint[1])) - 5;
+                                        ctx.fillText(label, bar.x, yPos);
+                                        ctx.restore();
+                                    }
+                                });
+
+                                // 2. Draw Trend Line (Start Top -> End Top)
+                                const meta = chart.getDatasetMeta(0);
+                                const startBar = meta.data[0];
+                                const endBar = meta.data[4];
+                                if (startBar && endBar) {
+                                    const startX = startBar.x;
+                                    const startY = startBar.y; 
+                                    const endX = endBar.x;
+                                    const endY = endBar.y;
+                                    
                                     ctx.save();
+                                    
+                                    // Line Style: High contrast dashed line (Dotted to avoid blending with bars)
+                                    ctx.beginPath();
+                                    ctx.moveTo(startX, startY);
+                                    ctx.lineTo(endX, endY);
+                                    ctx.lineWidth = 2;
+                                    ctx.setLineDash([6, 4]); 
+                                    // Use distinct color (White/Gray) to contrast against Red/Blue bars
+                                    ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(50, 50, 50, 0.6)';
+                                    ctx.stroke();
+
+                                    // 3. Draw Percentage Badge in the middle
+                                    const midX = (startX + endX) / 2;
+                                    const midY = (startY + endY) / 2;
+                                    const percentage = profitData.actualRate;
+                                    const text = `${percentage >= 0 ? '▲' : '▼'} ${Math.abs(percentage).toFixed(1)}%`;
+                                    
+                                    ctx.font = 'bold 12px Pretendard';
+                                    const textMetrics = ctx.measureText(text);
+                                    const boxWidth = textMetrics.width + 16;
+                                    const boxHeight = 24;
+                                    const bx = midX - boxWidth / 2;
+                                    const by = midY - boxHeight / 2;
+                                    
+                                    // Shadow for separation
+                                    ctx.shadowColor = "rgba(0, 0, 0, 0.2)";
+                                    ctx.shadowBlur = 4;
+                                    ctx.shadowOffsetY = 2;
+
+                                    // Badge Background (Clears underlying bar color)
+                                    ctx.fillStyle = isDark ? '#1C1C1E' : '#FFFFFF';
+                                    if (ctx.roundRect) ctx.roundRect(bx, by, boxWidth, boxHeight, 12);
+                                    else ctx.fillRect(bx, by, boxWidth, boxHeight);
+                                    ctx.fill();
+                                    
+                                    ctx.shadowColor = "transparent";
+
+                                    // Badge Border (Colored by trend)
+                                    ctx.lineWidth = 1.5;
+                                    ctx.strokeStyle = percentage >= 0 ? '#FF3B30' : '#0071E3'; 
+                                    ctx.stroke();
+
+                                    // Badge Text
+                                    ctx.fillStyle = percentage >= 0 ? '#FF3B30' : '#0071E3'; 
                                     ctx.textAlign = 'center';
-                                    ctx.textBaseline = 'bottom';
-                                    ctx.font = isTotal ? 'bold 12px Pretendard' : '11px Pretendard';
-                                    ctx.fillStyle = isDark ? '#fff' : '#000';
-                                    
-                                    let label = '';
-                                    if(isTotal) label = `${datapoint[1].toLocaleString()}`;
-                                    else label = `${value > 0 ? '+' : ''}${value.toLocaleString()}`;
-                                    
-                                    // Adjust position slightly above the bar (or below if negative and falling)
-                                    // Simple logic: always above the "max" of the bar for visibility
-                                    const yPos = y.getPixelForValue(Math.max(datapoint[0], datapoint[1])) - 5;
-                                    ctx.fillText(label, bar.x, yPos);
+                                    ctx.textBaseline = 'middle';
+                                    ctx.fillText(text, midX, midY + 1);
+
                                     ctx.restore();
                                 }
-                            });
+                            }
                         }
-                    }]
+                    ]
                 });
                 return () => { if (chartInstance.current) chartInstance.current.destroy(); };
             }, [profitData, isDark]);
@@ -1343,9 +1363,13 @@
                                     )}
                                 </div>
                                 <div className="mt-6 bg-[#F2F2F7] dark:bg-[#2C2C2E] p-5 rounded-2xl">
-                                    <div className="flex justify-between items-center mb-1">
+                                    <div className="flex justify-between items-center mb-2">
                                         <span className="text-xs font-bold text-gray-500 dark:text-gray-300">목표 도달 단가</span>
                                         <span className="text-sm font-bold force-dark-white">{formatNumber(targetRes.targetPrice)}원 <span className={targetRes.rate >= 0 ? "text-[#34C759]" : "text-[#FF3B30]"}>({targetRes.rate.toFixed(1)}%)</span></span>
+                                    </div>
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="text-xs font-bold text-gray-500 dark:text-gray-300">예상 평가금액</span>
+                                        <span className="text-sm font-bold force-dark-white">{formatNumber(targetRes.totalAmount)}원</span>
                                     </div>
                                     <div className="flex justify-between items-center pt-3 border-t border-gray-200 dark:border-gray-700">
                                         <span className="text-xs font-bold text-gray-500 dark:text-gray-300">예상 수익금</span>
