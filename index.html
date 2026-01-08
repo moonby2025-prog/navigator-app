@@ -562,19 +562,22 @@
             });
             const [routineLinks, setRoutineLinks] = useState(() => {
                 try {
-                    const saved = localStorage.getItem('invNav_routineLinks');
+                    // 키 이름을 _v2로 변경하여 강제로 새 기본값을 불러오도록 함 (1번 방법)
+                    const saved = localStorage.getItem('invNav_routineLinks_v2');
                     return saved ? JSON.parse(saved) : DEFAULT_ROUTINE_LINKS;
                 } catch (e) { return DEFAULT_ROUTINE_LINKS; }
             });
             const [blogInsightLinks, setBlogInsightLinks] = useState(() => {
                 try {
-                    const saved = localStorage.getItem('invNav_blogLinks');
+                    // 키 이름을 _v2로 변경하여 강제로 새 기본값을 불러오도록 함 (1번 방법)
+                    const saved = localStorage.getItem('invNav_blogLinks_v2');
                     return saved ? JSON.parse(saved) : DEFAULT_BLOG_LINKS;
                 } catch (e) { return DEFAULT_BLOG_LINKS; }
             });
             useEffect(() => { localStorage.setItem('invNav_favorites', JSON.stringify(favorites)); }, [favorites]);
-            useEffect(() => { localStorage.setItem('invNav_routineLinks', JSON.stringify(routineLinks)); }, [routineLinks]);
-            useEffect(() => { localStorage.setItem('invNav_blogLinks', JSON.stringify(blogInsightLinks)); }, [blogInsightLinks]);
+            // 저장할 때도 변경된 _v2 키를 사용
+            useEffect(() => { localStorage.setItem('invNav_routineLinks_v2', JSON.stringify(routineLinks)); }, [routineLinks]);
+            useEffect(() => { localStorage.setItem('invNav_blogLinks_v2', JSON.stringify(blogInsightLinks)); }, [blogInsightLinks]);
             const [targetInputs, setTargetInputs] = useState({ mode: 'cap', price: '', shares: '', currentCap: '', targetCap: '', targetRate: '' });
             const [ipoCalcInputs, setIpoCalcInputs] = useState({ price: '', qty: '', fee: '', rate: 50 });
             const [avgRows, setAvgRows] = useState([{ id: 1, q: '', p: '' }]);
