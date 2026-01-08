@@ -31,9 +31,7 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         /* Legacy Styles for Other Tabs (Preserved) */
-        .sim-input { 
-            @apply mt-1 block w-full rounded-md border-gray-300 dark:border-slate-500 shadow-sm p-2 border bg-white dark:bg-slate-100 focus:ring-indigo-500 focus:border-indigo-500 text-sm font-bold !text-black dark:!text-black dark:placeholder-slate-500; 
-        }
+        .sim-input {              @apply mt-1 block w-full rounded-md border-gray-300 dark:border-slate-500 shadow-sm p-2 border bg-white dark:bg-slate-100 focus:ring-indigo-500 focus:border-indigo-500 text-sm font-bold !text-black dark:!text-black dark:placeholder-slate-500;          }
         .num-font { font-variant-numeric: tabular-nums; }
         .guide-card { @apply p-4 rounded-xl border border-slate-100 dark:border-slate-600 bg-white dark:bg-slate-800 shadow-sm; }
         .nav-container { overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
@@ -41,102 +39,110 @@
         .ticker-fallback { display: flex; white-space: nowrap; overflow: hidden; align-items: center; height: 100%; width: 100%; }
         .ticker-scroll { display: inline-flex; gap: 2rem; animation: tickerScroll 40s linear infinite; padding-left: 20px; white-space: nowrap; }
         @keyframes tickerScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
-        .tool-input { 
-            @apply !bg-slate-100 dark:!bg-slate-100 border border-slate-300 dark:border-slate-500 shadow-sm focus:!bg-white dark:focus:!bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all !text-black dark:!text-black placeholder-slate-400 dark:placeholder-slate-500 font-bold; 
-        }
+        .tool-input {              @apply !bg-slate-100 dark:!bg-slate-100 border border-slate-300 dark:border-slate-500 shadow-sm focus:!bg-white dark:focus:!bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all !text-black dark:!text-black placeholder-slate-400 dark:placeholder-slate-500 font-bold;          }
         .dark input.sim-input, .dark input.tool-input, .dark select.sim-input, .dark select.tool-input, .dark .fav-item-btn { color: #000000 !important; }
         .fav-item-btn { @apply bg-slate-100 dark:bg-slate-100 border-slate-300 dark:border-slate-400 !text-black transition-all; }
         .tool-result-container { @apply mt-4 p-4 rounded-xl border-2 transition-all text-right shadow-sm; }
         .tool-input:hover { @apply border-slate-400 dark:border-slate-400 bg-slate-200 dark:bg-slate-200; }
         
         /* --- Apple Style Dashboard CSS --- */
-        .apple-card {
-            background-color: #ffffff;
-            border-radius: 24px;
-            padding: 24px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-            border: 1px solid rgba(0,0,0,0.05);
-            transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+        .apple-card { 
+            background-color: #ffffff; 
+            border-radius: 24px; 
+            padding: 24px; 
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03); 
+            border: 1px solid rgba(0,0,0,0.05); 
+            transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1); 
         }
-        .dark .apple-card {
-            background-color: #1C1C1E;
-            border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        .dark .apple-card { 
+            background-color: #1C1C1E; 
+            border: 1px solid rgba(255,255,255,0.1); 
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); 
         }
         
-        .apple-input {
-            width: 100%;
-            background-color: #F2F2F7;
-            border: none;
-            border-radius: 12px;
-            padding: 12px 16px;
-            font-size: 15px;
-            font-weight: 600;
-            color: #1D1D1F;
-            text-align: right;
-            outline: none;
-            transition: all 0.2s;
+        .apple-input { 
+            width: 100%; 
+            background-color: #F2F2F7; 
+            border: none; 
+            border-radius: 12px; 
+            padding: 12px 16px; 
+            font-size: 15px; 
+            font-weight: 600; 
+            color: #1D1D1F; 
+            text-align: right; 
+            outline: none; 
+            transition: all 0.2s; 
         }
-        .dark .apple-input {
-            background-color: #2C2C2E;
-            color: #FFFFFF;
+        .dark .apple-input { 
+            background-color: #2C2C2E; 
+            color: #FFFFFF; 
         }
-        .apple-input:focus {
-            box-shadow: 0 0 0 2px #0071E3;
-            background-color: #FFFFFF;
+        .apple-input:focus { 
+            box-shadow: 0 0 0 2px #0071E3; 
+            background-color: #FFFFFF; 
         }
-        .dark .apple-input:focus {
-            background-color: #3A3A3C;
+        .dark .apple-input:focus { 
+            background-color: #3A3A3C; 
         }
-
-        .apple-stat-label {
-            font-size: 13px;
-            font-weight: 600;
-            color: #86868B;
-            margin-bottom: 4px;
+        .apple-stat-label { 
+            font-size: 13px; 
+            font-weight: 600; 
+            color: #86868B; 
+            margin-bottom: 4px; 
         }
-        .apple-stat-value {
-            font-size: 24px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            color: #1D1D1F;
+        /* Dark mode label color fix */
+        .dark .apple-stat-label { 
+            color: #9ca3af;          }
+        .apple-stat-value { 
+            font-size: 24px; 
+            font-weight: 700; 
+            letter-spacing: -0.5px; 
+            /* REMOVED FIXED COLOR HERE TO ALLOW UTILITY CLASSES & INLINE STYLES TO WORK */ 
         }
-        .dark .apple-stat-value { color: #FFFFFF; }
-
-        .apple-list-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
+        /* .dark .apple-stat-value { color: #FFFFFF; }  <-- THIS LINE CAUSED THE ISSUE (DELETED) */ 
+        .apple-list-item { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            padding: 12px 0; 
+            border-bottom: 1px solid rgba(0,0,0,0.05); 
         }
         .dark .apple-list-item { border-bottom: 1px solid rgba(255,255,255,0.1); }
         .apple-list-item:last-child { border-bottom: none; }
+        /* --- STRONG OVERRIDES FOR DARK MODE (CRITICAL FIX) --- */
+        /* 대제목 강제 흰색 고정 */
+        html.dark .force-dark-white { color: #FFFFFF !important; }
+        
+        /* 수익률/프리미엄 숫자 색상 강제 고정 */
+        /* 상승(빨강) - 다크모드에서 더 밝은 빨강 */
+        .text-stat-up { color: #FF3B30; }
+        html.dark .text-stat-up { color: #FF453A !important; }
+        
+        /* 하락(파랑) - 다크모드에서 더 밝은 파랑 */
+        .text-stat-down { color: #0071E3; }
+        html.dark .text-stat-down { color: #0A84FF !important; }
+        
+        /* 중립/기본(검정->흰색) */
+        .text-stat-neutral { color: #1D1D1F; }
+        html.dark .text-stat-neutral { color: #FFFFFF !important; }
     </style>
 </head>
 <body class="bg-[#F5F5F7] dark:bg-[#000000] transition-colors duration-200">
     <div id="root"></div>
-
     <script type="text/babel">
         const { useState, useEffect, useRef, memo, useCallback, useMemo } = React;
-
         const ONE_HUNDRED_MILLION = 100000000;
         const TAX_THRESHOLD = 20000000;
-        const TROY_OZ_TO_KG = 32.1507466; 
+        const TROY_OZ_TO_KG = 32.1507466;          
         
-        const FIXED_BUY_PRICE_KG = 1530000; 
+        const FIXED_BUY_PRICE_KG = 1530000;          
         const BASE_USD_PRICE = 40.0;
         const BASE_EXCH_RATE = 1080.0;
-
-        const DEFAULT_EXCHANGE_RATES = { 
-            'KRW': { krw: 1 }, 'USD': { krw: 1380 }, 'JPY': { krw: 8.90 }, 'EUR': { krw: 1480 }, 'CNY': { krw: 190 }, 'ARS': { krw: 1.35 }, 'INR': { krw: 16.5 }
+        const DEFAULT_EXCHANGE_RATES = {              'KRW': { krw: 1 }, 'USD': { krw: 1380 }, 'JPY': { krw: 8.90 }, 'EUR': { krw: 1480 }, 'CNY': { krw: 190 }, 'ARS': { krw: 1.35 }, 'INR': { krw: 16.5 }
         };
-
         const DEFAULT_FAVORITES = [
-            { code: "005930", name: "삼성전자" }, { code: "005380", name: "현대차" }, 
-            { code: "237690", name: "에스티팜" }, { code: "445680", name: "큐리옥스" }
+            { code: "005930", name: "삼성전자" }, { code: "005380", name: "현대차" },              { code: "237690", name: "에스티팜" }, { code: "445680", name: "큐리옥스" }
         ];
-
         const DEFAULT_ROUTINE_LINKS = {
             "🌅 아침 필수 체크 (Morning Routine)": [
                 { name: "미국 시장 점검", url: "https://kr.investing.com/portfolio/?portfolioID=OT4%2BZDRrZTFjM2thYTthYg%3D%3D", icon: "fa-list-check", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" },
@@ -178,7 +184,6 @@
                 { name: "구글 지도", url: "https://maps.google.com/", icon: "fa-location-dot", color: "bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-300" }
             ]
         };
-
         const DEFAULT_BLOG_LINKS = {
             "🧬 큐리옥스바이오시스템즈": [
                 {name: "한계를 깨는 사람", url: "https://blog.naver.com/unlimitedi", icon: "fa-dna", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"},
@@ -192,23 +197,19 @@
                 {name: "Chan", url: "https://blog.naver.com/chany2do", icon: "fa-bolt", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"}
             ]
         };
-
         const formatNumber = (num) => {
             if (num === null || num === undefined || isNaN(num)) return '0';
             return Math.round(num).toLocaleString('ko-KR');
         };
-
         const formatManwon = (num) => {
             if (num === null || num === undefined || isNaN(num)) return '0';
             // 자연수로 표현 (Math.round)
             return Math.round(num / 10000).toLocaleString('ko-KR') + '만원';
         };
-
         const parseFormattedNumber = (value) => {
             if (typeof value !== 'string') return value || 0;
             return parseInt(value.replace(/[^0-9]/g, '')) || 0;
         };
-
         const calculateProgressiveIncomeTax = (income, rates) => {
             if (income <= 0) return 0;
             const threshold1 = 40000000;
@@ -226,7 +227,6 @@
             }
             return Math.max(0, tax);
         };
-
         const SimulationChart = memo(({ history }) => {
             const canvasRef = useRef(null);
             const chartInstance = useRef(null);
@@ -247,8 +247,7 @@
                             { label: '배우자 ISA', data: history.map(h => h.si / ONE_HUNDRED_MILLION), borderColor: '#3b82f6', pointRadius: 0 }
                         ]
                     },
-                    options: { 
-                        responsive: true, maintainAspectRatio: false, animation: false,
+                    options: {              responsive: true, maintainAspectRatio: false, animation: false,
                         scales: { y: { beginAtZero: true } },
                         plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } } } }
                     }
@@ -257,11 +256,9 @@
             }, [history]);
             return <div className="h-64 md:h-80 w-full"><canvas ref={canvasRef}></canvas></div>;
         });
-
         const TradingViewTicker = memo(({ theme }) => {
             const containerRef = useRef(null);
             const [isLoaded, setIsLoaded] = useState(false);
-
             useEffect(() => {
                 const container = containerRef.current;
                 if (!container) return;
@@ -270,7 +267,6 @@
                 const widgetDiv = document.createElement('div');
                 widgetDiv.className = 'tradingview-widget-container__widget';
                 container.appendChild(widgetDiv);
-
                 const script = document.createElement('script');
                 script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js';
                 script.async = true;
@@ -290,17 +286,13 @@
                     "displayMode": "adaptive",
                     "locale": "kr"
                 });
-
                 script.onload = () => setIsLoaded(true);
                 container.appendChild(script);
-
                 const checkTimer = setTimeout(() => {
                     if (container.querySelector('iframe')) setIsLoaded(true);
                 }, 2500);
-
                 return () => clearTimeout(checkTimer);
             }, [theme]);
-
             return (
                 <div className="relative w-full h-full overflow-hidden flex items-center">
                     <div className={`tradingview-widget-container w-full ${isLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500`} ref={containerRef}></div>
@@ -317,7 +309,6 @@
                 </div>
             );
         });
-
         const TradingViewHeatmap = memo(({ theme }) => {
             const ref = useRef(null);
             useEffect(() => {
@@ -333,7 +324,6 @@
             }, [theme]);
             return <div ref={ref} className="h-full"></div>;
         });
-
         const SilverMiniChart = memo(({ theme }) => {
             const ref = useRef(null);
             useEffect(() => {
@@ -357,213 +347,180 @@
             }, [theme]);
             return <div ref={ref} className="h-full"></div>;
         });
-
+        // --- UPDATED SILVER BRIDGE CHART (Waterfall Logic) ---
         const SilverPerformanceBridgeChart = memo(({ profitData, isDark }) => {
             const canvasRef = useRef(null);
             const chartInstance = useRef(null);
-
             useEffect(() => {
                 if (!canvasRef.current || !profitData) return;
                 const ctx = canvasRef.current.getContext('2d');
                 if (chartInstance.current) chartInstance.current.destroy();
-
                 const MAN_WON = 10000;
-                // 모든 값을 만원 단위의 자연수(반올림 정수)로 변환
+                // Values in 'Man Won'
                 const buyPriceMan = Math.round(FIXED_BUY_PRICE_KG / MAN_WON);
-                const actualPriceMan = Math.round(profitData.actualPrice / MAN_WON);
-                const theoPriceMan = Math.round(profitData.theoreticalKrwPrice / MAN_WON);
-                
-                // Stacked Bar 계산을 위한 프리미엄 (반올림된 값 기준 재계산하여 스택 합이 맞도록 함)
-                const premiumMan = actualPriceMan - theoPriceMan; 
-                const isPremiumPositive = premiumMan > 0;
-                
-                // 차트 데이터 구성
-                const baseBarVal = isPremiumPositive ? theoPriceMan : actualPriceMan;
-                const premiumBarVal = isPremiumPositive ? premiumMan : 0;
-                
-                const profitColor = '#34C759'; 
-                const lossColor = '#FF3B30'; 
-                const premiumColor = '#FF9500'; 
-                const buyColor = isDark ? '#48484A' : '#D1D1D6';
-                const mainColor = profitData.actualRate >= 0 ? profitColor : lossColor;
-
-                const customPlugin = {
-                    id: 'customPlugin',
-                    afterDraw(chart) {
-                        const { ctx, scales: { x, y } } = chart;
-                        
-                        // --- 1. Growth Line (상승률 표시 직선 차트) ---
-                        const meta0 = chart.getDatasetMeta(0);
-                        const barBuy = meta0.data[0];
-                        
-                        if(barBuy) {
-                            const x1 = barBuy.x;
-                            const y1 = barBuy.y; // 매입가 Bar 상단
-                            
-                            const meta1 = chart.getDatasetMeta(1);
-                            const barCurrentBase = meta0.data[1];
-                            const x2 = barCurrentBase.x;
-                            // 현재가 Bar의 전체 높이 상단 (Base + Premium)
-                            const y2 = y.getPixelForValue(actualPriceMan);
-
-                            ctx.save();
-                            
-                            // 직선 그리기 (점선)
-                            ctx.beginPath();
-                            ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)';
-                            ctx.lineWidth = 2;
-                            ctx.setLineDash([4, 4]);
-                            ctx.moveTo(x1, y1);
-                            ctx.lineTo(x2, y2);
-                            ctx.stroke();
-
-                            // 중앙 배지 (수익률 표시)
-                            const midX = (x1 + x2) / 2;
-                            const midY = (y1 + y2) / 2;
-                            const rate = profitData.actualRate;
-                            const rateText = `${rate >= 0 ? '+' : ''}${Math.round(rate)}%`;
-                            
-                            ctx.font = 'bold 12px Pretendard';
-                            const textMetrics = ctx.measureText(rateText);
-                            const textW = textMetrics.width;
-                            const pad = 6;
-                            const bgH = 20;
-
-                            // 배지 배경
-                            ctx.fillStyle = rate >= 0 ? profitColor : lossColor;
-                            
-                            if (ctx.roundRect) {
-                                ctx.beginPath();
-                                ctx.setLineDash([]);
-                                ctx.roundRect(midX - textW/2 - pad, midY - bgH/2, textW + pad*2, bgH, 10);
-                                ctx.fill();
-                            } else {
-                                ctx.fillRect(midX - textW/2 - pad, midY - bgH/2, textW + pad*2, bgH);
-                            }
-
-                            // 배지 텍스트
-                            ctx.fillStyle = '#FFFFFF';
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'middle';
-                            ctx.fillText(rateText, midX, midY);
-                            
-                            ctx.restore();
-                        }
-
-                        // --- 2. Premium Label (기존 로직 유지) ---
-                        if (isPremiumPositive) {
-                            const metaPrem = chart.getDatasetMeta(1);
-                            const barPrem = metaPrem.data[1];
-                            if (barPrem && !metaPrem.hidden) {
-                                ctx.save();
-                                ctx.font = 'bold 11px Pretendard';
-                                ctx.fillStyle = isDark ? '#FF9500' : '#d97706'; 
-                                ctx.textAlign = 'center';
-                                ctx.textBaseline = 'bottom';
-                                
-                                const amountText = `+${Math.round(premiumMan).toLocaleString()}만`;
-                                const percentText = `(${profitData.kPremiumPercent.toFixed(1)}%)`;
-                                
-                                ctx.fillText(amountText, barPrem.x, barPrem.y - 25);
-                                ctx.font = '10px Pretendard';
-                                ctx.fillText(percentText, barPrem.x, barPrem.y - 14);
-                                ctx.restore();
-                            }
-                        }
-                    }
-                };
-
+                const currentPriceMan = Math.round(profitData.actualPrice / MAN_WON);
+                // Effects (Calculated in Man Won)
+                const priceEffect = Math.round(profitData.priceContrib / MAN_WON);
+                const exchEffect = Math.round(profitData.exchContrib / MAN_WON);
+                // Residual captures Premium + Interaction
+                const premiumEffect = currentPriceMan - (buyPriceMan + priceEffect + exchEffect);
+                // Waterfall Data Construction (Floating Bars)
+                // Format: [min, max]
+                const bar1 = [0, buyPriceMan]; // Base
+                const bar2 = [buyPriceMan, buyPriceMan + priceEffect]; // Price Effect
+                const step2End = buyPriceMan + priceEffect;
+                const bar3 = [step2End, step2End + exchEffect]; // Exch Effect
+                const step3End = step2End + exchEffect;
+                const bar4 = [step3End, currentPriceMan]; // Premium/Residual
+                const bar5 = [0, currentPriceMan]; // Final
+                const upColor = '#FF3B30'; // Red
+                const downColor = '#0071E3'; // Blue
+                const baseColor = isDark ? '#48484A' : '#D1D1D6';
+                const finalColor = profitData.totalProfit >= 0 ? upColor : downColor;
+                const getColor = (val) => val >= 0 ? upColor : downColor;
                 chartInstance.current = new Chart(ctx, {
                     type: 'bar',
                     data: {
-                        labels: ['매입가', '현재가'],
-                        datasets: [
-                            {
-                                label: '기본가', 
-                                data: [buyPriceMan, baseBarVal],
-                                backgroundColor: [buyColor, mainColor],
-                                borderRadius: 6,
-                                borderSkipped: false,
-                                order: 2
-                            },
-                            {
-                                label: '김치프리미엄', 
-                                data: [0, premiumBarVal],
-                                backgroundColor: [buyColor, premiumColor], 
-                                borderRadius: 6,
-                                borderSkipped: false,
-                                order: 1
-                            }
-                        ]
+                        labels: ['매입가', '국제시세', '환율효과', '프리미엄', '현재가'],
+                        datasets: [{
+                            label: '가격 변동',
+                            data: [
+                                bar1,
+                                bar2,
+                                bar3,
+                                bar4,
+                                bar5
+                            ],
+                            backgroundColor: [
+                                baseColor,
+                                getColor(priceEffect),
+                                getColor(exchEffect),
+                                getColor(premiumEffect),
+                                finalColor
+                            ],
+                            borderRadius: 4,
+                            borderSkipped: false
+                        }]
                     },
-                    plugins: [customPlugin],
                     options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        layout: { padding: { top: 50 } }, // 상단 여백 확보
-                        scales: {
-                            x: { 
-                                stacked: true, 
-                                grid: { display: false },
-                                ticks: { font: { weight: 'bold' }, color: isDark ? '#aaa' : '#555' }
-                            },
-                            y: { 
-                                stacked: true, 
-                                display: false, 
-                                beginAtZero: false 
+                        layout: {
+                            padding: {
+                                top: 30 // 상단 여백 추가: 텍스트 잘림 방지
                             }
                         },
+                        responsive: true,
+                        maintainAspectRatio: false,
                         plugins: {
                             legend: { display: false },
-                            tooltip: { 
+                            tooltip: {
                                 callbacks: {
                                     label: function(context) {
-                                        return context.dataset.label + ': ' + context.raw.toLocaleString() + '만원';
+                                        const raw = context.raw;
+                                        const val = raw[1] - raw[0];
+                                        if(context.dataIndex === 0 || context.dataIndex === 4) {
+                                            return `금액: ${raw[1].toLocaleString()}만원`;
+                                        }
+                                        return `변동: ${val > 0 ? '+' : ''}${val.toLocaleString()}만원`;
                                     }
                                 }
                             }
+                        },
+                        scales: {
+                            x: {
+                                grid: { display: false },
+                                ticks: { font: { size: 11, weight: 'bold' }, color: isDark ? '#aaa' : '#555' }
+                            },
+                            y: {
+                                display: false,
+                                min: Math.min(buyPriceMan, currentPriceMan) * 0.5 // Dynamic scale start
+                            }
                         }
-                    }
+                    },
+                    plugins: [{
+                        id: 'customLabels',
+                        afterDraw(chart) {
+                            const { ctx, scales: { x, y } } = chart;
+                            chart.data.datasets[0].data.forEach((datapoint, index) => {
+                                const value = datapoint[1] - datapoint[0];
+                                const isTotal = index === 0 || index === 4;
+                                const meta = chart.getDatasetMeta(0);
+                                const bar = meta.data[index];
+                                
+                                if (bar) {
+                                    ctx.save();
+                                    ctx.textAlign = 'center';
+                                    ctx.textBaseline = 'bottom';
+                                    ctx.font = isTotal ? 'bold 12px Pretendard' : '11px Pretendard';
+                                    ctx.fillStyle = isDark ? '#fff' : '#000';
+                                    
+                                    let label = '';
+                                    if(isTotal) label = `${datapoint[1].toLocaleString()}`;
+                                    else label = `${value > 0 ? '+' : ''}${value.toLocaleString()}`;
+                                    
+                                    // Adjust position slightly above the bar (or below if negative and falling)
+                                    // Simple logic: always above the "max" of the bar for visibility
+                                    const yPos = y.getPixelForValue(Math.max(datapoint[0], datapoint[1])) - 5;
+                                    ctx.fillText(label, bar.x, yPos);
+                                    ctx.restore();
+                                }
+                            });
+                        }
+                    }]
                 });
-
                 return () => { if (chartInstance.current) chartInstance.current.destroy(); };
             }, [profitData, isDark]);
-
-            return <div className="h-full w-full"><canvas ref={canvasRef}></canvas></div>;
+            return (
+                <div className="flex flex-col h-full w-full">
+                    <div className="flex-1 min-h-0">
+                        <canvas ref={canvasRef}></canvas>
+                    </div>
+                    {/* Factor Analysis Table (Rich Content) */}
+                    <div className="mt-2 bg-slate-50 dark:bg-slate-900/50 rounded-xl p-3 grid grid-cols-3 gap-2 text-center">
+                        <div>
+                            <div className="text-[10px] text-slate-500 font-bold mb-1">국제시세 기여</div>
+                            <div className={`text-xs font-black ${profitData.priceContrib >= 0 ? 'text-red-500' : 'text-blue-500'}`}>{profitData.priceContrib > 0 ? '+' : ''}{formatManwon(profitData.priceContrib)}</div>
+                        </div>
+                        <div className="border-l border-slate-200 dark:border-slate-700">
+                            <div className="text-[10px] text-slate-500 font-bold mb-1">환율 기여</div>
+                            <div className={`text-xs font-black ${profitData.exchContrib >= 0 ? 'text-red-500' : 'text-blue-500'}`}>{profitData.exchContrib > 0 ? '+' : ''}{formatManwon(profitData.exchContrib)}</div>
+                        </div>
+                        <div className="border-l border-slate-200 dark:border-slate-700">
+                            <div className="text-[10px] text-slate-500 font-bold mb-1">프리미엄 잔존</div>
+                            <div className="text-xs font-black text-amber-600 dark:text-amber-400">+{formatManwon(profitData.kPremium)}</div>
+                        </div>
+                    </div>
+                </div>
+            );
         });
-
         // --- APPLE STYLE COMPONENTS (Internal) ---
         const AppleCard = ({ title, subTitle, children, className = "" }) => (
             <div className={`apple-card flex flex-col ${className}`}>
                 {(title || subTitle) && (
                     <div className="flex justify-between items-end mb-5">
                         <div className="flex flex-col">
-                            {title && <h3 className="text-lg font-bold dark:text-white tracking-tight leading-none">{title}</h3>}
-                            {subTitle && <span className="text-xs font-semibold text-gray-400 mt-1">{subTitle}</span>}
+                            {/* Title Color Fix: Added 'force-dark-white' class */}
+                            {title && <h3 className="text-lg font-bold text-slate-900 force-dark-white tracking-tight leading-none">{title}</h3>}
+                            {subTitle && <span className="text-xs font-semibold text-gray-400 dark:text-gray-400 mt-1">{subTitle}</span>}
                         </div>
                     </div>
                 )}
                 <div className="flex-1">{children}</div>
             </div>
         );
-
-        const AppleStatBox = ({ label, value, subValue, type = "neutral", valueClassName }) => {
-            const defaultValClass = type === 'up' ? 'text-[#34C759]' : type === 'down' ? 'text-[#FF3B30]' : 'text-[#1D1D1F] dark:text-white';
-            
-            // Allow override of value class (e.g., for Warning Red)
-            const finalValueClass = valueClassName || defaultValClass;
-
+        const AppleStatBox = ({ label, value, subValue, valueClassName }) => {
             return (
                 <div className="flex flex-col">
                     <span className="apple-stat-label">{label}</span>
                     <div className="flex items-baseline gap-2">
-                        <span className={`apple-stat-value ${finalValueClass}`}>{value}</span>
-                        {subValue && <span className="text-sm font-medium text-gray-400">{subValue}</span>}
+                        {/* Use valueClassName for strong CSS overrides */}
+                        <span className={`apple-stat-value ${valueClassName || 'text-stat-neutral'}`}>
+                            {value}
+                        </span>
+                        {subValue && <span className="text-sm font-medium text-gray-400 dark:text-gray-400">{subValue}</span>}
                     </div>
                 </div>
             );
         };
-
         function App() {
             const [activeTab, setActiveTab] = useState('dashboard');
             const [isDark, setIsDark] = useState(false);
@@ -573,20 +530,19 @@
             const [exchangeRates, setExchangeRates] = useState(DEFAULT_EXCHANGE_RATES);
             const [lastUpdated, setLastUpdated] = useState('연결 중...');
             const [isFetching, setIsFetching] = useState(false);
-
             const [isRoutineEditMode, setIsRoutineEditMode] = useState(false);
             const [isFavEditMode, setIsFavEditMode] = useState(false);
             const [newRoutine, setNewRoutine] = useState({ category: '', name: '', url: '' });
             const [searchQuery, setSearchQuery] = useState('');
-
+            const [newFav, setNewFav] = useState({ code: '', name: '' });
             const [silverAnalysisInputs, setSilverAnalysisInputs] = useState(() => {
                 try {
                     const saved = localStorage.getItem('invNav_silverInputs');
                     return saved ? JSON.parse(saved) : {
                         currentExch: '1,380',
                         currentUsdPrice: '32.50',
-                        currentDomesticPrice: '145' 
-                    };
+                        currentDomesticPrice: '145'
+                      };
                 } catch (e) {
                     return {
                         currentExch: '1,380',
@@ -595,60 +551,53 @@
                     };
                 }
             });
-
             useEffect(() => {
                 localStorage.setItem('invNav_silverInputs', JSON.stringify(silverAnalysisInputs));
             }, [silverAnalysisInputs]);
-
             const [favorites, setFavorites] = useState(() => {
                 try {
                     const saved = localStorage.getItem('invNav_favorites');
                     return saved ? JSON.parse(saved) : DEFAULT_FAVORITES;
                 } catch (e) { return DEFAULT_FAVORITES; }
             });
-
             const [routineLinks, setRoutineLinks] = useState(() => {
                 try {
                     const saved = localStorage.getItem('invNav_routineLinks');
                     return saved ? JSON.parse(saved) : DEFAULT_ROUTINE_LINKS;
                 } catch (e) { return DEFAULT_ROUTINE_LINKS; }
             });
-
             const [blogInsightLinks, setBlogInsightLinks] = useState(() => {
                 try {
                     const saved = localStorage.getItem('invNav_blogLinks');
                     return saved ? JSON.parse(saved) : DEFAULT_BLOG_LINKS;
                 } catch (e) { return DEFAULT_BLOG_LINKS; }
             });
-
             useEffect(() => { localStorage.setItem('invNav_favorites', JSON.stringify(favorites)); }, [favorites]);
             useEffect(() => { localStorage.setItem('invNav_routineLinks', JSON.stringify(routineLinks)); }, [routineLinks]);
             useEffect(() => { localStorage.setItem('invNav_blogLinks', JSON.stringify(blogInsightLinks)); }, [blogInsightLinks]);
-
             const [targetInputs, setTargetInputs] = useState({ mode: 'cap', price: '', shares: '', currentCap: '', targetCap: '', targetRate: '' });
             const [ipoCalcInputs, setIpoCalcInputs] = useState({ price: '', qty: '', fee: '', rate: 50 });
             const [avgRows, setAvgRows] = useState([{ id: 1, q: '', p: '' }]);
             const [exchInputs, setExchInputs] = useState({ base: 'USD', target: 'KRW', amount: '' });
             
             const DEFAULT_SIM_INPUTS = {
-                currentAge: 52, spouseCurrentAge: 48, simulationStartAge: 53, 
+                currentAge: 52, spouseCurrentAge: 48, simulationStartAge: 53,
                 pensionStartAgeUser: 65, pensionStartAgeSpouse: 65,
                 pensionStrategyUser: "normal", pensionStrategySpouse: "normal",
                 highCostStartAge: 80,
-                capUserNonISA: 0.0, capSpouseNonISA: 0.0, capUserISA: 2.0, capSpouseISA: 1.0, 
+                capUserNonISA: 0.0, capSpouseNonISA: 0.0, capUserISA: 2.0, capSpouseISA: 1.0,
                 capIPO: 5.0,
-                returnUserNonISA: 0.0, returnSpouseNonISA: 0.0, 
-                returnUserISA: 5.0, returnSpouseISA: 5.0, 
-                returnIPO: 4.0, returnCMA: 2.0, 
+                returnUserNonISA: 0.0, returnSpouseNonISA: 0.0,
+                returnUserISA: 5.0, returnSpouseISA: 5.0,
+                returnIPO: 4.0, returnCMA: 2.0,
                 inflationRate: 2.0, livingCostInflationRate: 1.5, taxRate1: 6.6, taxRate2: 16.5, taxRate3: 27.5,
-                monthlyLiving: "4,000,000", pensionSelf: "1,000,000", pensionSpouse: "600,000", 
-                ipoProfit: "5,000,000", 
+                monthlyLiving: "4,000,000", pensionSelf: "1,000,000", pensionSpouse: "600,000",
+                ipoProfit: "5,000,000",
                 otherIncome: "4,500,000", stockLending: "0", rentalIncome: "850,000",
-                targetLegacy: "200,000,000", 
-                extraReserve: "5,000,000", 
+                targetLegacy: "200,000,000",
+                extraReserve: "5,000,000",
                 monthlyMedical: "1,000,000"
             };
-
             const [simInputs, setSimInputs] = useState(() => {
                 try {
                     const saved = localStorage.getItem('invNav_simInputs');
@@ -657,17 +606,13 @@
             });
             
             useEffect(() => { localStorage.setItem('invNav_simInputs', JSON.stringify(simInputs)); }, [simInputs]);
-
             const [simResult, setSimResult] = useState({ history: [], summary: null });
             const [simTableVisibleCols, setSimTableVisibleCols] = useState({
                 taxable: true, exempt: true, income: true, expense: true, flow: true, status: true
             });
             const [isSimColMenuOpen, setIsSimColMenuOpen] = useState(false);
             const [showTableDetails, setShowTableDetails] = useState(false);
-
-            const [earnedIncome, setEarnedIncome] = useState("20,000,000"); 
-            const [finList, setFinList] = useState([{ id: 1, source: '배당금 합계', amount: 35000000 }]);
-
+            const [earnedIncome, setEarnedIncome] = useState("20,000,000");              const [finList, setFinList] = useState([{ id: 1, source: '배당금 합계', amount: 35000000 }]);
             const handleCommaChange = (e, callback) => {
                 const val = e.target.value.replace(/[^0-9.]/g, '');
                 if (val === '') {
@@ -678,7 +623,6 @@
                 parts[0] = parseInt(parts[0]).toLocaleString('ko-KR');
                 callback(parts.join('.'));
             };
-
             const fetchRealTimeRates = useCallback(async () => {
                 setIsFetching(true);
                 try {
@@ -687,13 +631,9 @@
                     if (data.result === 'success') {
                         const rates = data.rates;
                         const newRates = {
-                            'KRW': { krw: 1 }, 
-                            'USD': { krw: 1 / (rates.USD || 0.00072) }, 
-                            'JPY': { krw: 1 / (rates.JPY || 0.11) },
-                            'EUR': { krw: 1 / (rates.EUR || 0.00067) }, 
-                            'CNY': { krw: 1 / (rates.CNY || 0.0052) },
-                            'ARS': { krw: 1 / (rates.ARS || 0.65) }, 
-                            'INR': { krw: 1 / (rates.INR || 0.06) }
+                            'KRW': { krw: 1 },                              'USD': { krw: 1 / (rates.USD || 0.00072) },                              'JPY': { krw: 1 / (rates.JPY || 0.11) },
+                            'EUR': { krw: 1 / (rates.EUR || 0.00067) },                              'CNY': { krw: 1 / (rates.CNY || 0.0052) },
+                            'ARS': { krw: 1 / (rates.ARS || 0.65) },                              'INR': { krw: 1 / (rates.INR || 0.06) }
                         };
                         setExchangeRates(newRates);
                         setSilverAnalysisInputs(prev => ({
@@ -704,7 +644,6 @@
                     }
                 } catch (error) { setLastUpdated("실패 (기본값 사용)"); } finally { setIsFetching(false); }
             }, []);
-
             useEffect(() => {
                 fetchRealTimeRates();
                 const timer = setInterval(() => {
@@ -716,19 +655,16 @@
                 }, 1000);
                 return () => clearInterval(timer);
             }, [fetchRealTimeRates]);
-
             useEffect(() => {
                 if (isDark) document.documentElement.classList.add('dark');
                 else document.documentElement.classList.remove('dark');
             }, [isDark]);
-
             const searchSymbol = (query) => {
                 if(!query || query.trim() === "") { window.open('https://stock.naver.com/', '_blank'); return; }
                 const trimmed = query.trim();
                 const url = /[a-zA-Z]/.test(trimmed) ? `https://finance.naver.com/world/sise.naver?symbol=${trimmed.toUpperCase()}` : `https://finance.naver.com/item/main.naver?code=${trimmed}`;
                 window.open(url, '_blank');
             };
-
             const getAdjustedPensionAmount = (baseAmount, strategy) => {
                 let ageAdj = 0;
                 let amountMult = 1.0;
@@ -743,7 +679,6 @@
                 }
                 return { startAge: 65 + ageAdj, monthlyAmount: baseAmount * amountMult };
             };
-
             const runSimulation = useCallback(() => {
                 const s = simInputs;
                 const ageDiff = s.currentAge - s.spouseCurrentAge;
@@ -765,9 +700,7 @@
                 
                 const initOtherTotal = parseFormattedNumber(s.ipoProfit) + parseFormattedNumber(s.otherIncome) + parseFormattedNumber(s.stockLending) + parseFormattedNumber(s.rentalIncome);
                 
-                let history = []; 
-                let totalTaxAccum = 0; 
-                let depletionYear = null;
+                let history = [];                  let totalTaxAccum = 0;                  let depletionYear = null;
                 const period = Math.max(1, 96 - s.simulationStartAge);
                 
                 for (let year = 1; year <= period; year++) {
@@ -778,54 +711,38 @@
                     const lInf = Math.pow(1 + (s.livingCostInflationRate / 100), year - 1);
                     
                     const startTotalAssets = cUserNon + cSpouseNon + cUserISA + cSpouseISA + cIPO;
-
                     const grossUserNon = cUserNon * (s.returnUserNonISA / 100);
                     const grossSpouseNon = cSpouseNon * (s.returnSpouseNonISA / 100);
-                    const ipoCmaProfit = cIPO * (s.returnCMA / 100); 
-                    const ipoCapitalProfit = cIPO * (s.returnIPO / 100); 
-                    const grossUserISA = cUserISA * (s.returnUserISA / 100);
+                    const ipoCmaProfit = cIPO * (s.returnCMA / 100);                      const ipoCapitalProfit = cIPO * (s.returnIPO / 100);                      const grossUserISA = cUserISA * (s.returnUserISA / 100);
                     const grossSpouseISA = cSpouseISA * (s.returnSpouseISA / 100);
-
                     const taxableProfitYear = grossUserNon + grossSpouseNon + ipoCmaProfit;
                     const exemptProfitYear = ipoCapitalProfit + grossUserISA + grossSpouseISA;
-
                     const netProfUserNon = grossUserNon * 0.846;
                     const netProfSpouseNon = grossSpouseNon * 0.846;
-                    const netProfUserISA = grossUserISA * 0.901; 
-                    const netProfSpouseISA = grossSpouseISA * 0.901;
-                    const netProfIPO = (ipoCmaProfit * 0.846) + ipoCapitalProfit; 
-                    
+                    const netProfUserISA = grossUserISA * 0.901;                      const netProfSpouseISA = grossSpouseISA * 0.901;
+                    const netProfIPO = (ipoCmaProfit * 0.846) + ipoCapitalProfit;                      
                     const totalNetInvestmentProfit = netProfUserNon + netProfSpouseNon + netProfUserISA + netProfSpouseISA + netProfIPO;
-
-                    let weight = 1.0; 
-                    let lateLifeMedicalAnnual = 0;
+                    let weight = 1.0;                      let lateLifeMedicalAnnual = 0;
                     if (age >= Math.min(userPenInfo.startAge, spousePenInfo.startAge)) {
-                        if (age < s.highCostStartAge - 5) weight = 1.1; 
-                        else if (age < s.highCostStartAge) weight = 0.9; 
-                        else { weight = 0.7; lateLifeMedicalAnnual = medicalCostMonthly * 12 * lInf; }
+                        if (age < s.highCostStartAge - 5) weight = 1.1;                          else if (age < s.highCostStartAge) weight = 0.9;                          else { weight = 0.7; lateLifeMedicalAnnual = medicalCostMonthly * 12 * lInf; }
                     }
                     const annualLivingCost = (initLiving * lInf * weight) + lateLifeMedicalAnnual + extraReserveValue;
                     
                     let pension = 0;
-                    if (age >= userPenInfo.startAge) pension += userPenInfo.monthlyAmount * 12; 
-                    if (spouseAge >= spousePenInfo.startAge) pension += spousePenInfo.monthlyAmount * 12;
+                    if (age >= userPenInfo.startAge) pension += userPenInfo.monthlyAmount * 12;                      if (spouseAge >= spousePenInfo.startAge) pension += spousePenInfo.monthlyAmount * 12;
                     
                     const annualPension = pension * pInf;
                     const annualOthers = initOtherTotal * pInf;
                     const annualBaseIncome = annualPension + annualOthers;
-
                     const incTax = calculateProgressiveIncomeTax(annualBaseIncome, { rate1: s.taxRate1, rate2: s.taxRate2, rate3: s.taxRate3 });
                     totalTaxAccum += incTax;
                     const annualTotalExpenses = annualLivingCost + incTax;
-
                     cUserNon += netProfUserNon;
                     cSpouseNon += netProfSpouseNon;
                     cUserISA += netProfUserISA;
                     cSpouseISA += netProfSpouseISA;
                     cIPO += netProfIPO;
-
                     const cashSurplus = annualBaseIncome - annualTotalExpenses;
-
                     if (cashSurplus < 0) {
                         let rem = Math.abs(cashSurplus);
                         let w1 = Math.min(rem, cIPO); cIPO -= w1; rem -= w1;
@@ -837,22 +754,12 @@
                     } else {
                         cUserNon += cashSurplus;
                     }
-
                     const currentTotalAssets = cUserNon + cSpouseNon + cUserISA + cSpouseISA + cIPO;
                     const annualNetChange = currentTotalAssets - startTotalAssets;
-
-                    history.push({ 
-                        age, 
-                        total: Math.max(0, currentTotalAssets / ONE_HUNDRED_MILLION), 
-                        tax: incTax, 
-                        living: annualLivingCost, 
-                        profInvestment: totalNetInvestmentProfit, 
-                        taxableProfit: taxableProfitYear,
-                        separateExemptProfit: exemptProfitYear, 
-                        baseIncome: annualBaseIncome,
+                    history.push({                          age,                          total: Math.max(0, currentTotalAssets / ONE_HUNDRED_MILLION),                          tax: incTax,                          living: annualLivingCost,                          profInvestment: totalNetInvestmentProfit,                          taxableProfit: taxableProfitYear,
+                        separateExemptProfit: exemptProfitYear,                          baseIncome: annualBaseIncome,
                         annualProfit: totalNetInvestmentProfit + annualBaseIncome,
-                        netChange: annualNetChange, 
-                        un: Math.max(0, cUserNon), sn: Math.max(0, cSpouseNon), ui: Math.max(0, cUserISA), si: Math.max(0, cSpouseISA), cip: Math.max(0, cIPO),
+                        netChange: annualNetChange,                          un: Math.max(0, cUserNon), sn: Math.max(0, cSpouseNon), ui: Math.max(0, cUserISA), si: Math.max(0, cSpouseISA), cip: Math.max(0, cIPO),
                         isHighCost: age >= s.highCostStartAge,
                         isWarn: currentTotalAssets < targetLegacyValue,
                         details: {
@@ -862,33 +769,19 @@
                         }
                     });
                     
-                    if (currentTotalAssets <= -1000000 && year > 1) break; 
-                }
+                    if (currentTotalAssets <= -1000000 && year > 1) break;                  }
                 
-                setSimResult({ 
-                    history, 
-                    summary: { 
-                        initial: s.capUserNonISA + s.capSpouseNonISA + s.capUserISA + s.capSpouseISA + s.capIPO, 
-                        final: (history[history.length-1]?.total * ONE_HUNDRED_MILLION) || 0, 
-                        tax: totalTaxAccum, 
-                        depletion: depletionYear, 
-                        isSuccess: (history[history.length-1]?.total * ONE_HUNDRED_MILLION) >= targetLegacyValue 
-                    } 
-                });
+                setSimResult({                      history,                      summary: {                          initial: s.capUserNonISA + s.capSpouseNonISA + s.capUserISA + s.capSpouseISA + s.capIPO,                          final: (history[history.length-1]?.total * ONE_HUNDRED_MILLION) || 0,                          tax: totalTaxAccum,                          depletion: depletionYear,                          isSuccess: (history[history.length-1]?.total * ONE_HUNDRED_MILLION) >= targetLegacyValue                      }                  });
             }, [simInputs]);
-
             useEffect(() => { runSimulation(); }, [runSimulation]);
-
             const removeFavorite = (code) => { setFavorites(favorites.filter(f => f.code !== code)); };
             const addRoutineLink = () => { if (!newRoutine.category || !newRoutine.name || !newRoutine.url) return; const updated = { ...routineLinks }; updated[newRoutine.category] = [...updated[newRoutine.category], { name: newRoutine.name, url: newRoutine.url, icon: "fa-link", color: "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-100" }]; setRoutineLinks(updated); setNewRoutine({ category: '', name: '', url: '' }); };
             const removeRoutineLink = (category, index) => { const updated = { ...routineLinks }; updated[category] = updated[category].filter((_, i) => i !== index); setRoutineLinks(updated); };
-
             const silverProfitData = useMemo(() => {
                 const exch = parseFloat(silverAnalysisInputs.currentExch.replace(/[^0-9.]/g, '')) || 0;
                 const usd = parseFloat(silverAnalysisInputs.currentUsdPrice.replace(/[^0-9.]/g, '')) || 0;
                 const domesticPriceManwon = parseFloat(silverAnalysisInputs.currentDomesticPrice.replace(/[^0-9.]/g, '')) || 0;
-                const domesticPrice = domesticPriceManwon * 10000; 
-                const theoreticalKrwPrice = usd * exch * TROY_OZ_TO_KG;
+                const domesticPrice = domesticPriceManwon * 10000;                  const theoreticalKrwPrice = usd * exch * TROY_OZ_TO_KG;
                 const kPremium = domesticPrice - theoreticalKrwPrice;
                 const kPremiumPercent = theoreticalKrwPrice > 0 ? (kPremium / theoreticalKrwPrice) * 100 : 0;
                 const priceContrib = (usd - BASE_USD_PRICE) * BASE_EXCH_RATE * TROY_OZ_TO_KG;
@@ -897,78 +790,73 @@
                 const residualContrib = totalProfit - priceContrib - exchContrib;
                 const actualRate = ((domesticPrice / FIXED_BUY_PRICE_KG) - 1) * 100;
                 const absProfit = Math.abs(totalProfit) || 1;
-                return { 
-                    actualRate, theoreticalKrwPrice, actualPrice: domesticPrice,
+                return {                      actualRate, theoreticalKrwPrice, actualPrice: domesticPrice,
                     kPremium, kPremiumPercent, priceContrib, exchContrib, residualContrib, totalProfit,
                     exchPerc: (exchContrib / absProfit) * 100,
                     pricePerc: (priceContrib / absProfit) * 100,
                     residPerc: (residualContrib / absProfit) * 100
                 };
             }, [silverAnalysisInputs]);
-
             // --- 1. NEW APPLE STYLE DASHBOARD ---
             const renderDashboard = () => (
                 <div className="animate-fade-in space-y-6">
                     <div className="flex justify-between items-end px-1">
                         <div>
-                            <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">자산 현황</h2>
-                            <p className="text-sm font-medium text-slate-500 mt-1">포트폴리오 및 시장 데이터</p>
+                            {/* Main Title Fix: Added 'force-dark-white' */}
+                            <h2 className="text-3xl font-bold tracking-tight text-slate-900 force-dark-white">자산 현황</h2>
+                            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">포트폴리오 및 시장 데이터</p>
                         </div>
                         <div className="flex items-center gap-2 bg-white dark:bg-[#1C1C1E] px-3 py-1.5 rounded-full border border-slate-100 dark:border-white/10 shadow-sm">
                             <span className={`w-2 h-2 rounded-full ${isFetching ? 'bg-yellow-400 animate-pulse' : 'bg-[#34C759]'}`}></span>
-                            <span className="text-xs font-bold text-slate-600 dark:text-slate-400">{lastUpdated}</span>
+                            <span className="text-xs font-bold text-slate-600 dark:text-slate-300">{lastUpdated}</span>
                         </div>
                     </div>
-
                     {/* Ticker - Minimal */}
                     <div className="apple-card h-14 !p-0 overflow-hidden relative flex items-center bg-white dark:bg-[#1C1C1E]">
                         <TradingViewTicker theme={isDark ? 'dark' : 'light'} />
                     </div>
-
                     {/* Bento Grid Layout */}
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                        
-                        {/* 1. Silver Analysis (Large Block) */}
+                          {/* 1. Silver Analysis (Large Block) */}
                         <AppleCard title="은(Silver) 분석" subTitle="실시간 프리미엄 및 수익률" className="lg:col-span-8 h-full min-h-[320px]">
                             <div className="flex flex-col md:flex-row gap-8 h-full">
                                 {/* Inputs - Clean Apple Style */}
                                 <div className="w-full md:w-1/3 space-y-5">
                                     <div>
-                                        <label className="text-xs font-bold text-slate-400 pl-1 mb-1 block">국제 시세 (USD/oz)</label>
+                                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">국제 시세 (USD/oz)</label>
                                         <input className="apple-input" value={silverAnalysisInputs.currentUsdPrice} onChange={e=>handleCommaChange(e, v=>setSilverAnalysisInputs({...silverAnalysisInputs, currentUsdPrice:v}))} />
                                     </div>
                                     <div>
-                                        <label className="text-xs font-bold text-slate-400 pl-1 mb-1 block">원달러 환율 ($/₩)</label>
+                                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">원달러 환율 ($/₩)</label>
                                         <div className="apple-input flex justify-between items-center text-slate-400 cursor-default bg-slate-50 dark:bg-white/5">
                                             <span className="text-xs">실시간</span>
-                                            <span className="text-slate-900 dark:text-white">{silverAnalysisInputs.currentExch}</span>
+                                            <span className="text-slate-900 force-dark-white">{silverAnalysisInputs.currentExch}</span>
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="text-xs font-bold text-slate-400 pl-1 mb-1 block">국내 매도가 (만/kg)</label>
+                                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">국내 매도가 (만/kg)</label>
                                         <input className="apple-input" value={silverAnalysisInputs.currentDomesticPrice} onChange={e=>handleCommaChange(e, v=>setSilverAnalysisInputs({...silverAnalysisInputs, currentDomesticPrice:v}))} />
                                     </div>
                                 </div>
-
                                 {/* Stats & Mini Chart */}
                                 <div className="w-full md:w-2/3 flex flex-col gap-6">
                                     <div className="grid grid-cols-2 gap-4">
+                                        {/* Container Background Fix: Force dark background with !bg-slate-800 */}
                                         <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-2xl p-5">
-                                            <AppleStatBox 
-                                                label="총 손익 (수익률)" 
-                                                value={`${silverProfitData.totalProfit >= 0 ? '+' : ''}${formatNumber(silverProfitData.totalProfit)} (${silverProfitData.actualRate >= 0 ? '+' : ''}${silverProfitData.actualRate.toFixed(2)}%)`} 
-                                                type={silverProfitData.actualRate >= 0 ? 'up' : 'down'}
-                                                valueClassName={`text-lg sm:text-2xl font-bold ${silverProfitData.actualRate >= 0 ? 'text-[#FF3B30]' : 'text-[#0071E3]'}`}
+                                            {/* Profit Rate Color: Use new CSS classes */}
+                                            <AppleStatBox
+                                                  label="수익률"
+                                                  value={`${silverProfitData.actualRate >= 0 ? '+' : ''}${silverProfitData.actualRate.toFixed(2)}%`}
+                                                  valueClassName={silverProfitData.actualRate >= 0 ? 'text-stat-up' : 'text-stat-down'}
                                             />
                                         </div>
                                         <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-2xl p-5 relative overflow-hidden">
-                                            <AppleStatBox 
-                                                label="김치 프리미엄" 
-                                                value={`${silverProfitData.kPremiumPercent.toFixed(2)}%`} 
-                                                type={silverProfitData.kPremiumPercent > 5 ? 'up' : 'neutral'}
-                                                subValue={`이론가 ${formatNumber(silverProfitData.theoreticalKrwPrice)}원`}
-                                                // Highlight logic for > 20%
-                                                valueClassName={silverProfitData.kPremiumPercent >= 20 ? 'text-[#FF3B30] font-black animate-pulse' : undefined}
+                                            {/* Premium Color: Use new CSS classes */}
+                                            <AppleStatBox
+                                                  label="김치 프리미엄"
+                                                  value={`${silverProfitData.kPremiumPercent.toFixed(2)}%`}
+                                                  subValue={`이론가 ${formatNumber(silverProfitData.theoreticalKrwPrice)}원`}
+                                                  valueClassName={silverProfitData.kPremiumPercent >= 20 ? 'text-stat-up animate-pulse' : (silverProfitData.kPremiumPercent < 0 ? 'text-stat-down' : 'text-stat-neutral')}
                                             />
                                         </div>
                                     </div>
@@ -979,127 +867,186 @@
                                 </div>
                             </div>
                         </AppleCard>
-
                         {/* 2. Bridge Chart (Side Block) */}
-                        <AppleCard title="성과 브릿지" subTitle="매입가 vs 이론가 vs 거품" className="lg:col-span-4 h-full">
-                            <div className="h-full min-h-[250px] flex flex-col justify-between">
-                                <div className="flex-1 w-full relative">
-                                    {/* Updated stacked bar chart */}
-                                    <SilverPerformanceBridgeChart profitData={silverProfitData} isDark={isDark} />
+                        <AppleCard title="성과 브릿지" subTitle="요인별 가격 변동 (Waterfall)" className="lg:col-span-4 h-full">
+                            <div className="h-full">
+                                <SilverPerformanceBridgeChart profitData={silverProfitData} isDark={isDark} />
+                            </div>
+                        </AppleCard>
+                        {/* 3. Favorites & Search (Restored) */}
+                        <AppleCard title="관심 종목 & 검색" subTitle="빠른 조회 및 편집" className="lg:col-span-4 h-full min-h-[400px]">
+                            <div className="flex flex-col h-full">
+                                {/* Search Input */}
+                                <div className="relative mb-4">
+                                    <input                                          type="text"                                          className="w-full bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-xl pl-10 pr-4 py-3 text-sm font-bold text-slate-900 force-dark-white outline-none focus:ring-2 focus:ring-[#0071E3]/20"
+                                        placeholder="종목명 또는 코드 검색 (Enter)"
+                                        value={searchQuery}
+                                        onChange={e => setSearchQuery(e.target.value)}
+                                        onKeyDown={e => e.key === 'Enter' && searchSymbol(searchQuery)}
+                                    />
+                                    <i className="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-gray-400 dark:text-gray-300"></i>
                                 </div>
-                                <div className="mt-4 p-4 rounded-2xl bg-[#F2F2F7] dark:bg-[#2C2C2E] flex justify-between items-center">
-                                    <span className="text-xs font-semibold text-gray-500">현재 평가금액</span>
-                                    <span className="text-lg font-bold text-slate-900 dark:text-white">{formatManwon(silverProfitData.actualPrice)}</span>
+                                {/* Edit Mode Toggle */}
+                                <div className="flex justify-between items-center mb-2 px-1">
+                                    <span className="text-xs font-bold text-gray-400 dark:text-gray-300">내 관심 종목 ({favorites.length})</span>
+                                    <button onClick={() => setIsFavEditMode(!isFavEditMode)} className="text-xs font-bold text-[#0071E3]">
+                                        {isFavEditMode ? '완료' : '편집'}
+                                    </button>
                                 </div>
-                            </div>
-                        </AppleCard>
-
-                        {/* 3. Heatmap (Wide Block) */}
-                        <AppleCard className="lg:col-span-8 min-h-[400px] !p-0 overflow-hidden relative">
-                            <div className="absolute top-4 left-4 z-10 bg-white/80 dark:bg-black/80 backdrop-blur px-3 py-1 rounded-full text-xs font-bold border border-slate-200 dark:border-white/10">S&P 500 섹터 맵</div>
-                            <TradingViewHeatmap theme={isDark ? 'dark' : 'light'} />
-                        </AppleCard>
-
-                        {/* 4. Favorites (Side List) */}
-                        <AppleCard title="관심 종목" subTitle="빠른 시세 조회" className="lg:col-span-4">
-                            <div className="relative mb-4">
-                                <i className="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-                                <input 
-                                    type="text" 
-                                    placeholder="종목명 또는 코드..." 
-                                    className="w-full bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-xl py-2.5 pl-8 pr-4 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all dark:text-white placeholder-gray-400"
-                                    onKeyDown={(e) => e.key === 'Enter' && searchSymbol(e.target.value)}
-                                />
-                            </div>
-                            <div className="flex flex-col">
-                                {favorites.map((f, i) => (
-                                    <div key={i} onClick={() => searchSymbol(f.code)} className="apple-list-item cursor-pointer group hover:bg-gray-50 dark:hover:bg-white/5 px-2 rounded-lg transition-colors">
-                                        <div className="flex flex-col">
-                                            <span className="font-bold text-sm text-[#1D1D1F] dark:text-white">{f.name}</span>
-                                            <span className="text-[11px] font-semibold text-gray-400 group-hover:text-blue-500">{f.code}</span>
-                                        </div>
-                                        <i className="fa-solid fa-chevron-right text-[10px] text-gray-300 group-hover:text-blue-500"></i>
-                                    </div>
-                                ))}
-                                <button onClick={()=>{
-                                    const n = prompt("종목명"); const c = prompt("코드");
-                                    if(n&&c) setFavorites([...favorites, {name:n, code:c}]);
-                                }} className="mt-3 w-full py-3 text-xs font-bold text-[#0071E3] bg-blue-50 dark:bg-blue-900/20 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors">
-                                    + 종목 추가
-                                </button>
-                            </div>
-                        </AppleCard>
-                    </div>
-                </div>
-            );
-
-            // --- LEGACY TABS (PRESERVED EXACTLY AS IS) ---
-            const renderRoutine = () => (
-                <div className="space-y-6 animate-fade-in pb-10 overflow-x-hidden">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b dark:border-slate-700 font-bold">
-                        <div className="flex items-center gap-4">
-                            <h2 className="text-2xl font-black dark:text-white">오늘의 루틴</h2>
-                            <button onClick={() => setIsRoutineEditMode(!isRoutineEditMode)} className={`px-3 py-1 rounded text-xs transition-all ${isRoutineEditMode ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-white'}`}>
-                                <i className="fa-solid fa-pen-to-square mr-1"></i> {isRoutineEditMode ? '편집 완료' : '링크 편집'}
-                            </button>
-                        </div>
-                        <div className="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-lg w-full sm:w-auto shadow-inner">
-                            <button onClick={() => setLinkMode('investment')} className={`flex-1 sm:flex-none px-6 py-2 text-xs font-black rounded-lg transition-all ${linkMode === 'investment' ? 'bg-white shadow text-blue-600 dark:bg-slate-600 dark:text-blue-200' : 'text-slate-500 dark:text-slate-400'}`}>투자 & 일상</button>
-                            <button onClick={() => setLinkMode('blogs')} className={`flex-1 sm:flex-none px-6 py-2 text-xs font-black rounded-lg transition-all ${linkMode === 'blogs' ? 'bg-white shadow text-emerald-600 dark:bg-slate-600 dark:text-emerald-300' : 'text-slate-500 dark:text-slate-400'}`}>인사이트 블로그</button>
-                        </div>
-                    </div>
-
-                    {isRoutineEditMode && (
-                        <div className="p-6 bg-indigo-50 dark:bg-indigo-900/10 rounded-2xl border-2 border-indigo-200 dark:border-indigo-800 animate-fade-in mb-6">
-                            <h3 className="font-black text-indigo-600 dark:text-indigo-400 mb-4 text-sm"><i className="fa-solid fa-plus-circle mr-2"></i>새 루틴 링크 추가</h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                                <select className="sim-input !mt-0 text-xs" value={newRoutine.category} onChange={e=>setNewRoutine({...newRoutine, category:e.target.value})}>
-                                    <option value="">카테고리 선택</option>
-                                    {Object.keys(linkMode === 'blogs' ? blogInsightLinks : routineLinks).map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                                </select>
-                                <input type="text" placeholder="사이트명" className="sim-input !mt-0 text-xs" value={newRoutine.name} onChange={e=>setNewRoutine({...newRoutine, name:e.target.value})} />
-                                <input type="text" placeholder="URL" className="sim-input !mt-0 text-xs" value={newRoutine.url} onChange={e=>setNewRoutine({...newRoutine, url:e.target.value})} />
-                                <button onClick={() => {
-                                    if(linkMode === 'blogs') {
-                                        if (!newRoutine.category || !newRoutine.name || !newRoutine.url) return;
-                                        const updated = { ...blogInsightLinks };
-                                        updated[newRoutine.category] = [...updated[newRoutine.category], { name: newRoutine.name, url: newRoutine.url, icon: "fa-link", color: "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-100" }];
-                                        setBlogInsightLinks(updated);
-                                        setNewRoutine({ category: '', name: '', url: '' });
-                                    } else { addRoutineLink(); }
-                                }} className="bg-indigo-600 text-white rounded font-black text-xs h-10">추가하기</button>
-                            </div>
-                        </div>
-                    )}
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-bold">
-                        {Object.entries(linkMode === 'blogs' ? blogInsightLinks : routineLinks).map(([cat, links]) => (
-                            <div key={cat} className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-lg border dark:border-slate-700 transition-all hover:shadow-xl">
-                                <h3 className={`text-lg font-black mb-4 border-b dark:border-slate-700 pb-2 flex items-center gap-2 ${linkMode === 'blogs' ? 'text-emerald-600 dark:text-emerald-400' : 'text-indigo-600 dark:text-indigo-400'}`}>
-                                    {cat}
-                                </h3>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    {links.map((l, i) => (
-                                        <div key={i} className="relative group">
-                                            <a href={l.url} target="_blank" className="block p-3 rounded-xl bg-slate-50 dark:bg-slate-900/40 hover:shadow-md flex items-center gap-3 group transition-all border border-transparent dark:border-slate-700 dark:hover:border-emerald-500/50">
-                                                <div className={`w-8 h-8 rounded flex items-center justify-center ${l.color || 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-100'} bg-opacity-20 group-hover:scale-110 transition`}><i className={`fa-solid ${l.icon || 'fa-link'}`}></i></div>
-                                                <span className="text-sm truncate pr-6 text-slate-900 dark:text-slate-100 font-bold">{l.name}</span>
-                                            </a>
-                                            {isRoutineEditMode && (
-                                                <button onClick={() => {
-                                                    if(linkMode === 'blogs') { const updated = { ...blogInsightLinks }; updated[cat] = updated[cat].filter((_, index) => index !== i); setBlogInsightLinks(updated); }
-                                                    else { removeRoutineLink(cat, i); }
-                                                }} className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition"><i className="fa-solid fa-xmark text-[10px]"></i></button>
+                                {/* Favorites List */}
+                                <div className="flex-1 overflow-y-auto space-y-2 pr-1 mb-4 scrollbar-hide">
+                                    {favorites.map((fav) => (
+                                        <div key={fav.code} className="bg-[#F2F2F7] dark:bg-[#2C2C2E] p-3 rounded-xl flex justify-between items-center group hover:bg-gray-200 dark:hover:bg-gray-700 transition cursor-pointer" onClick={() => !isFavEditMode && searchSymbol(fav.code)}>
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-white dark:bg-[#1C1C1E] flex items-center justify-center text-xs font-black text-gray-500 shadow-sm">
+                                                    {fav.name.substring(0,1)}
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-bold text-slate-900 dark:text-white">{fav.name}</span>
+                                                    <span className="text-[10px] font-medium text-gray-400 dark:text-gray-400">{fav.code}</span>
+                                                </div>
+                                            </div>
+                                            {isFavEditMode ? (
+                                                <button                                                      onClick={(e) => { e.stopPropagation(); removeFavorite(fav.code); }}
+                                                    className="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow-sm hover:scale-110 transition"
+                                                >
+                                                    <i className="fa-solid fa-minus text-[10px]"></i>
+                                                </button>
+                                            ) : (
+                                                <i className="fa-solid fa-chevron-right text-xs text-gray-300 dark:text-gray-500 group-hover:text-gray-400"></i>
                                             )}
                                         </div>
                                     ))}
                                 </div>
+                                {/* Add New Favorite */}
+                                {isFavEditMode && (
+                                    <div className="mt-auto pt-4 border-t border-gray-100 dark:border-white/5 animate-fade-in">
+                                        <div className="flex gap-2">
+                                            <input className="w-20 bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-lg px-2 py-2 text-xs font-bold text-center outline-none force-dark-white" placeholder="코드" value={newFav.code} onChange={e=>setNewFav({...newFav, code:e.target.value})} />
+                                            <input className="flex-1 bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-lg px-2 py-2 text-xs font-bold outline-none force-dark-white" placeholder="종목명" value={newFav.name} onChange={e=>setNewFav({...newFav, name:e.target.value})} />
+                                            <button                                                  onClick={() => {
+                                                    if(newFav.code && newFav.name) {
+                                                        setFavorites([...favorites, newFav]);
+                                                        setNewFav({code:'', name:''});
+                                                    }
+                                                }}
+                                                className="w-8 bg-[#0071E3] text-white rounded-lg flex items-center justify-center hover:bg-blue-600"
+                                            >
+                                                <i className="fa-solid fa-plus text-xs"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
+                        </AppleCard>
+                        {/* 4. Heatmap (Adjusted Width) */}
+                        <AppleCard className="lg:col-span-8 h-96 min-h-[400px] !p-0 overflow-hidden"><TradingViewHeatmap theme={isDark ? 'dark' : 'light'} /></AppleCard>
+                    </div>
+                </div>
+            );
+            // --- UPDATED ROUTINE TAB (Apple Style) ---
+            const renderRoutine = () => (
+                <div className="animate-fade-in pb-10 space-y-6">
+                    {/* Header & Controls */}
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 px-1">
+                        <div>
+                            {/* Title Fix: Added 'force-dark-white' */}
+                            <h2 className="text-3xl font-bold tracking-tight text-slate-900 force-dark-white">오늘의 루틴</h2>
+                            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">
+                                {linkMode === 'investment' ? '매일 체크하는 투자 및 생활 정보' : '깊이 있는 분석과 인사이트 블로그'}
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                             {/* Segmented Control for Mode */}
+                            <div className="bg-[#E5E5EA] dark:bg-[#2C2C2E] p-1 rounded-full flex">
+                                <button                                      onClick={() => setLinkMode('investment')}                                      className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${linkMode === 'investment' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-500 dark:text-gray-300'}`}
+                                >
+                                    투자 & 일상
+                                </button>
+                                <button                                      onClick={() => setLinkMode('blogs')}                                      className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${linkMode === 'blogs' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-500 dark:text-gray-300'}`}
+                                >
+                                    인사이트
+                                </button>
+                            </div>
+                            {/* Edit Toggle */}
+                            <button                                  onClick={() => setIsRoutineEditMode(!isRoutineEditMode)}                                  className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${isRoutineEditMode ? 'bg-[#0071E3] text-white' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-[#0071E3]'}`}
+                            >
+                                {isRoutineEditMode ? '완료' : '편집'}
+                            </button>
+                        </div>
+                    </div>
+                    {/* Add New Link Form (Edit Mode Only) */}
+                    {isRoutineEditMode && (
+                        <AppleCard className="bg-indigo-50/50 dark:bg-indigo-900/10 border-indigo-100 dark:border-indigo-800">
+                            <div className="flex items-center gap-2 mb-4 text-[#0071E3]">
+                                <i className="fa-solid fa-circle-plus"></i>
+                                <span className="text-sm font-bold">새로운 링크 추가</span>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                                <div className="sm:col-span-3">
+                                    <select                                          className="apple-input w-full"                                          value={newRoutine.category}                                          onChange={e=>setNewRoutine({...newRoutine, category:e.target.value})}
+                                    >
+                                        <option value="">카테고리 선택</option>
+                                        {Object.keys(linkMode === 'blogs' ? blogInsightLinks : routineLinks).map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                                    </select>
+                                </div>
+                                <div className="sm:col-span-3">
+                                    <input type="text" placeholder="사이트명" className="apple-input" value={newRoutine.name} onChange={e=>setNewRoutine({...newRoutine, name:e.target.value})} />
+                                </div>
+                                <div className="sm:col-span-4">
+                                    <input type="text" placeholder="URL (https://...)" className="apple-input" value={newRoutine.url} onChange={e=>setNewRoutine({...newRoutine, url:e.target.value})} />
+                                </div>
+                                <div className="sm:col-span-2">
+                                    <button                                          onClick={() => {
+                                            if(linkMode === 'blogs') {
+                                                if (!newRoutine.category || !newRoutine.name || !newRoutine.url) return;
+                                                const updated = { ...blogInsightLinks };
+                                                updated[newRoutine.category] = [...updated[newRoutine.category], { name: newRoutine.name, url: newRoutine.url, icon: "fa-link", color: "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-100" }];
+                                                setBlogInsightLinks(updated);
+                                                setNewRoutine({ category: '', name: '', url: '' });
+                                            } else { addRoutineLink(); }
+                                        }}                                          className="w-full h-full bg-[#0071E3] hover:bg-blue-600 text-white rounded-xl font-bold text-xs transition py-3 sm:py-0"
+                                    >
+                                        추가하기
+                                    </button>
+                                </div>
+                            </div>
+                        </AppleCard>
+                    )}
+                    {/* Link Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {Object.entries(linkMode === 'blogs' ? blogInsightLinks : routineLinks).map(([cat, links]) => (
+                            <AppleCard key={cat} title={cat} className="h-full">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {links.map((l, i) => (
+                                        <div key={i} className="relative group">
+                                            <a                                                  href={l.url}                                                  target="_blank"                                                  className="flex items-center gap-3 p-3 rounded-xl bg-[#F2F2F7] dark:bg-[#2C2C2E] hover:bg-gray-200 dark:hover:bg-gray-700 transition-all group-hover:scale-[1.02]"
+                                            >
+                                                <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${l.color ? l.color.replace('text-', 'text-opacity-80 text-') : 'bg-white dark:bg-white/10 text-gray-500'}`}>
+                                                    <i className={`fa-solid ${l.icon || 'fa-link'} text-sm`}></i>
+                                                </div>
+                                                <span className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                                                    {l.name}
+                                                </span>
+                                            </a>
+                                            {isRoutineEditMode && (
+                                                <button                                                      onClick={(e) => {
+                                                        e.preventDefault();
+                                                        if(linkMode === 'blogs') { const updated = { ...blogInsightLinks }; updated[cat] = updated[cat].filter((_, index) => index !== i); setBlogInsightLinks(updated); }
+                                                        else { removeRoutineLink(cat, i); }
+                                                    }}                                                      className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-[#FF3B30] text-white rounded-full flex items-center justify-center shadow-md hover:scale-110 transition z-10 border-2 border-white dark:border-[#1C1C1E]"
+                                                >
+                                                    <i className="fa-solid fa-minus text-[10px]"></i>
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </AppleCard>
                         ))}
                     </div>
                 </div>
             );
-
             const renderTools = () => {
                 const targetRes = (() => {
                     const currentPrice = parseFormattedNumber(targetInputs.price); const shares = parseFormattedNumber(targetInputs.shares);
@@ -1111,100 +1058,113 @@
                 const exchRes = (parseFormattedNumber(exchInputs.amount) * (exchangeRates[exchInputs.base]?.krw || 1)) / (exchangeRates[exchInputs.target]?.krw || 1);
                 let avgCost = 0, avgQ = 0; avgRows.forEach(r => { const q = parseFormattedNumber(r.q); const p = parseFormattedNumber(r.p); avgQ += q; avgCost += q * p; });
                 const ipoNeeded = (parseFormattedNumber(ipoCalcInputs.price) * parseFormattedNumber(ipoCalcInputs.qty) * (ipoCalcInputs.rate/100)) + parseFormattedNumber(ipoCalcInputs.fee);
-
                 return (
                     <div className="animate-fade-in pb-10 font-bold space-y-6">
-                        <h2 className="text-xl sm:text-2xl font-black mb-4 border-b dark:border-slate-700 pb-2 flex flex-col sm:flex-row sm:items-center gap-3 dark:text-white">
-                            투자 지원 도구함
-                            <span className="text-[10px] sm:text-xs bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-200 px-2 py-1 rounded font-black w-max">계산기 및 분석 툴킷</span>
-                        </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-                            <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border dark:border-slate-700 flex flex-col">
-                                <h3 className="font-bold mb-4 text-indigo-600 dark:text-indigo-400 font-black flex items-center gap-2"><i className="fa-solid fa-bullseye"></i> 목표 단가 분석</h3>
-                                <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-lg mb-4 text-[10px]">
-                                    <button onClick={() => setTargetInputs({...targetInputs, mode:'cap'})} className={`flex-1 py-1.5 rounded-md transition-all ${targetInputs.mode==='cap'?'bg-white dark:bg-slate-600 shadow text-indigo-600 dark:text-indigo-100':'text-slate-500 dark:text-slate-300'}`}>시총 비례</button>
-                                    <button onClick={() => setTargetInputs({...targetInputs, mode:'rate'})} className={`flex-1 py-1.5 rounded-md transition-all ${targetInputs.mode==='rate'?'bg-white shadow text-indigo-600 dark:text-indigo-100':'text-slate-500 dark:text-slate-300'}`}>가격 직접</button>
+                        {/* Header */}
+                        <div className="flex justify-between items-end px-1">
+                             <div>
+                                {/* Title Fix: Added 'force-dark-white' */}
+                                <h2 className="text-3xl font-bold tracking-tight text-slate-900 force-dark-white">투자 도구</h2>
+                                <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">계산기 및 분석 툴킷</p>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* 1. Target Price */}
+                            <AppleCard title="목표 단가 분석" subTitle="시총 비례 또는 지정가" className="flex flex-col h-full">
+                                {/* Segmented Control */}
+                                <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] p-1 rounded-xl flex mb-6">
+                                    <button onClick={() => setTargetInputs({...targetInputs, mode:'cap'})} className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${targetInputs.mode==='cap'?'bg-white dark:bg-[#636366] shadow-sm text-black dark:text-white':'text-gray-400 dark:text-gray-400'}`}>시총 비례</button>
+                                    <button onClick={() => setTargetInputs({...targetInputs, mode:'rate'})} className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${targetInputs.mode==='rate'?'bg-white dark:bg-[#636366] shadow-sm text-black dark:text-white':'text-gray-400 dark:text-gray-400'}`}>가격 직접</button>
                                 </div>
+                                
                                 <div className="space-y-4 flex-1">
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-slate-100 mb-1 font-bold">현재가</label><input type="text" className="sim-input tool-input text-right" placeholder="0" value={targetInputs.price} onChange={e=>handleCommaChange(e, v=>setTargetInputs({...targetInputs, price:v}))} /></div>
-                                        <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-slate-100 mb-1 font-bold">보유 수량</label><input type="text" className="sim-input tool-input text-right" placeholder="0" value={targetInputs.shares} onChange={e=>handleCommaChange(e, v=>setTargetInputs({...targetInputs, shares:v}))} /></div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div><label className="text-xs font-bold text-gray-500 dark:text-gray-300 pl-1 mb-1 block">현재가</label><input type="text" className="apple-input" placeholder="0" value={targetInputs.price} onChange={e=>handleCommaChange(e, v=>setTargetInputs({...targetInputs, price:v}))} /></div>
+                                        <div><label className="text-xs font-bold text-gray-500 dark:text-gray-300 pl-1 mb-1 block">보유 수량</label><input type="text" className="apple-input" placeholder="0" value={targetInputs.shares} onChange={e=>handleCommaChange(e, v=>setTargetInputs({...targetInputs, shares:v}))} /></div>
                                     </div>
                                     {targetInputs.mode === 'cap' ? (
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-slate-100 mb-1 truncate font-bold">현재 시총(조)</label><input type="number" step="0.1" className="sim-input tool-input" value={targetInputs.currentCap} onChange={e=>setTargetInputs({...targetInputs, currentCap:e.target.value})} /></div>
-                                            <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-slate-100 mb-1 truncate font-bold">목표 시총(조)</label><input type="number" step="0.1" className="sim-input tool-input" value={targetInputs.targetCap} onChange={e=>setTargetInputs({...targetInputs, targetCap:e.target.value})} /></div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div><label className="text-xs font-bold text-gray-500 dark:text-gray-300 pl-1 mb-1 block">현재 시총(조)</label><input type="number" step="0.1" className="apple-input text-right" value={targetInputs.currentCap} onChange={e=>setTargetInputs({...targetInputs, currentCap:e.target.value})} /></div>
+                                            <div><label className="text-xs font-bold text-gray-500 dark:text-gray-300 pl-1 mb-1 block">목표 시총(조)</label><input type="number" step="0.1" className="apple-input text-right" value={targetInputs.targetCap} onChange={e=>setTargetInputs({...targetInputs, targetCap:e.target.value})} /></div>
                                         </div>
                                     ) : (
-                                        <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-slate-100 mb-1 font-bold">목표 단가 직접 입력</label><input type="text" className="sim-input tool-input text-right" placeholder="0" value={targetInputs.targetRate} onChange={e=>handleCommaChange(e, v=>setTargetInputs({...targetInputs, targetRate:v}))} /></div>
+                                        <div><label className="text-xs font-bold text-gray-500 dark:text-gray-300 pl-1 mb-1 block">목표 단가</label><input type="text" className="apple-input" placeholder="0" value={targetInputs.targetRate} onChange={e=>handleCommaChange(e, v=>setTargetInputs({...targetInputs, targetRate:v}))} /></div>
                                     )}
                                 </div>
-                                <div className="tool-result-container bg-indigo-50/50 dark:bg-indigo-900/40 border-indigo-200 dark:border-indigo-700 text-indigo-700 dark:text-white num-font font-black">
-                                    <div className="flex justify-between items-center text-xs opacity-90 border-b border-indigo-100 dark:border-indigo-700 pb-2 mb-2"><span>목표 도달 단가</span><span>{formatNumber(targetRes.targetPrice)}원 ({targetRes.rate.toFixed(1)}%)</span></div>
-                                    <div className="flex justify-between items-center text-xs opacity-90 mb-1"><span>예상 총액</span><span>{formatNumber(targetRes.totalAmount)}원</span></div>
-                                    <div className="flex justify-between items-center text-sm border-t border-indigo-200 dark:border-indigo-700 pt-2 mt-2"><span>총 예상 수익금</span><span className="text-lg text-indigo-700 dark:text-indigo-300">{formatNumber(targetRes.profit)}원</span></div>
-                                </div>
-                            </div>
-                            <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border dark:border-slate-700 overflow-hidden flex flex-col">
-                                <div className="flex justify-between items-center mb-4 text-blue-600 dark:text-blue-400">
-                                    <div className="flex flex-col">
-                                        <h3 className="font-bold font-black flex items-center gap-2 flex-shrink-0"><i className="fa-solid fa-money-bill-transfer"></i> 환율 계산기</h3>
-                                        <p className="text-[9px] text-slate-400 dark:text-slate-400 mt-1 font-bold">수신 시점: {lastUpdated}</p>
+                                <div className="mt-6 bg-[#F2F2F7] dark:bg-[#2C2C2E] p-5 rounded-2xl">
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className="text-xs font-bold text-gray-500 dark:text-gray-300">목표 도달 단가</span>
+                                        <span className="text-sm font-bold force-dark-white">{formatNumber(targetRes.targetPrice)}원 <span className={targetRes.rate >= 0 ? "text-[#34C759]" : "text-[#FF3B30]"}>({targetRes.rate.toFixed(1)}%)</span></span>
                                     </div>
-                                    <button onClick={fetchRealTimeRates} className={`text-slate-400 dark:text-white hover:text-blue-500 transition-colors ${isFetching ? 'animate-spin' : ''}`}><i className="fa-solid fa-arrows-rotate text-xs"></i></button>
+                                    <div className="flex justify-between items-center pt-3 border-t border-gray-200 dark:border-gray-700">
+                                        <span className="text-xs font-bold text-gray-500 dark:text-gray-300">예상 수익금</span>
+                                        <span className="text-xl font-bold text-[#0071E3]">{formatNumber(targetRes.profit)}원</span>
+                                    </div>
+                                </div>
+                            </AppleCard>
+                            {/* 2. Exchange Rate */}
+                            <AppleCard title="환율 계산기" subTitle={`수신: ${lastUpdated}`} className="flex flex-col h-full">
+                                <div className="flex justify-end mb-4">
+                                     <button onClick={fetchRealTimeRates} className={`text-xs font-bold text-[#0071E3] flex items-center gap-1 ${isFetching ? 'opacity-50' : ''}`}><i className={`fa-solid fa-arrows-rotate ${isFetching ? 'animate-spin' : ''}`}></i> 새로고침</button>
                                 </div>
                                 <div className="space-y-4 flex-1">
-                                    <div className="flex flex-wrap sm:flex-nowrap gap-2 w-full">
-                                        <select className="w-full sm:w-24 md:w-1/3 sim-input tool-input flex-shrink-0" value={exchInputs.base} onChange={e=>setExchInputs({...exchInputs, base:e.target.value})}>{Object.keys(exchangeRates).map(k=><option key={k} value={k}>{k}</option>)}</select>
-                                        <input type="text" className="w-full flex-1 min-w-0 sim-input tool-input text-right" value={exchInputs.amount} onChange={e=>handleCommaChange(e, v=>setExchInputs({...exchInputs, amount:v}))} />
+                                    <div className="flex gap-3">
+                                        <select className="bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-xl px-3 font-bold text-sm outline-none force-dark-white" value={exchInputs.base} onChange={e=>setExchInputs({...exchInputs, base:e.target.value})}>{Object.keys(exchangeRates).map(k=><option key={k} value={k}>{k}</option>)}</select>
+                                        <input type="text" className="apple-input flex-1" value={exchInputs.amount} onChange={e=>handleCommaChange(e, v=>setExchInputs({...exchInputs, amount:v}))} />
                                     </div>
-                                    <div className="flex flex-wrap sm:flex-nowrap gap-2 w-full">
-                                        <select className="w-full sm:w-24 md:w-1/3 sim-input tool-input flex-shrink-0" value={exchInputs.target} onChange={e=>setExchInputs({...exchInputs, target:e.target.value})}>{Object.keys(exchangeRates).map(k=><option key={k} value={k}>{k}</option>)}</select>
-                                        <div className="w-full flex-1 min-w-0 flex items-center justify-end px-3 py-2 rounded-md bg-white dark:bg-slate-700 border-2 border-blue-200 dark:border-blue-900 text-blue-600 dark:text-white font-black text-lg num-font shadow-inner overflow-hidden">
-                                            <span className="break-all text-right leading-tight">{formatNumber(exchRes)}</span>
+                                    <div className="flex gap-3 items-center">
+                                        <i className="fa-solid fa-arrow-down text-gray-300 mx-auto"></i>
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <select className="bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-xl px-3 font-bold text-sm outline-none force-dark-white" value={exchInputs.target} onChange={e=>setExchInputs({...exchInputs, target:e.target.value})}>{Object.keys(exchangeRates).map(k=><option key={k} value={k}>{k}</option>)}</select>
+                                        <div className="flex-1 bg-white dark:bg-[#1C1C1E] border border-slate-100 dark:border-white/10 rounded-xl flex items-center justify-end px-4 py-3 font-bold text-lg force-dark-white">
+                                            {formatNumber(exchRes)}
                                         </div>
                                     </div>
                                 </div>
-                                <div className="mt-4 p-3 rounded-xl bg-blue-50/50 dark:bg-blue-900/30 text-[10px] text-blue-600 dark:text-white text-center font-bold">실시간 환율 정보를 바탕으로 자동 계산됩니다.</div>
-                            </div>
-                            <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border dark:border-slate-700 font-bold">
-                                <h3 className="mb-4 text-purple-600 dark:text-purple-400 font-black flex items-center gap-2"><i className="fa-solid fa-piggy-bank"></i> 공모주 청약 계산</h3>
-                                <div className="grid grid-cols-2 gap-3 mb-4">
-                                    <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">공모가</label><input type="text" className="sim-input tool-input text-right" value={ipoCalcInputs.price} onChange={e=>handleCommaChange(e, v=>setIpoCalcInputs({...ipoCalcInputs, price:v}))} /></div>
-                                    <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">청약수량</label><input type="text" className="sim-input tool-input text-right" value={ipoCalcInputs.qty} onChange={e=>setIpoCalcInputs({...ipoCalcInputs, qty:parseFormattedNumber(e.target.value).toLocaleString()})} /></div>
-                                    <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">증거금율</label><select className="sim-input tool-input" value={ipoCalcInputs.rate} onChange={e=>setIpoCalcInputs({...ipoCalcInputs, rate:parseInt(e.target.value)})}><option value={50}>50%</option><option value={100}>100%</option></select></div>
-                                    <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">수수료</label><input type="text" className="sim-input tool-input text-right" value={ipoCalcInputs.fee} onChange={e=>handleCommaChange(e, v=>setIpoCalcInputs({...ipoCalcInputs, fee:v}))} /></div>
+                                <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-4 text-center font-medium">실시간 고시 환율 기반 (지연될 수 있음)</p>
+                            </AppleCard>
+                            {/* 3. IPO Calculator */}
+                            <AppleCard title="공모주 청약" subTitle="필요 증거금 계산" className="flex flex-col h-full">
+                                <div className="grid grid-cols-2 gap-4 mb-6">
+                                    <div><label className="text-xs font-bold text-gray-500 dark:text-gray-300 pl-1 mb-1 block">공모가</label><input type="text" className="apple-input" value={ipoCalcInputs.price} onChange={e=>handleCommaChange(e, v=>setIpoCalcInputs({...ipoCalcInputs, price:v}))} /></div>
+                                    <div><label className="text-xs font-bold text-gray-500 dark:text-gray-300 pl-1 mb-1 block">청약수량</label><input type="text" className="apple-input" value={ipoCalcInputs.qty} onChange={e=>setIpoCalcInputs({...ipoCalcInputs, qty:parseFormattedNumber(e.target.value).toLocaleString()})} /></div>
+                                    <div><label className="text-xs font-bold text-gray-500 dark:text-gray-300 pl-1 mb-1 block">증거금율</label><select className="apple-input h-[46px]" value={ipoCalcInputs.rate} onChange={e=>setIpoCalcInputs({...ipoCalcInputs, rate:parseInt(e.target.value)})}><option value={50}>50%</option><option value={100}>100%</option></select></div>
+                                    <div><label className="text-xs font-bold text-gray-500 dark:text-gray-300 pl-1 mb-1 block">수수료</label><input type="text" className="apple-input" value={ipoCalcInputs.fee} onChange={e=>handleCommaChange(e, v=>setIpoCalcInputs({...ipoCalcInputs, fee:v}))} /></div>
                                 </div>
-                                <div className="tool-result-container bg-purple-50/50 dark:bg-purple-900/40 border-purple-200 dark:border-purple-800 text-purple-600 dark:text-white num-font font-black">
-                                    <span className="text-xs opacity-90 block mb-1">총 필요 증거금</span>
-                                    <span className="text-xl text-purple-700 dark:text-purple-300">{formatNumber(ipoNeeded)}원</span>
+                                <div className="mt-auto bg-[#F2F2F7] dark:bg-[#2C2C2E] p-5 rounded-2xl flex justify-between items-center">
+                                    <span className="text-xs font-bold text-gray-500 dark:text-gray-300">필요 증거금</span>
+                                    <span className="text-xl font-bold text-purple-600 dark:text-purple-400">{formatNumber(ipoNeeded)}원</span>
                                 </div>
-                            </div>
-                            <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border dark:border-slate-700 font-bold flex flex-col">
-                                <h3 className="mb-3 text-emerald-600 dark:text-emerald-400 flex justify-between items-center font-black">
-                                    <span className="flex items-center gap-2"><i className="fa-solid fa-scale-balanced"></i> 평단가 계산기</span>
-                                    <button onClick={()=>setAvgRows([...avgRows, {id:Date.now(), q:'', p:''}])} className="bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-white px-2 py-0.5 rounded text-[10px] hover:bg-emerald-200 transition-colors">+ 추가</button>
-                                </h3>
-                                <div className="space-y-2 overflow-y-auto max-h-40 mb-3 pr-1 scrollbar-thin">
+                            </AppleCard>
+                            {/* 4. Average Cost */}
+                            <AppleCard title="평단가 계산기" subTitle="물타기 시뮬레이션" className="flex flex-col h-full">
+                                <div className="flex-1 overflow-y-auto max-h-[200px] space-y-2 pr-1 mb-4 scrollbar-hide">
                                     {avgRows.map((r, i) => (
-                                        <div key={r.id} className="grid grid-cols-12 gap-1 items-center animate-fade-in">
-                                            <input type="text" placeholder="수량" className="col-span-5 sim-input tool-input text-right !p-1.5" value={r.q} onChange={e=>handleCommaChange(e, v=>{const n=[...avgRows]; n[i].q=v; setAvgRows(n);})} />
-                                            <input type="text" placeholder="단가" className="col-span-5 sim-input tool-input text-right !p-1.5" value={r.p} onChange={e=>handleCommaChange(e, v=>{const n=[...avgRows]; n[i].p=v; setAvgRows(n);})} />
-                                            <button onClick={()=>{const n=avgRows.filter(row=>row.id!==r.id); setAvgRows(n.length?n:[{id:Date.now(),q:'',p:''}]);}} className="col-span-2 text-rose-400 hover:text-rose-500"><i className="fa-solid fa-trash-can text-xs"></i></button>
+                                        <div key={r.id} className="flex gap-2 items-center">
+                                            <input type="text" placeholder="수량" className="apple-input flex-1 !text-sm !py-2" value={r.q} onChange={e=>handleCommaChange(e, v=>{const n=[...avgRows]; n[i].q=v; setAvgRows(n);})} />
+                                            <input type="text" placeholder="단가" className="apple-input flex-1 !text-sm !py-2" value={r.p} onChange={e=>handleCommaChange(e, v=>{const n=[...avgRows]; n[i].p=v; setAvgRows(n);})} />
+                                            <button onClick={()=>{const n=avgRows.filter(row=>row.id!==r.id); setAvgRows(n.length?n:[{id:Date.now(),q:'',p:''}]);}} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500"><i className="fa-solid fa-trash-can text-xs"></i></button>
                                         </div>
                                     ))}
                                 </div>
-                                <div className="tool-result-container bg-emerald-50/50 dark:bg-emerald-900/40 border-emerald-200 dark:border-emerald-700/50 pb-1 mb-2">
-                                    <div className="flex justify-between items-center text-[10px] border-b dark:border-slate-700 pb-1 mb-2"><span className="text-slate-500 dark:text-slate-200 font-bold">합계 수량</span><span className="text-slate-900 dark:text-white font-black">{formatNumber(avgQ)}</span></div>
-                                    <div className="text-[10px] text-slate-500 dark:text-slate-200 font-bold">최종 평단가</div>
-                                    <div className="text-xl text-emerald-700 dark:text-emerald-400 font-black">{avgQ ? formatNumber(avgCost/avgQ) : 0}원</div>
+                                <button onClick={()=>setAvgRows([...avgRows, {id:Date.now(), q:'', p:''}])} className="mb-6 w-full py-2 bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-xl text-xs font-bold text-[#0071E3] hover:bg-gray-200 dark:hover:bg-gray-700 transition">+ 추가하기</button>
+                                
+                                <div className="bg-emerald-50 dark:bg-emerald-900/20 p-5 rounded-2xl border border-emerald-100 dark:border-emerald-800">
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className="text-xs font-bold text-emerald-600/70 dark:text-emerald-400/70">합계 수량</span>
+                                        <span className="text-sm font-bold text-emerald-800 dark:text-emerald-200">{formatNumber(avgQ)}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center pt-2 border-t border-emerald-100 dark:border-emerald-800/50">
+                                        <span className="text-xs font-bold text-emerald-600/70 dark:text-emerald-400/70">최종 평단가</span>
+                                        <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{avgQ ? formatNumber(avgCost/avgQ) : 0}원</span>
+                                    </div>
                                 </div>
-                            </div>
+                            </AppleCard>
                         </div>
                     </div>
                 );
             };
-
             const renderFinancialTax = () => {
                 const totalFinIncome = finList.reduce((a, c) => a + c.amount, 0);
                 const earnedIncomeValue = parseFormattedNumber(earnedIncome);
@@ -1213,19 +1173,16 @@
                     const isTarget = find > TAX_THRESHOLD; const findTaxable = isTarget ? (find - TAX_THRESHOLD) : 0; const combinedBase = earned + findTaxable;
                     let rem = combinedBase; let calculatedTax = 0; let lastLimit = 0; const breakdown = [];
                     for (const b of brackets) { if (rem <= 0) break; const chunk = Math.min(rem, b.limit - lastLimit); const tax = chunk * b.rate; breakdown.push({ label: `${formatNumber(lastLimit/10000)}만~${isFinite(b.limit) ? formatNumber(b.limit/10000)+'만' : '초과'}`, income: chunk, rate: b.rate * 100, tax: tax }); calculatedTax += tax; rem -= chunk; lastLimit = b.limit; }
-                    const separateFinTax = isTarget ? TAX_THRESHOLD * 0.14 : find * 0.14; 
-                    const totalDecided = (calculatedTax + separateFinTax) * 1.1; 
-                    let remE = earned; let lastLE = 0; let taxEOnly = 0; for (const b of brackets) { if (remE <= 0) break; const chunk = Math.min(remE, b.limit - lastLE); taxEOnly += chunk * b.rate; remE -= chunk; lastLE = b.limit; }
-                    const prepaidEarned = taxEOnly * 1.1; const prepaidFin = find * 0.154; 
-                    const additionalPayable = totalDecided - (prepaidEarned + prepaidFin); 
-                    const nhiAnnual = Math.max(0, find - 20000000) * 0.0709 * 1.1281;
+                    const separateFinTax = isTarget ? TAX_THRESHOLD * 0.14 : find * 0.14;                      const totalDecided = (calculatedTax + separateFinTax) * 1.1;                      let remE = earned; let lastLE = 0; let taxEOnly = 0; for (const b of brackets) { if (remE <= 0) break; const chunk = Math.min(remE, b.limit - lastLE); taxEOnly += chunk * b.rate; remE -= chunk; lastLE = b.limit; }
+                    const prepaidEarned = taxEOnly * 1.1; const prepaidFin = find * 0.154;                      const additionalPayable = totalDecided - (prepaidEarned + prepaidFin);                      const nhiAnnual = Math.max(0, find - 20000000) * 0.0709 * 1.1281;
                     return { totalDecided, additionalPayable, nhiAnnual, isTarget, breakdown, totalPrepaid: prepaidEarned + prepaidFin };
                 };
                 const resCurrent = calculateTaxFlow(earnedIncomeValue, totalFinIncome); const resNoEarned = calculateTaxFlow(0, totalFinIncome);
                 const taxImpact = resCurrent.additionalPayable - resNoEarned.additionalPayable; const finalTotalBurden = resCurrent.additionalPayable + resCurrent.nhiAnnual;
                 return (
                     <div className="space-y-6 animate-fade-in pb-10 font-bold w-full max-w-full overflow-hidden">
-                        <h2 className="text-xl sm:text-2xl font-black mb-4 border-b dark:border-slate-700 pb-2 flex flex-col sm:flex-row sm:items-center gap-3 dark:text-white">
+                        {/* Title Fix: Added 'force-dark-white' */}
+                        <h2 className="text-xl sm:text-2xl font-black mb-4 border-b dark:border-slate-700 pb-2 flex flex-col sm:flex-row sm:items-center gap-3 force-dark-white">
                             금융소득 종합과세 & 기납부 세액 정산
                             <span className="text-[10px] sm:text-xs bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-200 px-2 py-1 rounded font-black w-max">실제 추가 납부액 분석</span>
                         </h2>
@@ -1262,7 +1219,7 @@
                                     <h3 className="text-lg font-black text-indigo-800 dark:text-indigo-300 mb-6 flex items-center gap-2"><i className="fa-solid fa-scale-unbalanced-flip"></i> 근로소득 합산 시 실제 세금 증가분</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                         <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 shadow-sm"><p className="text-[11px] font-black text-slate-900 dark:text-slate-300 mb-2 flex items-center gap-1"><i className="fa-solid fa-circle text-[6px] text-slate-400"></i> 금융소득만 있을 때 정산액</p><p className="text-lg font-black text-slate-900 dark:text-slate-100">{formatNumber(resNoEarned.additionalPayable)}원</p><p className="text-[9px] text-slate-500 dark:text-slate-400 mt-1 font-bold">※ 금융 원천징수분(15.4%) 차감 후 정산액</p></div>
-                                        <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-900 border-2 border-indigo-200 dark:border-indigo-800"><p className="text-[11px] font-black text-indigo-700 dark:text-indigo-300 mb-2 flex items-center gap-1"><i className="fa-solid fa-circle text-[6px] text-indigo-500"></i> 근로+금융 합산 시 정산액</p><p className="text-lg font-black text-indigo-700 dark:text-white">{formatNumber(resCurrent.additionalPayable)}원</p><p className="text-[9px] text-indigo-400 dark:text-indigo-300 mt-1 font-bold">※ 근로/금융 기납부 세액 모두 차감 후 정산액</p></div>
+                                        <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-900 border-2 border-indigo-200 dark:border-indigo-800"><p className="text-[11px] font-black text-indigo-700 dark:text-indigo-300 mb-2 flex items-center gap-1"><i className="fa-solid fa-circle text-[6px] text-indigo-500"></i> 근로+금융 합산 시 정산액</p><p className="text-lg font-black text-indigo-700 force-dark-white">{formatNumber(resCurrent.additionalPayable)}원</p><p className="text-[9px] text-indigo-400 dark:text-indigo-300 mt-1 font-bold">※ 근로/금융 기납부 세액 모두 차감 후 정산액</p></div>
                                     </div>
                                     <div className="bg-rose-600 p-5 rounded-2xl text-white shadow-lg text-center transform hover:scale-[1.01] transition-transform"><p className="text-xs font-black opacity-90 mb-2">근로소득 보유로 인한 순수 세금 증가분</p><h4 className="text-3xl sm:text-4xl font-black mb-1">+{formatNumber(taxImpact)}원</h4><p className="text-[10px] font-bold opacity-80 leading-normal">※ 건보료를 제외하고, 근로소득과의 합산으로 인해 누진세율이 올라가 금융소득이 높은 세율을 적용받아 발생하는 추가 세부담입니다.</p></div>
                                 </div>
@@ -1281,10 +1238,10 @@
                     </div>
                 );
             };
-
             const renderSimulation = () => (
                 <div className="animate-fade-in pb-10 font-bold space-y-6">
-                    <h2 className="text-xl sm:text-2xl font-black mb-4 border-b dark:border-slate-700 pb-2 flex flex-col sm:flex-row sm:items-center gap-3 dark:text-white">
+                    {/* Title Fix: Added 'force-dark-white' */}
+                    <h2 className="text-xl sm:text-2xl font-black mb-4 border-b dark:border-slate-700 pb-2 flex flex-col sm:flex-row sm:items-center gap-3 force-dark-white">
                         노후 자금 시뮬레이션
                         <span className="text-[10px] sm:text-xs bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-200 px-2 py-1 rounded font-black w-max">v3.5 수익 분석 체계 고도화</span>
                     </h2>
@@ -1405,6 +1362,20 @@
                                 <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">정상 배우자 연금(월)</label><input type="text" className="sim-input text-right" value={simInputs.pensionSpouse} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, pensionSpouse: v}))}/></div>
                             </div>
                         </div>
+                        {/* --- NEW SECTION 5: OTHER INCOME & RESERVE --- */}
+                        <div className="bg-white dark:bg-slate-800 p-5 rounded-xl border dark:border-slate-700 shadow-sm space-y-4">
+                            <h3 className="text-teal-600 dark:text-teal-300 text-sm border-b dark:border-slate-700 pb-1 font-black"><i className="fa-solid fa-hand-holding-dollar mr-1"></i> 5. 기타 수입 및 연간 예비비</h3>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">공모주 연수익</label><input type="text" className="sim-input text-right" value={simInputs.ipoProfit} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, ipoProfit: v}))}/></div>
+                                <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">기타 연수익</label><input type="text" className="sim-input text-right" value={simInputs.otherIncome} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, otherIncome: v}))}/></div>
+                                <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">대차 연수익</label><input type="text" className="sim-input text-right" value={simInputs.stockLending} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, stockLending: v}))}/></div>
+                                <div className="flex flex-col"><label className="text-[10px] text-slate-500 dark:text-white font-black">임대 연수익</label><input type="text" className="sim-input text-right" value={simInputs.rentalIncome} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, rentalIncome: v}))}/></div>
+                            </div>
+                            <div className="flex flex-col border-t dark:border-slate-700 pt-3 mt-1 bg-amber-50 dark:bg-amber-900/20 p-2 rounded">
+                                <label className="text-[10px] text-amber-600 dark:text-amber-400 font-black">연간 비상금/예비비 (지출 합산)</label>
+                                <input type="text" className="sim-input !mt-1 !p-1 border-amber-200 dark:border-amber-700 text-right" value={simInputs.extraReserve} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, extraReserve: v}))}/>
+                            </div>
+                        </div>
                         <div className={`${simResult.summary?.isSuccess ? 'bg-indigo-600' : 'bg-rose-600'} text-white p-5 rounded-xl shadow-lg flex flex-col justify-center text-center transition-colors duration-500 h-full`}>
                             <p className="text-xs opacity-90 mb-2 font-black">100세 예측 자산</p>
                             <h3 className={`text-xl sm:text-2xl font-black ${simResult.summary?.depletion ? 'text-yellow-300' : 'text-white'} break-all`}>
@@ -1415,11 +1386,9 @@
                             </div>
                         </div>
                     </div>
-
                     <div className="mt-6 bg-white dark:bg-slate-800 p-6 rounded-xl border dark:border-slate-700 shadow-sm h-[350px] sm:h-[450px]">
                         <SimulationChart history={simResult.history} />
                     </div>
-
                     <div className="mt-6 bg-white dark:bg-slate-800 p-3 rounded-xl border dark:border-slate-700 shadow-sm relative">
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                             <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
@@ -1463,9 +1432,7 @@
                                 </thead>
                                 <tbody className="bg-white dark:bg-slate-800">
                                     {simResult.history.map((h, idx) => {
-                                        const totalExpense = h.living + h.tax; 
-                                        const cashFlowIndex = totalExpense > 0 ? (h.annualProfit / totalExpense) * 100 : 0; 
-                                        const rowBgClass = h.isHighCost ? 'bg-amber-50 dark:bg-amber-900/30' : h.isWarn ? 'bg-rose-50/70 dark:bg-rose-900/60' : '';
+                                        const totalExpense = h.living + h.tax;                                          const cashFlowIndex = totalExpense > 0 ? (h.annualProfit / totalExpense) * 100 : 0;                                          const rowBgClass = h.isHighCost ? 'bg-amber-50 dark:bg-amber-900/30' : h.isWarn ? 'bg-rose-50/70 dark:bg-rose-900/60' : '';
                                         return (
                                             <tr key={idx} className={`hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors border-b dark:border-slate-700 ${rowBgClass}`}>
                                                 <td className="px-2 py-2.5 font-black text-slate-900 dark:text-white text-center sticky left-0 bg-inherit z-10 border-r dark:border-slate-700">{h.age}</td>
@@ -1480,7 +1447,7 @@
                                                     </div>
                                                     {showTableDetails && (
                                                         <div className="text-[8px] text-slate-500 dark:text-slate-400 font-normal leading-tight border-t dark:border-slate-700 pt-1 mt-1 space-y-0.5 animate-fade-in">
-                                                            <div className="flex justify-between gap-4"><span>본인일반:</span><span className="font-bold text-slate-700 dark:text-slate-200">{formatNumber(h.un)}</span></div>
+                                                              <div className="flex justify-between gap-4"><span>본인일반:</span><span className="font-bold text-slate-700 dark:text-slate-200">{formatNumber(h.un)}</span></div>
                                                             <div className="flex justify-between gap-4"><span>배우자일반:</span><span className="font-bold text-slate-700 dark:text-slate-200">{formatNumber(h.sn)}</span></div>
                                                             <div className="flex justify-between gap-4"><span>공모주:</span><span className="font-bold text-slate-700 dark:text-slate-200">{formatNumber(h.cip)}</span></div>
                                                             <div className="flex justify-between gap-4"><span>배우자ISA:</span><span className="font-bold text-slate-700 dark:text-slate-200">{formatNumber(h.si)}</span></div>
@@ -1522,7 +1489,6 @@
                     </div>
                 </div>
             );
-
             return (
                 <div className={`min-h-screen flex flex-col transition-colors duration-200 ${isDark ? 'dark bg-black text-white' : 'bg-[#F5F5F7] text-slate-800'}`}>
                     <header className="sticky top-0 z-50 bg-white/80 dark:bg-[#1C1C1E]/80 backdrop-blur-xl border-b dark:border-white/10 shadow-sm h-16">
