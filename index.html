@@ -273,6 +273,7 @@
                 script.innerHTML = JSON.stringify({
                     "symbols": [
                         { "proName": "FX_IDC:XAGUSD", "title": "실시간 은(Silver)" },
+                        // 상하이 은(SHFE) 제거됨 (이전 상태 복구)
                         { "proName": "TVC:GOLD", "title": "금 현물 (XAU/USD)" },
                         { "proName": "FX_IDC:USDKRW", "title": "원달러 환율" },
                         { "proName": "FOREXCOM:SPXUSD", "title": "S&P 500" },
@@ -300,9 +301,9 @@
                         <div className="absolute inset-0 ticker-fallback text-[11px] font-bold text-slate-500 dark:text-slate-300">
                             <div className="ticker-scroll">
                                 <span><i className="fa-solid fa-coins mr-1 text-slate-400"></i> 은(Silver): 연결 중...</span>
+                                {/* 상하이 은 제거됨 */}
                                 <span><i className="fa-solid fa-crown mr-1 text-yellow-500"></i> 금(Gold): 로딩 중...</span>
                                 <span><i className="fa-solid fa-money-bill-1-wave mr-1 text-emerald-500"></i> USD/KRW: 1,380.00</span>
-                                <span><i className="fa-solid fa-chart-line mr-1 text-blue-500"></i> S&P 500: 지수 로딩 중...</span>
                             </div>
                         </div>
                     )}
@@ -329,6 +330,18 @@
             useEffect(() => {
                 if (!ref.current) return;
                 ref.current.innerHTML = '';
+                
+                const containerDiv = document.createElement('div');
+                containerDiv.className = 'tradingview-widget-container';
+                containerDiv.style.height = '100%';
+                containerDiv.style.width = '100%';
+                
+                const widgetDiv = document.createElement('div');
+                widgetDiv.className = 'tradingview-widget-container__widget';
+                widgetDiv.style.height = '100%';
+                widgetDiv.style.width = '100%';
+                containerDiv.appendChild(widgetDiv);
+                
                 const script = document.createElement('script');
                 script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
                 script.async = true;
@@ -343,10 +356,122 @@
                     "autosize": true,
                     "largeChartUrl": ""
                 });
-                ref.current.appendChild(script);
+                containerDiv.appendChild(script);
+                ref.current.appendChild(containerDiv);
             }, [theme]);
-            return <div ref={ref} className="h-full"></div>;
+            return <div ref={ref} className="h-full w-full"></div>;
         });
+
+        // --- UPDATED: Shanghai Silver Link Panel ---
+        // 위젯 데이터 제한 문제를 해결하기 위해, 사용자가 찾은 가장 확실한 SMM(상하이 금속 거래소) 공식 사이트로 연결
+        const TradingViewShanghaiChart = memo(({ theme }) => {
+            return (
+                <div className="h-full w-full flex flex-col items-center justify-center p-6 bg-[#F9F9F9] dark:bg-[#2C2C2E] rounded-2xl border border-dashed border-gray-300 dark:border-gray-600">
+                    <div className="text-center space-y-4">
+                        <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <i className="fa-solid fa-scale-balanced text-2xl text-red-600 dark:text-red-400"></i>
+                        </div>
+                        <div>
+                            <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-1">상하이 은 시세 (SMM)</h4>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                사이트 내 표기된 <span className="text-red-500 dark:text-red-400 font-bold">Price (CNY/kg)</span> 값을<br/>
+                                확인하여 입력해주세요.
+                            </p>
+                        </div>
+                        <div className="flex flex-col gap-2 w-full max-w-xs mx-auto pt-2">
+                            <a 
+                                // 수정됨: 사용자가 제공한 SMM 공식 사이트 URL 적용 (가장 확실한 데이터 소스)
+                                href="https://www.metal.com/en/prices/201102250392" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-between px-4 py-3 bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition shadow-sm group"
+                            >
+                                <span className="text-sm font-bold text-slate-700 dark:text-slate-200">🇨🇳 SMM (공식 원본 사이트)</span>
+                                <i className="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400 group-hover:text-red-500"></i>
+                            </a>
+                            {/* 시나파이낸스 링크 삭제됨 */}
+                        </div>
+                    </div>
+                </div>
+            );
+        });
+
+        // --- NEW WIDGET: Gold Chart ---
+        // VIX, DXY 등 지수 데이터가 제한되므로, 은 가격의 기준점이 되는 '국제 금 시세'로 대체
+        const TradingViewGoldChart = memo(({ theme }) => {
+            const ref = useRef(null);
+            useEffect(() => {
+                if (!ref.current) return;
+                ref.current.innerHTML = '';
+                
+                const containerDiv = document.createElement('div');
+                containerDiv.className = 'tradingview-widget-container';
+                containerDiv.style.height = '100%';
+                containerDiv.style.width = '100%';
+                
+                const widgetDiv = document.createElement('div');
+                widgetDiv.className = 'tradingview-widget-container__widget';
+                widgetDiv.style.height = '100%';
+                widgetDiv.style.width = '100%';
+                containerDiv.appendChild(widgetDiv);
+
+                const script = document.createElement('script');
+                script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
+                script.async = true;
+                script.innerHTML = JSON.stringify({
+                    "symbol": "TVC:GOLD", // 금 시세 (은 투자의 나침반)
+                    "width": "100%",
+                    "height": "100%",
+                    "locale": "kr",
+                    "dateRange": "12M",
+                    "colorTheme": theme,
+                    "isTransparent": true,
+                    "autosize": true,
+                    "largeChartUrl": ""
+                });
+                containerDiv.appendChild(script);
+                ref.current.appendChild(containerDiv);
+            }, [theme]);
+            return <div ref={ref} className="h-full w-full"></div>;
+        });
+
+        const TradingViewRatioChart = memo(({ theme }) => {
+            const ref = useRef(null);
+            useEffect(() => {
+                if (!ref.current) return;
+                ref.current.innerHTML = '';
+                
+                const containerDiv = document.createElement('div');
+                containerDiv.className = 'tradingview-widget-container';
+                containerDiv.style.height = '100%';
+                containerDiv.style.width = '100%';
+                
+                const widgetDiv = document.createElement('div');
+                widgetDiv.className = 'tradingview-widget-container__widget';
+                widgetDiv.style.height = '100%';
+                widgetDiv.style.width = '100%';
+                containerDiv.appendChild(widgetDiv);
+
+                const script = document.createElement('script');
+                script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
+                script.async = true;
+                script.innerHTML = JSON.stringify({
+                    "symbol": "TVC:GOLDSILVER",
+                    "width": "100%",
+                    "height": "100%",
+                    "locale": "kr",
+                    "dateRange": "12M",
+                    "colorTheme": theme,
+                    "isTransparent": true,
+                    "autosize": true,
+                    "largeChartUrl": ""
+                });
+                containerDiv.appendChild(script);
+                ref.current.appendChild(containerDiv);
+            }, [theme]);
+            return <div ref={ref} className="h-full w-full"></div>;
+        });
+
         // --- UPDATED SILVER BRIDGE CHART (Waterfall Logic) ---
         const SilverPerformanceBridgeChart = memo(({ profitData, isDark }) => {
             const canvasRef = useRef(null);
@@ -524,9 +649,13 @@
         function App() {
             const [activeTab, setActiveTab] = useState('dashboard');
             const [isDark, setIsDark] = useState(false);
+            // ... existing state ...
             const [linkMode, setLinkMode] = useState('investment');
             const [marketStatus, setMarketStatus] = useState({ text: '장 마감', color: 'bg-red-600' });
             
+            // Dashboard Chart Tab State
+            const [dashChartTab, setDashChartTab] = useState('price'); // 'price', 'shanghai', 'gold', 'ratio'
+
             const [exchangeRates, setExchangeRates] = useState(DEFAULT_EXCHANGE_RATES);
             const [lastUpdated, setLastUpdated] = useState('연결 중...');
             const [isFetching, setIsFetching] = useState(false);
@@ -537,22 +666,24 @@
             const [newFav, setNewFav] = useState({ code: '', name: '' });
             const [silverAnalysisInputs, setSilverAnalysisInputs] = useState(() => {
                 try {
-                    const saved = localStorage.getItem('invNav_silverInputs');
+                    const saved = localStorage.getItem('invNav_silverInputs_v3'); // 단위 변경으로 키 버전 v2 -> v3 업데이트 (초기화 유도)
                     return saved ? JSON.parse(saved) : {
                         currentExch: '1,380',
                         currentUsdPrice: '32.50',
-                        currentDomesticPrice: '145'
+                        currentDomesticPrice: '1,450,000', // 기본값 원 단위로 변경
+                        currentShanghaiPrice: '7,400' 
                       };
                 } catch (e) {
                     return {
                         currentExch: '1,380',
                         currentUsdPrice: '32.50',
-                        currentDomesticPrice: '145'
+                        currentDomesticPrice: '1,450,000',
+                        currentShanghaiPrice: '7,400'
                     };
                 }
             });
             useEffect(() => {
-                localStorage.setItem('invNav_silverInputs', JSON.stringify(silverAnalysisInputs));
+                localStorage.setItem('invNav_silverInputs_v3', JSON.stringify(silverAnalysisInputs));
             }, [silverAnalysisInputs]);
             const [favorites, setFavorites] = useState(() => {
                 try {
@@ -662,12 +793,26 @@
                 if (isDark) document.documentElement.classList.add('dark');
                 else document.documentElement.classList.remove('dark');
             }, [isDark]);
+            
+            // 검색 기능 수정: 한글 검색 시 에러 화면(잘못된 URL)이 뜨지 않도록 분기 처리 개선
             const searchSymbol = (query) => {
                 if(!query || query.trim() === "") { window.open('https://stock.naver.com/', '_blank'); return; }
                 const trimmed = query.trim();
-                const url = /[a-zA-Z]/.test(trimmed) ? `https://finance.naver.com/world/sise.naver?symbol=${trimmed.toUpperCase()}` : `https://finance.naver.com/item/main.naver?code=${trimmed}`;
-                window.open(url, '_blank');
+                
+                // 1. 영어가 포함된 경우 -> 해외 주식 티커로 간주하고 상세 페이지로 이동
+                if (/[a-zA-Z]/.test(trimmed)) {
+                    window.open(`https://finance.naver.com/world/sise.naver?symbol=${trimmed.toUpperCase()}`, '_blank');
+                } 
+                // 2. 숫자만 있는 경우 -> 국내 종목 코드로 간주하고 상세 페이지로 이동
+                else if (/^\d+$/.test(trimmed)) {
+                     window.open(`https://finance.naver.com/item/main.naver?code=${trimmed}`, '_blank');
+                }
+                // 3. 그 외 (한글 등) -> 네이버 증권 '통합 검색 결과' 페이지로 이동 (에러 방지)
+                else {
+                    window.open(`https://finance.naver.com/search/search.naver?query=${encodeURIComponent(trimmed)}`, '_blank');
+                }
             };
+
             const getAdjustedPensionAmount = (baseAmount, strategy) => {
                 let ageAdj = 0;
                 let amountMult = 1.0;
@@ -783,23 +928,42 @@
             const silverProfitData = useMemo(() => {
                 const exch = parseFloat(silverAnalysisInputs.currentExch.replace(/[^0-9.]/g, '')) || 0;
                 const usd = parseFloat(silverAnalysisInputs.currentUsdPrice.replace(/[^0-9.]/g, '')) || 0;
-                const domesticPriceManwon = parseFloat(silverAnalysisInputs.currentDomesticPrice.replace(/[^0-9.]/g, '')) || 0;
-                const domesticPrice = domesticPriceManwon * 10000;                  const theoreticalKrwPrice = usd * exch * TROY_OZ_TO_KG;
+                
+                // 수정됨: 만원 단위 곱하기 제거 (입력값 그대로 원 단위 사용)
+                const domesticPrice = parseFloat(silverAnalysisInputs.currentDomesticPrice.replace(/[^0-9.]/g, '')) || 0;
+                
+                // Kimchi Premium Calc
+                const theoreticalKrwPrice = usd * exch * TROY_OZ_TO_KG;
                 const kPremium = domesticPrice - theoreticalKrwPrice;
                 const kPremiumPercent = theoreticalKrwPrice > 0 ? (kPremium / theoreticalKrwPrice) * 100 : 0;
+                
+                // Shanghai Premium Calc
+                const shanghaiCNY = parseFloat(silverAnalysisInputs.currentShanghaiPrice.replace(/[^0-9.]/g, '')) || 0;
+                // USD/CNY Rate calculation (using KRW based rates: USD/KRW / CNY/KRW)
+                const usdKrw = exchangeRates['USD']?.krw || 1380;
+                const cnyKrw = exchangeRates['CNY']?.krw || 190;
+                const usdToCny = cnyKrw > 0 ? usdKrw / cnyKrw : 7.2;
+                
+                const theoreticalShanghaiCNY = usd * usdToCny * TROY_OZ_TO_KG;
+                const sPremiumPercent = theoreticalShanghaiCNY > 0 ? ((shanghaiCNY - theoreticalShanghaiCNY) / theoreticalShanghaiCNY) * 100 : 0;
+
                 const priceContrib = (usd - BASE_USD_PRICE) * BASE_EXCH_RATE * TROY_OZ_TO_KG;
                 const exchContrib = (exch - BASE_EXCH_RATE) * BASE_USD_PRICE * TROY_OZ_TO_KG;
                 const totalProfit = domesticPrice - FIXED_BUY_PRICE_KG;
                 const residualContrib = totalProfit - priceContrib - exchContrib;
                 const actualRate = ((domesticPrice / FIXED_BUY_PRICE_KG) - 1) * 100;
                 const absProfit = Math.abs(totalProfit) || 1;
-                return {                      actualRate, theoreticalKrwPrice, actualPrice: domesticPrice,
-                    kPremium, kPremiumPercent, priceContrib, exchContrib, residualContrib, totalProfit,
+                
+                return {                      
+                    actualRate, theoreticalKrwPrice, actualPrice: domesticPrice,
+                    kPremium, kPremiumPercent, 
+                    sPremiumPercent, theoreticalShanghaiCNY, 
+                    priceContrib, exchContrib, residualContrib, totalProfit,
                     exchPerc: (exchContrib / absProfit) * 100,
                     pricePerc: (priceContrib / absProfit) * 100,
                     residPerc: (residualContrib / absProfit) * 100
                 };
-            }, [silverAnalysisInputs]);
+            }, [silverAnalysisInputs, exchangeRates]);
             // --- 1. NEW APPLE STYLE DASHBOARD ---
             const renderDashboard = () => (
                 <div className="animate-fade-in space-y-6">
@@ -821,10 +985,10 @@
                     {/* Bento Grid Layout */}
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                           {/* 1. Silver Analysis (Large Block) */}
-                        <AppleCard title="은(Silver) 분석" subTitle="실시간 프리미엄 및 수익률" className="lg:col-span-8 h-full min-h-[320px]">
+                        <AppleCard title="은(Silver) 분석" subTitle="한중일 프리미엄 비교" className="lg:col-span-8 h-full min-h-[320px]">
                             <div className="flex flex-col md:flex-row gap-8 h-full">
                                 {/* Inputs - Clean Apple Style */}
-                                <div className="w-full md:w-1/3 space-y-5">
+                                <div className="w-full md:w-1/3 space-y-4">
                                     <div>
                                         <label className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">국제 시세 (USD/oz)</label>
                                         <input className="apple-input" value={silverAnalysisInputs.currentUsdPrice} onChange={e=>handleCommaChange(e, v=>setSilverAnalysisInputs({...silverAnalysisInputs, currentUsdPrice:v}))} />
@@ -837,35 +1001,83 @@
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">국내 매도가 (만/kg)</label>
+                                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">국내 매도가 (원/kg)</label>
                                         <input className="apple-input" value={silverAnalysisInputs.currentDomesticPrice} onChange={e=>handleCommaChange(e, v=>setSilverAnalysisInputs({...silverAnalysisInputs, currentDomesticPrice:v}))} />
                                     </div>
+                                    <div className="pt-2 border-t border-dashed border-gray-200 dark:border-white/10">
+                                        {/* 라벨 이름을 다시 CNY/kg로 복구 */}
+                                        <label className="text-xs font-bold text-red-500/80 dark:text-red-400/80 pl-1 mb-1 block">상하이 시세 (CNY/kg)</label>
+                                        <input className="apple-input !bg-red-50 dark:!bg-red-900/10 !text-red-600 dark:!text-red-300 focus:!bg-white" value={silverAnalysisInputs.currentShanghaiPrice} onChange={e=>handleCommaChange(e, v=>setSilverAnalysisInputs({...silverAnalysisInputs, currentShanghaiPrice:v}))} />
+                                    </div>
                                 </div>
-                                {/* Stats & Mini Chart */}
-                                <div className="w-full md:w-2/3 flex flex-col gap-6">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        {/* Container Background Fix: Force dark background with !bg-slate-800 */}
-                                        <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-2xl p-5">
-                                            {/* Profit Rate Color: Use new CSS classes */}
+                                {/* Stats & Charts Area */}
+                                <div className="w-full md:w-2/3 flex flex-col gap-4">
+                                    {/* Stats Grid: Added Shanghai Premium */}
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-2xl p-3">
                                             <AppleStatBox
                                                   label="수익률"
-                                                  value={`${silverProfitData.actualRate >= 0 ? '+' : ''}${silverProfitData.actualRate.toFixed(2)}%`}
+                                                  value={`${silverProfitData.actualRate >= 0 ? '+' : ''}${silverProfitData.actualRate.toFixed(1)}%`}
                                                   valueClassName={silverProfitData.actualRate >= 0 ? 'text-stat-up' : 'text-stat-down'}
                                             />
                                         </div>
-                                        <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-2xl p-5 relative overflow-hidden">
-                                            {/* Premium Color: Use new CSS classes */}
+                                        <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-2xl p-3 relative overflow-hidden">
                                             <AppleStatBox
                                                   label="김치 프리미엄"
-                                                  value={`${silverProfitData.kPremiumPercent.toFixed(2)}%`}
-                                                  subValue={`이론가 ${formatNumber(silverProfitData.theoreticalKrwPrice)}원`}
+                                                  value={`${silverProfitData.kPremiumPercent.toFixed(1)}%`}
+                                                  subValue="국내 vs 국제"
                                                   valueClassName={silverProfitData.kPremiumPercent >= 20 ? 'text-stat-up animate-pulse' : (silverProfitData.kPremiumPercent < 0 ? 'text-stat-down' : 'text-stat-neutral')}
                                             />
                                         </div>
+                                        <div className="bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-2xl p-3 relative overflow-hidden">
+                                            <AppleStatBox
+                                                  label="상하이 프리미엄"
+                                                  value={`${silverProfitData.sPremiumPercent >= 0 ? '+' : ''}${silverProfitData.sPremiumPercent.toFixed(1)}%`}
+                                                  subValue="중국 vs 국제"
+                                                  valueClassName="text-red-600 dark:text-red-400"
+                                            />
+                                        </div>
                                     </div>
-                                    {/* Chart Aspect Ratio Fix: Increased min-height to 280px */}
-                                    <div className="flex-1 min-h-[280px] rounded-2xl overflow-hidden border border-slate-100 dark:border-white/5 relative">
-                                         <SilverMiniChart theme={isDark ? 'dark' : 'light'} />
+                                    
+                                    {/* Chart Tabs & Display Area */}
+                                    <div className="flex-1 flex flex-col min-h-0">
+                                        <div className="flex gap-2 mb-3 overflow-x-auto pb-1 scrollbar-hide">
+                                            {/* 1. 은 시세 (Silver) */}
+                                            <button 
+                                                onClick={() => setDashChartTab('price')} 
+                                                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab === 'price' ? 'bg-[#0071E3] text-white shadow-md' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}
+                                            >
+                                                은 시세(Silver)
+                                            </button>
+                                            {/* 2. 상하이 은 (New) */}
+                                            <button 
+                                                onClick={() => setDashChartTab('shanghai')} 
+                                                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab === 'shanghai' ? 'bg-[#FF3B30] text-white shadow-md' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}
+                                            >
+                                                상하이 은(SHFE)
+                                            </button>
+                                            {/* 3. 금 시세 (Gold) */}
+                                            <button 
+                                                onClick={() => setDashChartTab('gold')} 
+                                                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab === 'gold' ? 'bg-[#0071E3] text-white shadow-md' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}
+                                            >
+                                                금 시세(Gold)
+                                            </button>
+                                            {/* 4. 금은비 (Ratio) */}
+                                            <button 
+                                                onClick={() => setDashChartTab('ratio')} 
+                                                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab === 'ratio' ? 'bg-[#0071E3] text-white shadow-md' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}
+                                            >
+                                                금은비(Ratio)
+                                            </button>
+                                        </div>
+                                        {/* 차트 영역 높이 고정 (안정성 확보) */}
+                                        <div className="h-[400px] rounded-2xl overflow-hidden border border-slate-100 dark:border-white/5 relative bg-white dark:bg-[#1C1C1E]">
+                                            {dashChartTab === 'price' && <SilverMiniChart theme={isDark ? 'dark' : 'light'} />}
+                                            {dashChartTab === 'shanghai' && <TradingViewShanghaiChart theme={isDark ? 'dark' : 'light'} />}
+                                            {dashChartTab === 'gold' && <TradingViewGoldChart theme={isDark ? 'dark' : 'light'} />}
+                                            {dashChartTab === 'ratio' && <TradingViewRatioChart theme={isDark ? 'dark' : 'light'} />}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -885,7 +1097,7 @@
                                         placeholder="종목명 또는 코드 검색 (Enter)"
                                         value={searchQuery}
                                         onChange={e => setSearchQuery(e.target.value)}
-                                        onKeyDown={e => e.key === 'Enter' && searchSymbol(searchQuery)}
+                                        onKeyDown={e => { if(e.key === 'Enter'){ searchSymbol(searchQuery); setSearchQuery(''); } }}
                                     />
                                     <i className="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-gray-400 dark:text-gray-300"></i>
                                 </div>
