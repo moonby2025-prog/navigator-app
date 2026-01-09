@@ -747,6 +747,7 @@
                 pensionStartAgeUser: 65, pensionStartAgeSpouse: 65,
                 pensionStrategyUser: "normal", pensionStrategySpouse: "normal",
                 highCostStartAge: 80,
+                regionalInsStartAge: 60, 
                 capUserNonISA: 0.0, capSpouseNonISA: 0.0, capUserISA: 2.0, capSpouseISA: 1.0,
                 capIPO: 6.5,
                 returnUserNonISA: 0.0, returnSpouseNonISA: 0.0,
@@ -756,19 +757,20 @@
                 monthlyLiving: "5,000,000", pensionSelf: "1,000,000", pensionSpouse: "600,000",
                 ipoProfit: "6,000,000",
                 otherIncome: "4,500,000", stockLending: "0", rentalIncome: "850,000",
-                tradingProfit: "0", // 매매수익 추가
+                tradingProfit: "0",
                 targetLegacy: "200,000,000",
                 extraReserve: "5,000,000",
-                monthlyMedical: "1,000,000"
+                monthlyMedical: "1,000,000",
+                monthlyRegionalIns: "0", // 초기값 0
+                housingMarketPrice: "5" // 수정됨: 주택 시세(억) 기본값 5억으로 변경
             };
             const [simInputs, setSimInputs] = useState(() => {
                 try {
-                    const saved = localStorage.getItem('invNav_simInputs');
+                    const saved = localStorage.getItem('invNav_simInputs_v3'); // 버전 업데이트 (기본값 변경 반영)
                     return saved ? { ...DEFAULT_SIM_INPUTS, ...JSON.parse(saved) } : DEFAULT_SIM_INPUTS;
                 } catch (e) { return DEFAULT_SIM_INPUTS; }
             });
-            
-            useEffect(() => { localStorage.setItem('invNav_simInputs', JSON.stringify(simInputs)); }, [simInputs]);
+            useEffect(() => { localStorage.setItem('invNav_simInputs_v3', JSON.stringify(simInputs)); }, [simInputs]);
             const [simResult, setSimResult] = useState({ history: [], summary: null });
             const [simTableVisibleCols, setSimTableVisibleCols] = useState({
                 taxable: true, exempt: true, income: true, expense: true, flow: true, status: true
@@ -874,6 +876,45 @@
                 }
                 return { startAge: 65 + ageAdj, monthlyAmount: baseAmount * amountMult };
             };
+
+            // 지역가입자 건보료 자동 계산 함수 (수정됨: 현재 가치 기준 단순화 모델)
+            // 논리: "지금 은퇴한다고 가정했을 때의 보험료"를 계산하고, 
+            // 시뮬레이션 엔진이 이를 매년 물가상승률만큼 증액시키도록 함 (가장 확률 높은 단순화 모델)
+            const calculateAutoRegionalIns = () => {
+                // 1. 소득 등급 (연소득)
+                // 연금 50%, 기타소득 100%
+                const annualPension = (parseFormattedNumber(simInputs.pensionSelf) + parseFormattedNumber(simInputs.pensionSpouse)) * 12 * 0.5;
+                const annualOthers = parseFormattedNumber(simInputs.ipoProfit) + parseFormattedNumber(simInputs.otherIncome) + parseFormattedNumber(simInputs.stockLending) + parseFormattedNumber(simInputs.rentalIncome) + parseFormattedNumber(simInputs.tradingProfit);
+                const annualScoreIncome = annualPension + annualOthers;
+                
+                // 소득 보험료 (월) = (연 환산 소득 * 7.09%) / 12
+                const incomePremium = (annualScoreIncome * 0.0709) / 12;
+
+                // 2. 재산 등급 (주택)
+                // 시세 -> 과세표준 (약 45% 가정: 공시가율 * 공정시장가액비율) - 기본공제 5000만원
+                const housePrice = parseFloat(simInputs.housingMarketPrice) * ONE_HUNDRED_MILLION;
+                const propertyTaxBase = (housePrice * 0.45) - 50000000;
+                
+                let propertyPremium = 0;
+                if (propertyTaxBase > 0) {
+                    // 재산 보험료 약식 계산 (2024년 기준 근사치)
+                    // 재산 과표 1억당 월 약 4.5만원~5만원 꼴 (점수당 208.4원 반영 시)
+                    // 복잡한 등급표 대신 선형 근사식 적용: 과표 * 0.00045 (오차 범위 내 적절)
+                    propertyPremium = propertyTaxBase * 0.00045; 
+                }
+
+                // 3. 합산 및 장기요양보험료(12.95%) 추가
+                const totalPremium = (incomePremium + propertyPremium) * 1.1295;
+                
+                // 4. 결과 적용 (천원 단위 절사)
+                const finalPremium = Math.floor(totalPremium / 1000) * 1000;
+                
+                setSimInputs(prev => ({
+                    ...prev,
+                    monthlyRegionalIns: finalPremium.toLocaleString('ko-KR')
+                }));
+            };
+
             const runSimulation = useCallback(() => {
                 const s = simInputs;
                 const ageDiff = s.currentAge - s.spouseCurrentAge;
@@ -887,13 +928,12 @@
                 const targetLegacyValue = parseFormattedNumber(s.targetLegacy);
                 const extraReserveValue = parseFormattedNumber(s.extraReserve);
                 const medicalCostMonthly = parseFormattedNumber(s.monthlyMedical);
-                
+                const regionalInsMonthly = parseFormattedNumber(s.monthlyRegionalIns);
                 const initLiving = parseFormattedNumber(s.monthlyLiving) * 12;
                 
                 const userPenInfo = getAdjustedPensionAmount(parseFormattedNumber(s.pensionSelf), s.pensionStrategyUser);
                 const spousePenInfo = getAdjustedPensionAmount(parseFormattedNumber(s.pensionSpouse), s.pensionStrategySpouse);
                 
-                // initOtherTotal 계산에 tradingProfit 추가
                 const initOtherTotal = parseFormattedNumber(s.ipoProfit) + parseFormattedNumber(s.otherIncome) + parseFormattedNumber(s.stockLending) + parseFormattedNumber(s.rentalIncome) + parseFormattedNumber(s.tradingProfit || "0");
                 
                 let history = [];                  let totalTaxAccum = 0;                  let depletionYear = null;
@@ -907,6 +947,7 @@
                     const lInf = Math.pow(1 + (s.livingCostInflationRate / 100), year - 1);
                     
                     const startTotalAssets = cUserNon + cSpouseNon + cUserISA + cSpouseISA + cIPO;
+                    
                     const grossUserNon = cUserNon * (s.returnUserNonISA / 100);
                     const grossSpouseNon = cSpouseNon * (s.returnSpouseNonISA / 100);
                     const ipoCmaProfit = cIPO * (s.returnCMA / 100);                      const ipoCapitalProfit = cIPO * (s.returnIPO / 100);                      const grossUserISA = cUserISA * (s.returnUserISA / 100);
@@ -918,11 +959,26 @@
                     const netProfUserISA = grossUserISA * 0.901;                      const netProfSpouseISA = grossSpouseISA * 0.901;
                     const netProfIPO = (ipoCmaProfit * 0.846) + ipoCapitalProfit;                      
                     const totalNetInvestmentProfit = netProfUserNon + netProfSpouseNon + netProfUserISA + netProfSpouseISA + netProfIPO;
-                    let weight = 1.0;                      let lateLifeMedicalAnnual = 0;
+                    
+                    // 지출 계산 로직 (상세 내역 저장을 위해 변수 분리)
+                    let weight = 1.0;                      
+                    let lateLifeMedicalAnnual = 0;
                     if (age >= Math.min(userPenInfo.startAge, spousePenInfo.startAge)) {
                         if (age < s.highCostStartAge - 5) weight = 1.1;                          else if (age < s.highCostStartAge) weight = 0.9;                          else { weight = 0.7; lateLifeMedicalAnnual = medicalCostMonthly * 12 * lInf; }
                     }
-                    const annualLivingCost = (initLiving * lInf * weight) + lateLifeMedicalAnnual + extraReserveValue;
+                    
+                    // 기본 생활비 (가중치 적용)
+                    const basicLivingAnnual = initLiving * lInf * weight;
+
+                    // 지역가입자 건보료
+                    let regionalInsAnnual = 0;
+                    const safeRegionalAge = s.regionalInsStartAge || 60;
+                    if (age >= safeRegionalAge) {
+                        regionalInsAnnual = regionalInsMonthly * 12 * lInf;
+                    }
+
+                    // 총 생활비 합산
+                    const annualLivingCost = basicLivingAnnual + lateLifeMedicalAnnual + regionalInsAnnual + extraReserveValue;
                     
                     let pension = 0;
                     if (age >= userPenInfo.startAge) pension += userPenInfo.monthlyAmount * 12;                      if (spouseAge >= spousePenInfo.startAge) pension += spousePenInfo.monthlyAmount * 12;
@@ -933,6 +989,7 @@
                     const incTax = calculateProgressiveIncomeTax(annualBaseIncome, { rate1: s.taxRate1, rate2: s.taxRate2, rate3: s.taxRate3 });
                     totalTaxAccum += incTax;
                     const annualTotalExpenses = annualLivingCost + incTax;
+                    
                     cUserNon += netProfUserNon;
                     cSpouseNon += netProfSpouseNon;
                     cUserISA += netProfUserISA;
@@ -961,7 +1018,15 @@
                         details: {
                             taxable: { u: grossUserNon, s: grossSpouseNon, c: ipoCmaProfit },
                             exempt: { i: ipoCapitalProfit, ui: grossUserISA, si: grossSpouseISA },
-                            income: { p: annualPension, o: annualOthers }
+                            income: { p: annualPension, o: annualOthers },
+                            // 추가: 지출 상세 내역 저장
+                            expense: {
+                                l: basicLivingAnnual, // 순수 생활비
+                                m: lateLifeMedicalAnnual, // 의료/간병비
+                                r: regionalInsAnnual, // 건보료
+                                t: incTax, // 세금
+                                e: extraReserveValue // 예비비
+                            }
                         }
                     });
                     
@@ -1695,6 +1760,14 @@
                                                 <span className="text-xs font-bold text-slate-500">세 부터</span>
                                             </div>
                                         </div>
+                                        {/* 추가된 부분: 지역가입자 전환 나이 */}
+                                        <div className="flex justify-between items-center">
+                                            <label className="text-xs font-bold text-orange-500 dark:text-orange-400">지역가입자(건보료) 전환</label>
+                                            <div className="flex items-center gap-2">
+                                                <input type="number" className="apple-input !w-20 !py-1 !text-center !bg-white dark:!bg-white/10" value={simInputs.regionalInsStartAge || 60} onChange={e=>setSimInputs({...simInputs, regionalInsStartAge:parseInt(e.target.value)})}/>
+                                                <span className="text-xs font-bold text-slate-500">세 부터</span>
+                                            </div>
+                                        </div>
                                         <div className="flex justify-between items-center">
                                             <label className="text-xs font-bold text-rose-500 dark:text-rose-400">간병기(고비용) 전환</label>
                                             <div className="flex items-center gap-2">
@@ -1833,18 +1906,49 @@
                                     {/* Income & Expense */}
                                     <div className="flex-1 space-y-3 bg-[#F2F2F7] dark:bg-[#2C2C2E] p-4 rounded-xl">
                                         <div className="flex justify-between items-center">
-                                            <label className="text-xs font-bold text-rose-500">월 생활비 (원)</label>
-                                            <input type="text" className="apple-input !w-32 !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.monthlyLiving} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, monthlyLiving: v}))}/>
+                                        <label className="text-xs font-bold text-rose-500">월 생활비 (원)</label>
+                                        <input type="text" className="apple-input !w-32 !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.monthlyLiving} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, monthlyLiving: v}))}/>
+                                    </div>
+                                    
+                                    {/* 주택 가격 입력 (건보료 계산용) */}
+                                    <div className="flex justify-between items-center pt-1">
+                                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400">보유 주택 시세 (억)</label>
+                                        <input type="number" step="0.1" className="apple-input !w-32 !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.housingMarketPrice} onChange={e=>setSimInputs({...simInputs, housingMarketPrice: e.target.value})}/>
+                                    </div>
+
+                                    {/* 추가된 부분: 예상 지역 건보료 + 자동 계산 버튼 */}
+                                    <div className="bg-orange-50 dark:bg-orange-900/10 p-2 rounded-lg border border-orange-100 dark:border-orange-900/30">
+                                        <div className="flex justify-between items-center mb-1">
+                                            <label className="text-[11px] font-bold text-orange-600 dark:text-orange-400 flex items-center gap-1">
+                                                <i className="fa-solid fa-hospital-user"></i>
+                                                지역 건보료 ({simInputs.regionalInsStartAge || 60}세~)
+                                            </label>
+                                            <button 
+                                                onClick={calculateAutoRegionalIns}
+                                                className="text-[10px] bg-orange-100 dark:bg-orange-800 text-orange-700 dark:text-orange-100 px-2 py-0.5 rounded-md hover:bg-orange-200 transition font-bold"
+                                            >
+                                                <i className="fa-solid fa-calculator mr-1"></i>자동 계산
+                                            </button>
                                         </div>
-                                        <div className="flex justify-between items-center">
-                                            <label className="text-xs font-bold text-rose-500">월 의료비 (간병)</label>
-                                            <input type="text" className="apple-input !w-32 !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.monthlyMedical} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, monthlyMedical: v}))}/>
+                                        <div className="flex items-center gap-2">
+                                            <input type="text" className="apple-input !py-1 !text-sm !bg-white dark:!bg-white/10 !text-right" value={simInputs.monthlyRegionalIns || ''} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, monthlyRegionalIns: v}))}/>
+                                            <span className="text-xs font-bold text-gray-500">원/월</span>
                                         </div>
-                                        <div className="flex justify-between items-center">
-                                            <label className="text-xs font-bold text-rose-500">연간 비상금/예비비</label>
-                                            <input type="text" className="apple-input !w-32 !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.extraReserve} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, extraReserve: v}))}/>
-                                        </div>
-                                        <div className="border-t border-gray-200 dark:border-white/10 my-1"></div>
+                                        <p className="text-[9px] text-gray-400 mt-1 text-right">
+                                            *현재 가치(소득+재산) 기준 산출 (물가상승 자동 반영됨)
+                                        </p>
+                                    </div>
+
+                                    <div className="flex justify-between items-center mt-2">
+                                        {/* 수정됨: 의료비 적용 시작 나이(highCostStartAge)를 명시 */}
+                                        <label className="text-xs font-bold text-rose-500">월 의료비 (간병, {simInputs.highCostStartAge}세~)</label>
+                                        <input type="text" className="apple-input !w-32 !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.monthlyMedical} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, monthlyMedical: v}))}/>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <label className="text-xs font-bold text-rose-500">연간 비상금/예비비</label>
+                                        <input type="text" className="apple-input !w-32 !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.extraReserve} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, extraReserve: v}))}/>
+                                    </div>
+                                    <div className="border-t border-gray-200 dark:border-white/10 my-1"></div>
                                         <div className="flex justify-between items-center">
                                             <label className="text-xs font-bold text-blue-500">월 연금 (본인)</label>
                                             <input type="text" className="apple-input !w-32 !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.pensionSelf} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, pensionSelf: v}))}/>
@@ -2019,7 +2123,22 @@
                                                 {simTableVisibleCols.taxable && <td className={`px-2 py-2.5 font-black num-font text-right ${h.taxableProfit > 20000000 ? 'text-red-500 underline' : 'text-indigo-600 dark:text-indigo-200'}`}><div className={`${showTableDetails ? 'text-[10px] mb-1' : 'text-xs'}`}>{formatNumber(h.taxableProfit)}</div>{showTableDetails && <div className="text-[8px] opacity-70 leading-tight border-t dark:border-slate-600 mt-1 pt-1 font-normal animate-fade-in">본인: {formatNumber(h.details.taxable.u)}<br/>배우자: {formatNumber(h.details.taxable.s)}<br/>CMA: {formatNumber(h.details.taxable.c)}</div>}</td>}
                                                 {simTableVisibleCols.exempt && <td className="px-2 py-2.5 text-emerald-600 dark:text-emerald-200 font-black num-font text-right"><div className={`${showTableDetails ? 'text-[10px] mb-1' : 'text-xs'}`}>{formatNumber(h.separateExemptProfit)}</div>{showTableDetails && <div className="text-[8px] opacity-70 leading-tight border-t dark:border-slate-600 mt-1 pt-1 font-normal animate-fade-in">공모주: {formatNumber(h.details.exempt.i)}<br/>본인ISA: {formatNumber(h.details.exempt.ui)}<br/>배우자ISA: {formatNumber(h.details.exempt.si)}</div>}</td>}
                                                 {simTableVisibleCols.income && <td className="px-2 py-2.5 text-blue-600 dark:text-blue-300 font-black num-font text-right"><div className={`${showTableDetails ? 'text-[10px] mb-1' : 'text-xs'}`}>{formatNumber(h.baseIncome)}</div>{showTableDetails && <div className="text-[8px] opacity-70 leading-tight border-t dark:border-slate-600 mt-1 pt-1 font-normal animate-fade-in">공적연금: {formatNumber(h.details.income.p)}<br/>기타수입: {formatNumber(h.details.income.o)}</div>}</td>}
-                                                {simTableVisibleCols.expense && <td className="px-2 py-2.5 num-font text-rose-600 dark:text-rose-400 font-black text-right">{formatNumber(totalExpense)}</td>}
+                                                {/* 수정됨: 총 지출(expense) 열에 상세 내역 표시 로직 추가 */}
+                                                {simTableVisibleCols.expense && (
+                                                    <td className="px-2 py-2.5 num-font text-rose-600 dark:text-rose-400 font-black text-right">
+                                                        <div className={`${showTableDetails ? 'text-[10px] mb-1' : 'text-xs'}`}>
+                                                            {formatNumber(totalExpense)}
+                                                        </div>
+                                                        {showTableDetails && (
+                                                            <div className="text-[8px] opacity-70 leading-tight border-t dark:border-slate-600 mt-1 pt-1 font-normal animate-fade-in">
+                                                                생활비: {formatNumber(h.details.expense.l)}<br/>
+                                                                {h.details.expense.m > 0 && <>의료/간병: {formatNumber(h.details.expense.m)}<br/></>}
+                                                                {h.details.expense.r > 0 && <>건보료: {formatNumber(h.details.expense.r)}<br/></>}
+                                                                세금: {formatNumber(h.details.expense.t)}
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                )}
                                                 {simTableVisibleCols.flow && (
                                                     <>
                                                         <td className={`px-2 py-2.5 font-black text-center ${cashFlowIndex >= 100 ? 'text-emerald-600' : 'text-rose-600'}`}>
