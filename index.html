@@ -1834,6 +1834,10 @@
                                             <label className="text-xs font-bold text-rose-500">월 의료비 (간병)</label>
                                             <input type="text" className="apple-input !w-32 !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.monthlyMedical} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, monthlyMedical: v}))}/>
                                         </div>
+                                        <div className="flex justify-between items-center">
+                                            <label className="text-xs font-bold text-rose-500">연간 비상금/예비비</label>
+                                            <input type="text" className="apple-input !w-32 !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.extraReserve} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, extraReserve: v}))}/>
+                                        </div>
                                         <div className="border-t border-gray-200 dark:border-white/10 my-1"></div>
                                         <div className="flex justify-between items-center">
                                             <label className="text-xs font-bold text-blue-500">월 연금 (본인)</label>
