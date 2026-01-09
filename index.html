@@ -1081,12 +1081,16 @@
                                                   valueClassName={silverProfitData.actualRate >= 0 ? 'text-stat-up' : 'text-stat-down'}
                                             />
                                         </div>
-                                        <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-2xl p-3 relative overflow-hidden">
+                                        <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-2xl p-3 relative overflow-hidden flex flex-col justify-between">
                                             <AppleStatBox
                                                   label="김치 프리미엄"
                                                   value={`${silverProfitData.kPremiumPercent.toFixed(1)}%`}
                                                   valueClassName={silverProfitData.kPremiumPercent >= 20 ? 'text-stat-up animate-pulse' : (silverProfitData.kPremiumPercent < 0 ? 'text-stat-down' : 'text-stat-neutral')}
                                             />
+                                            {/* 추가된 부분: 이론가 표시 */}
+                                            <div className="text-[10px] text-gray-500 dark:text-gray-400 font-bold mt-1 tracking-tight">
+                                                국제: {formatNumber(silverProfitData.theoreticalKrwPrice)}원
+                                            </div>
                                         </div>
                                         <div className="bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-2xl p-3 relative overflow-hidden">
                                             <AppleStatBox
