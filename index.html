@@ -756,6 +756,7 @@
                 monthlyLiving: "5,000,000", pensionSelf: "1,000,000", pensionSpouse: "600,000",
                 ipoProfit: "6,000,000",
                 otherIncome: "4,500,000", stockLending: "0", rentalIncome: "850,000",
+                tradingProfit: "0", // 매매수익 추가
                 targetLegacy: "200,000,000",
                 extraReserve: "5,000,000",
                 monthlyMedical: "1,000,000"
@@ -892,7 +893,8 @@
                 const userPenInfo = getAdjustedPensionAmount(parseFormattedNumber(s.pensionSelf), s.pensionStrategyUser);
                 const spousePenInfo = getAdjustedPensionAmount(parseFormattedNumber(s.pensionSpouse), s.pensionStrategySpouse);
                 
-                const initOtherTotal = parseFormattedNumber(s.ipoProfit) + parseFormattedNumber(s.otherIncome) + parseFormattedNumber(s.stockLending) + parseFormattedNumber(s.rentalIncome);
+                // initOtherTotal 계산에 tradingProfit 추가
+                const initOtherTotal = parseFormattedNumber(s.ipoProfit) + parseFormattedNumber(s.otherIncome) + parseFormattedNumber(s.stockLending) + parseFormattedNumber(s.rentalIncome) + parseFormattedNumber(s.tradingProfit || "0");
                 
                 let history = [];                  let totalTaxAccum = 0;                  let depletionYear = null;
                 const period = Math.max(1, 96 - s.simulationStartAge);
@@ -1868,11 +1870,17 @@
                                                     <label className="text-[10px] text-gray-400 block mb-0.5">임대 소득</label>
                                                     <input type="text" className="apple-input !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.rentalIncome} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, rentalIncome: v}))} />
                                                 </div>
+                                                {/* 매매 수익 입력창 추가 */}
+                                                <div>
+                                                    <label className="text-[10px] text-gray-400 block mb-0.5">매매 수익</label>
+                                                    <input type="text" className="apple-input !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.tradingProfit} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, tradingProfit: v}))} />
+                                                </div>
                                             </div>
                                             <div className="text-right mt-2">
                                                  <span className="text-[10px] text-gray-400 mr-2">합계:</span>
                                                  <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
-                                                    {formatNumber(parseFormattedNumber(simInputs.ipoProfit) + parseFormattedNumber(simInputs.otherIncome) + parseFormattedNumber(simInputs.stockLending) + parseFormattedNumber(simInputs.rentalIncome))}원
+                                                    {/* 합계 계산에 tradingProfit 포함 */}
+                                                    {formatNumber(parseFormattedNumber(simInputs.ipoProfit) + parseFormattedNumber(simInputs.otherIncome) + parseFormattedNumber(simInputs.stockLending) + parseFormattedNumber(simInputs.rentalIncome) + parseFormattedNumber(simInputs.tradingProfit || "0"))}원
                                                  </span>
                                             </div>
                                         </div>
