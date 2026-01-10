@@ -389,44 +389,7 @@
             );
         });
 
-        // --- NEW WIDGET: Gold Chart ---
-        const TradingViewGoldChart = memo(({ theme }) => {
-            const ref = useRef(null);
-            useEffect(() => {
-                if (!ref.current) return;
-                ref.current.innerHTML = '';
-                
-                const containerDiv = document.createElement('div');
-                containerDiv.className = 'tradingview-widget-container';
-                containerDiv.style.height = '100%';
-                containerDiv.style.width = '100%';
-                
-                const widgetDiv = document.createElement('div');
-                widgetDiv.className = 'tradingview-widget-container__widget';
-                widgetDiv.style.height = '100%';
-                widgetDiv.style.width = '100%';
-                containerDiv.appendChild(widgetDiv);
-
-                const script = document.createElement('script');
-                script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
-                script.async = true;
-                script.innerHTML = JSON.stringify({
-                    "symbol": "TVC:GOLD", 
-                    "width": "100%",
-                    "height": "100%",
-                    "locale": "kr",
-                    "dateRange": "12M",
-                    "colorTheme": theme,
-                    "isTransparent": true,
-                    "autosize": true,
-                    "largeChartUrl": ""
-                });
-                containerDiv.appendChild(script);
-                ref.current.appendChild(containerDiv);
-            }, [theme]);
-            return <div ref={ref} className="h-full w-full"></div>;
-        });
-
+        // --- TradingViewRatioChart Component ---
         const TradingViewRatioChart = memo(({ theme }) => {
             const ref = useRef(null);
             useEffect(() => {
@@ -681,7 +644,7 @@
             const [marketStatus, setMarketStatus] = useState({ text: '장 마감', color: 'bg-red-600' });
             
             // Dashboard Chart Tab State
-            const [dashChartTab, setDashChartTab] = useState('price'); // 'price', 'shanghai', 'gold', 'ratio'
+            const [dashChartTab, setDashChartTab] = useState('price'); // 'price', 'shanghai', 'ratio'
 
             const [exchangeRates, setExchangeRates] = useState(DEFAULT_EXCHANGE_RATES);
             const [lastUpdated, setLastUpdated] = useState('연결 중...');
@@ -1092,7 +1055,8 @@
                         </div>
                     </div>
                     {/* Ticker - Minimal */}
-                    <div className="apple-card h-14 !p-0 overflow-hidden relative flex items-center bg-white dark:bg-[#1C1C1E]">
+                    {/* 수정됨: 모바일에서 티커 내용이 줄바꿈될 경우를 대비해 고정 높이(h-14) 대신 자동 높이(h-auto) 적용 */}
+                    <div className="apple-card min-h-[56px] h-auto !p-0 overflow-hidden relative flex items-center bg-white dark:bg-[#1C1C1E]">
                         <TradingViewTicker theme={isDark ? 'dark' : 'light'} />
                     </div>
                     {/* Bento Grid Layout */}
@@ -1183,14 +1147,7 @@
                                             >
                                                 상하이/국내 시세
                                             </button>
-                                            {/* 3. 금 시세 (Gold) */}
-                                            <button 
-                                                onClick={() => setDashChartTab('gold')} 
-                                                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab === 'gold' ? 'bg-[#0071E3] text-white shadow-md' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}
-                                            >
-                                                금 시세(Gold)
-                                            </button>
-                                            {/* 4. 금은비 (Ratio) */}
+                                            {/* 3. 금은비 (Ratio) - 금 시세 삭제됨 */}
                                             <button 
                                                 onClick={() => setDashChartTab('ratio')} 
                                                 className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab === 'ratio' ? 'bg-[#0071E3] text-white shadow-md' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}
@@ -1202,7 +1159,7 @@
                                         <div className="h-[400px] rounded-2xl overflow-hidden border border-slate-100 dark:border-white/5 relative bg-white dark:bg-[#1C1C1E]">
                                             {dashChartTab === 'price' && <SilverMiniChart theme={isDark ? 'dark' : 'light'} />}
                                             {dashChartTab === 'shanghai' && <TradingViewShanghaiChart theme={isDark ? 'dark' : 'light'} />}
-                                            {dashChartTab === 'gold' && <TradingViewGoldChart theme={isDark ? 'dark' : 'light'} />}
+                                            {/* 금 시세 차트 컴포넌트 렌더링 삭제됨 */}
                                             {dashChartTab === 'ratio' && <TradingViewRatioChart theme={isDark ? 'dark' : 'light'} />}
                                         </div>
                                     </div>
@@ -1391,11 +1348,29 @@
             );
             const renderTools = () => {
                 const targetRes = (() => {
-                    const currentPrice = parseFormattedNumber(targetInputs.price); const shares = parseFormattedNumber(targetInputs.shares);
-                    let targetPrice = 0, rate = 0;
-                    if(targetInputs.mode === 'cap') { const currentCap = parseFloat(targetInputs.currentCap) || 1; const targetCap = parseFloat(targetInputs.targetCap) || 0; targetPrice = currentPrice * (targetCap / currentCap); rate = ((targetCap / currentCap) - 1) * 100; }
-                    else { targetPrice = parseFormattedNumber(targetInputs.targetRate); if(currentPrice > 0) rate = ((targetPrice - currentPrice) / currentPrice) * 100; }
-                    return { targetPrice, rate, totalAmount: targetPrice * shares, profit: (targetPrice - currentPrice) * shares };
+                    const currentPrice = parseFormattedNumber(targetInputs.price); 
+                    const shares = parseFormattedNumber(targetInputs.shares);
+                    const currentCap = parseFloat(targetInputs.currentCap) || 0;
+                    
+                    let targetPrice = 0, rate = 0, expectedCap = 0;
+                    
+                    if(targetInputs.mode === 'cap') { 
+                        const targetCap = parseFloat(targetInputs.targetCap) || 0; 
+                        const effectiveCurrentCap = currentCap || 1;
+                        targetPrice = currentPrice * (targetCap / effectiveCurrentCap); 
+                        rate = ((targetCap / effectiveCurrentCap) - 1) * 100; 
+                    }
+                    else { 
+                        targetPrice = parseFormattedNumber(targetInputs.targetRate); 
+                        if(currentPrice > 0) {
+                            rate = ((targetPrice - currentPrice) / currentPrice) * 100; 
+                            // 가격 직접 모드일 때 예상 시가총액 계산 (입력된 현재 시총이 있을 경우에만)
+                            if (currentCap > 0) {
+                                expectedCap = currentCap * (targetPrice / currentPrice);
+                            }
+                        }
+                    }
+                    return { targetPrice, rate, totalAmount: targetPrice * shares, profit: (targetPrice - currentPrice) * shares, expectedCap };
                 })();
                 const exchRes = (parseFormattedNumber(exchInputs.amount) * (exchangeRates[exchInputs.base]?.krw || 1)) / (exchangeRates[exchInputs.target]?.krw || 1);
                 let avgCost = 0, avgQ = 0; avgRows.forEach(r => { const q = parseFormattedNumber(r.q); const p = parseFormattedNumber(r.p); avgQ += q; avgCost += q * p; });
@@ -1430,7 +1405,11 @@
                                             <div><label className="text-xs font-bold text-gray-500 dark:text-gray-300 pl-1 mb-1 block">목표 시총(조)</label><input type="number" step="0.1" className="apple-input text-right" value={targetInputs.targetCap} onChange={e=>setTargetInputs({...targetInputs, targetCap:e.target.value})} /></div>
                                         </div>
                                     ) : (
-                                        <div><label className="text-xs font-bold text-gray-500 dark:text-gray-300 pl-1 mb-1 block">목표 단가</label><input type="text" className="apple-input" placeholder="0" value={targetInputs.targetRate} onChange={e=>handleCommaChange(e, v=>setTargetInputs({...targetInputs, targetRate:v}))} /></div>
+                                        // 수정됨: 가격 직접 모드 - 입력 순서 변경 (현재 시총 -> 목표 단가)
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div><label className="text-xs font-bold text-gray-500 dark:text-gray-300 pl-1 mb-1 block">현재 시총(조)</label><input type="number" step="0.1" className="apple-input text-right" value={targetInputs.currentCap} onChange={e=>setTargetInputs({...targetInputs, currentCap:e.target.value})} /></div>
+                                            <div><label className="text-xs font-bold text-gray-500 dark:text-gray-300 pl-1 mb-1 block">목표 단가</label><input type="text" className="apple-input" placeholder="0" value={targetInputs.targetRate} onChange={e=>handleCommaChange(e, v=>setTargetInputs({...targetInputs, targetRate:v}))} /></div>
+                                        </div>
                                     )}
                                 </div>
                                 <div className="mt-6 bg-[#F2F2F7] dark:bg-[#2C2C2E] p-5 rounded-2xl">
@@ -1438,6 +1417,13 @@
                                         <span className="text-xs font-bold text-gray-500 dark:text-gray-300">목표 도달 단가</span>
                                         <span className="text-sm font-bold force-dark-white">{formatNumber(targetRes.targetPrice)}원 <span className={targetRes.rate >= 0 ? "text-[#34C759]" : "text-[#FF3B30]"}>({targetRes.rate.toFixed(1)}%)</span></span>
                                     </div>
+                                    {/* 수정됨: '가격 직접(rate)' 모드일 때만 예상 시가총액 표시 (입력값 없으면 - 표시) */}
+                                    {targetInputs.mode === 'rate' && (
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-xs font-bold text-gray-500 dark:text-gray-300">예상 시가총액</span>
+                                            <span className="text-sm font-bold force-dark-white">{targetRes.expectedCap > 0 ? targetRes.expectedCap.toFixed(2) + '조' : '-'}</span>
+                                        </div>
+                                    )}
                                     <div className="flex justify-between items-center mb-2">
                                         <span className="text-xs font-bold text-gray-500 dark:text-gray-300">예상 평가금액</span>
                                         <span className="text-sm font-bold force-dark-white">{formatNumber(targetRes.totalAmount)}원</span>
