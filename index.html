@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Investment Navigator (투자 비서 - 은 투자 강화형)</title>
+    <title>Investment Navigator (투자 비서 - 통합형)</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome (Icons) -->
@@ -349,6 +349,44 @@
             return <div ref={ref} className="h-full w-full"></div>;
         });
 
+        // --- NEW: Gold Mini Chart Component ---
+        const GoldMiniChart = memo(({ theme }) => {
+            const ref = useRef(null);
+            useEffect(() => {
+                if (!ref.current) return;
+                ref.current.innerHTML = '';
+                
+                const containerDiv = document.createElement('div');
+                containerDiv.className = 'tradingview-widget-container';
+                containerDiv.style.height = '100%';
+                containerDiv.style.width = '100%';
+                
+                const widgetDiv = document.createElement('div');
+                widgetDiv.className = 'tradingview-widget-container__widget';
+                widgetDiv.style.height = '100%';
+                widgetDiv.style.width = '100%';
+                containerDiv.appendChild(widgetDiv);
+                
+                const script = document.createElement('script');
+                script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
+                script.async = true;
+                script.innerHTML = JSON.stringify({
+                    "symbol": "TVC:GOLD",
+                    "width": "100%",
+                    "height": "100%",
+                    "locale": "kr",
+                    "dateRange": "12M",
+                    "colorTheme": theme,
+                    "isTransparent": true,
+                    "autosize": true,
+                    "largeChartUrl": ""
+                });
+                containerDiv.appendChild(script);
+                ref.current.appendChild(containerDiv);
+            }, [theme]);
+            return <div ref={ref} className="h-full w-full"></div>;
+        });
+
         // --- UPDATED: Shanghai Silver Link Panel ---
         const TradingViewShanghaiChart = memo(({ theme }) => {
             return (
@@ -510,7 +548,18 @@
                                         ctx.textBaseline = 'bottom';
                                         ctx.font = isTotal ? 'bold 12px Pretendard' : '11px Pretendard';
                                         ctx.fillStyle = isDark ? '#fff' : '#000';
-                                        let label = isTotal ? `${datapoint[1].toLocaleString()}` : `${value > 0 ? '+' : ''}${value.toLocaleString()}`;
+                                        
+                                        let label;
+                                        if (isTotal) {
+                                            // 매입가, 현재가는 금액 표시
+                                            label = `${datapoint[1].toLocaleString()}`;
+                                        } else {
+                                            // 변동 요인은 % 표시 (매입가 대비)
+                                            const basePrice = chart.data.datasets[0].data[0][1];
+                                            const pct = basePrice !== 0 ? (value / basePrice) * 100 : 0;
+                                            label = `${pct > 0 ? '+' : ''}${pct.toFixed(1)}%`;
+                                        }
+
                                         const yPos = y.getPixelForValue(Math.max(datapoint[0], datapoint[1])) - 5;
                                         ctx.fillText(label, bar.x, yPos);
                                         ctx.restore();
@@ -553,25 +602,27 @@
                                     const by = midY - boxHeight / 2;
                                     
                                     // Shadow for separation
-                                    ctx.shadowColor = "rgba(0, 0, 0, 0.2)";
-                                    ctx.shadowBlur = 4;
-                                    ctx.shadowOffsetY = 2;
+                                    ctx.shadowColor = "rgba(0, 0, 0, 0.3)";
+                                    ctx.shadowBlur = 6;
+                                    ctx.shadowOffsetY = 3;
 
-                                    // Badge Background (Clears underlying bar color)
-                                    ctx.fillStyle = isDark ? '#1C1C1E' : '#FFFFFF';
+                                    // Badge Background
+                                    // 다크모드에서는 흰색 배경(가독성↑), 라이트모드에서는 진한 회색 배경
+                                    ctx.fillStyle = isDark ? '#FFFFFF' : '#2C2C2E';
                                     if (ctx.roundRect) ctx.roundRect(bx, by, boxWidth, boxHeight, 12);
                                     else ctx.fillRect(bx, by, boxWidth, boxHeight);
                                     ctx.fill();
                                     
                                     ctx.shadowColor = "transparent";
 
-                                    // Badge Border (Colored by trend)
+                                    // Badge Border (Colored by trend) - 테두리로 상승/하락 구분
                                     ctx.lineWidth = 1.5;
                                     ctx.strokeStyle = percentage >= 0 ? '#FF3B30' : '#0071E3'; 
                                     ctx.stroke();
 
-                                    // Badge Text
-                                    ctx.fillStyle = percentage >= 0 ? '#FF3B30' : '#0071E3'; 
+                                    // Badge Text (Contrast)
+                                    // 배경색에 맞춰 글자색 반전 (다크모드 배경엔 검은글씨, 라이트모드 배경엔 흰글씨)
+                                    ctx.fillStyle = isDark ? '#000000' : '#FFFFFF'; 
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle';
                                     ctx.fillText(text, midX, midY + 1);
@@ -817,7 +868,7 @@
                 } 
                 // 2. 숫자만 있는 경우 -> 국내 종목 코드로 간주하고 상세 페이지로 이동
                 else if (/^\d+$/.test(trimmed)) {
-                     window.open(`https://finance.naver.com/item/main.naver?code=${trimmed}`, '_blank');
+                      window.open(`https://finance.naver.com/item/main.naver?code=${trimmed}`, '_blank');
                 }
                 // 3. 그 외 (한글 등) -> 네이버 증권 '통합 검색 결과' 페이지로 이동 (에러 방지)
                 else {
@@ -924,7 +975,7 @@
                     const totalNetInvestmentProfit = netProfUserNon + netProfSpouseNon + netProfUserISA + netProfSpouseISA + netProfIPO;
                     
                     // 지출 계산 로직 (상세 내역 저장을 위해 변수 분리)
-                    let weight = 1.0;                      
+                    let weight = 1.0;                       
                     let lateLifeMedicalAnnual = 0;
                     if (age >= Math.min(userPenInfo.startAge, spousePenInfo.startAge)) {
                         if (age < s.highCostStartAge - 5) weight = 1.1;                          else if (age < s.highCostStartAge) weight = 0.9;                          else { weight = 0.7; lateLifeMedicalAnnual = medicalCostMonthly * 12 * lInf; }
@@ -1138,28 +1189,39 @@
                                                 onClick={() => setDashChartTab('price')} 
                                                 className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab === 'price' ? 'bg-[#0071E3] text-white shadow-md' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}
                                             >
-                                                은 시세(Silver)
+                                                <span className="sm:hidden">은시세</span>
+                                                <span className="hidden sm:inline">은 시세(Silver)</span>
                                             </button>
-                                            {/* 2. 상하이 은 (New) */}
+                                            {/* 2. 상하이 은 - 위치 변경됨 */}
                                             <button 
                                                 onClick={() => setDashChartTab('shanghai')} 
                                                 className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab === 'shanghai' ? 'bg-[#FF3B30] text-white shadow-md' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}
                                             >
-                                                상하이/국내 시세
+                                                <span className="sm:hidden">상하이/국내</span>
+                                                <span className="hidden sm:inline">상하이/국내 시세</span>
                                             </button>
-                                            {/* 3. 금은비 (Ratio) - 금 시세 삭제됨 */}
+                                            {/* 3. 금 시세 (Gold) - 위치 변경됨 */}
+                                            <button 
+                                                onClick={() => setDashChartTab('gold')} 
+                                                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab === 'gold' ? 'bg-[#FF9F0A] text-white shadow-md' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}
+                                            >
+                                                <span className="sm:hidden">금시세</span>
+                                                <span className="hidden sm:inline">금 시세(Gold)</span>
+                                            </button>
+                                            {/* 4. 금은비 (Ratio) */}
                                             <button 
                                                 onClick={() => setDashChartTab('ratio')} 
                                                 className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab === 'ratio' ? 'bg-[#0071E3] text-white shadow-md' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}
                                             >
-                                                금은비(Ratio)
+                                                <span className="sm:hidden">금은비</span>
+                                                <span className="hidden sm:inline">금은비(Ratio)</span>
                                             </button>
                                         </div>
                                         {/* 차트 영역 높이 고정 (안정성 확보) */}
                                         <div className="h-[400px] rounded-2xl overflow-hidden border border-slate-100 dark:border-white/5 relative bg-white dark:bg-[#1C1C1E]">
                                             {dashChartTab === 'price' && <SilverMiniChart theme={isDark ? 'dark' : 'light'} />}
+                                            {dashChartTab === 'gold' && <GoldMiniChart theme={isDark ? 'dark' : 'light'} />}
                                             {dashChartTab === 'shanghai' && <TradingViewShanghaiChart theme={isDark ? 'dark' : 'light'} />}
-                                            {/* 금 시세 차트 컴포넌트 렌더링 삭제됨 */}
                                             {dashChartTab === 'ratio' && <TradingViewRatioChart theme={isDark ? 'dark' : 'light'} />}
                                         </div>
                                     </div>
@@ -1177,11 +1239,11 @@
                             <div className="flex flex-col h-full">
                                 {/* Search Input */}
                                 <div className="relative mb-4">
-                                    <input                                          type="text"                                          className="w-full bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-xl pl-10 pr-4 py-3 text-sm font-bold text-slate-900 force-dark-white outline-none focus:ring-2 focus:ring-[#0071E3]/20"
-                                        placeholder="종목명 또는 코드 검색 (Enter)"
-                                        value={searchQuery}
-                                        onChange={e => setSearchQuery(e.target.value)}
-                                        onKeyDown={e => { if(e.key === 'Enter'){ searchSymbol(searchQuery); setSearchQuery(''); } }}
+                                    <input                                  type="text"                                  className="w-full bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-xl pl-10 pr-4 py-3 text-sm font-bold text-slate-900 force-dark-white outline-none focus:ring-2 focus:ring-[#0071E3]/20"
+                                            placeholder="종목명 또는 코드 검색 (Enter)"
+                                            value={searchQuery}
+                                            onChange={e => setSearchQuery(e.target.value)}
+                                            onKeyDown={e => { if(e.key === 'Enter'){ searchSymbol(searchQuery); setSearchQuery(''); } }}
                                     />
                                     <i className="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-gray-400 dark:text-gray-300"></i>
                                 </div>
@@ -1206,8 +1268,8 @@
                                                 </div>
                                             </div>
                                             {isFavEditMode ? (
-                                                <button                                                      onClick={(e) => { e.stopPropagation(); removeFavorite(fav.code); }}
-                                                    className="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow-sm hover:scale-110 transition"
+                                                <button                                              onClick={(e) => { e.stopPropagation(); removeFavorite(fav.code); }}
+                                                      className="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow-sm hover:scale-110 transition"
                                                 >
                                                     <i className="fa-solid fa-minus text-[10px]"></i>
                                                 </button>
@@ -1220,20 +1282,20 @@
                                 {/* Add New Favorite */}
                                 {isFavEditMode && (
                                     <div className="mt-auto pt-4 border-t border-gray-100 dark:border-white/5 animate-fade-in">
-                                        <div className="flex gap-2">
-                                            <input className="w-20 bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-lg px-2 py-2 text-xs font-bold text-center outline-none force-dark-white" placeholder="코드" value={newFav.code} onChange={e=>setNewFav({...newFav, code:e.target.value})} />
-                                            <input className="flex-1 bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-lg px-2 py-2 text-xs font-bold outline-none force-dark-white" placeholder="종목명" value={newFav.name} onChange={e=>setNewFav({...newFav, name:e.target.value})} />
-                                            <button                                                  onClick={() => {
-                                                    if(newFav.code && newFav.name) {
-                                                        setFavorites([...favorites, newFav]);
-                                                        setNewFav({code:'', name:''});
-                                                    }
-                                                }}
-                                                className="w-8 bg-[#0071E3] text-white rounded-lg flex items-center justify-center hover:bg-blue-600"
-                                            >
-                                                <i className="fa-solid fa-plus text-xs"></i>
-                                            </button>
-                                        </div>
+                                            <div className="flex gap-2">
+                                                <input className="w-20 bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-lg px-2 py-2 text-xs font-bold text-center outline-none force-dark-white" placeholder="코드" value={newFav.code} onChange={e=>setNewFav({...newFav, code:e.target.value})} />
+                                                <input className="flex-1 bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-lg px-2 py-2 text-xs font-bold outline-none force-dark-white" placeholder="종목명" value={newFav.name} onChange={e=>setNewFav({...newFav, name:e.target.value})} />
+                                                <button                                              onClick={() => {
+                                                        if(newFav.code && newFav.name) {
+                                                            setFavorites([...favorites, newFav]);
+                                                            setNewFav({code:'', name:''});
+                                                        }
+                                                    }}
+                                                    className="w-8 bg-[#0071E3] text-white rounded-lg flex items-center justify-center hover:bg-blue-600"
+                                                >
+                                                    <i className="fa-solid fa-plus text-xs"></i>
+                                                </button>
+                                            </div>
                                     </div>
                                 )}
                             </div>
@@ -1258,17 +1320,17 @@
                         <div className="flex items-center gap-3">
                              {/* Segmented Control for Mode */}
                             <div className="bg-[#E5E5EA] dark:bg-[#2C2C2E] p-1 rounded-full flex">
-                                <button                                      onClick={() => setLinkMode('investment')}                                      className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${linkMode === 'investment' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-500 dark:text-gray-300'}`}
+                                <button                                   onClick={() => setLinkMode('investment')}                                   className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${linkMode === 'investment' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-500 dark:text-gray-300'}`}
                                 >
                                     투자 & 일상
                                 </button>
-                                <button                                      onClick={() => setLinkMode('blogs')}                                      className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${linkMode === 'blogs' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-500 dark:text-gray-300'}`}
+                                <button                                   onClick={() => setLinkMode('blogs')}                                   className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${linkMode === 'blogs' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-500 dark:text-gray-300'}`}
                                 >
                                     인사이트
                                 </button>
                             </div>
                             {/* Edit Toggle */}
-                            <button                                  onClick={() => setIsRoutineEditMode(!isRoutineEditMode)}                                  className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${isRoutineEditMode ? 'bg-[#0071E3] text-white' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-[#0071E3]'}`}
+                            <button                                 onClick={() => setIsRoutineEditMode(!isRoutineEditMode)}                                 className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${isRoutineEditMode ? 'bg-[#0071E3] text-white' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-[#0071E3]'}`}
                             >
                                 {isRoutineEditMode ? '완료' : '편집'}
                             </button>
@@ -1283,10 +1345,10 @@
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
                                 <div className="sm:col-span-3">
-                                    <select                                          className="apple-input w-full"                                          value={newRoutine.category}                                          onChange={e=>setNewRoutine({...newRoutine, category:e.target.value})}
+                                    <select                                  className="apple-input w-full"                                  value={newRoutine.category}                                  onChange={e=>setNewRoutine({...newRoutine, category:e.target.value})}
                                     >
-                                        <option value="">카테고리 선택</option>
-                                        {Object.keys(linkMode === 'blogs' ? blogInsightLinks : routineLinks).map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                                            <option value="">카테고리 선택</option>
+                                            {Object.keys(linkMode === 'blogs' ? blogInsightLinks : routineLinks).map(cat => <option key={cat} value={cat}>{cat}</option>)}
                                     </select>
                                 </div>
                                 <div className="sm:col-span-3">
@@ -1296,7 +1358,7 @@
                                     <input type="text" placeholder="URL (https://...)" className="apple-input" value={newRoutine.url} onChange={e=>setNewRoutine({...newRoutine, url:e.target.value})} />
                                 </div>
                                 <div className="sm:col-span-2">
-                                    <button                                          onClick={() => {
+                                    <button                                  onClick={() => {
                                             if(linkMode === 'blogs') {
                                                 if (!newRoutine.category || !newRoutine.name || !newRoutine.url) return;
                                                 const updated = { ...blogInsightLinks };
@@ -1304,7 +1366,7 @@
                                                 setBlogInsightLinks(updated);
                                                 setNewRoutine({ category: '', name: '', url: '' });
                                             } else { addRoutineLink(); }
-                                        }}                                          className="w-full h-full bg-[#0071E3] hover:bg-blue-600 text-white rounded-xl font-bold text-xs transition py-3 sm:py-0"
+                                        }}                                  className="w-full h-full bg-[#0071E3] hover:bg-blue-600 text-white rounded-xl font-bold text-xs transition py-3 sm:py-0"
                                     >
                                         추가하기
                                     </button>
@@ -1319,7 +1381,7 @@
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     {links.map((l, i) => (
                                         <div key={i} className="relative group">
-                                            <a                                                  href={l.url}                                                  target="_blank"                                                  className="flex items-center gap-3 p-3 rounded-xl bg-[#F2F2F7] dark:bg-[#2C2C2E] hover:bg-gray-200 dark:hover:bg-gray-700 transition-all group-hover:scale-[1.02]"
+                                            <a                                          href={l.url}                                          target="_blank"                                          className="flex items-center gap-3 p-3 rounded-xl bg-[#F2F2F7] dark:bg-[#2C2C2E] hover:bg-gray-200 dark:hover:bg-gray-700 transition-all group-hover:scale-[1.02]"
                                             >
                                                 <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${l.color ? l.color.replace('text-', 'text-opacity-80 text-') : 'bg-white dark:bg-white/10 text-gray-500'}`}>
                                                     <i className={`fa-solid ${l.icon || 'fa-link'} text-sm`}></i>
@@ -1329,11 +1391,11 @@
                                                 </span>
                                             </a>
                                             {isRoutineEditMode && (
-                                                <button                                                      onClick={(e) => {
+                                                <button                                              onClick={(e) => {
                                                         e.preventDefault();
                                                         if(linkMode === 'blogs') { const updated = { ...blogInsightLinks }; updated[cat] = updated[cat].filter((_, index) => index !== i); setBlogInsightLinks(updated); }
                                                         else { removeRoutineLink(cat, i); }
-                                                    }}                                                      className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-[#FF3B30] text-white rounded-full flex items-center justify-center shadow-md hover:scale-110 transition z-10 border-2 border-white dark:border-[#1C1C1E]"
+                                                    }}                                              className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-[#FF3B30] text-white rounded-full flex items-center justify-center shadow-md hover:scale-110 transition z-10 border-2 border-white dark:border-[#1C1C1E]"
                                                 >
                                                     <i className="fa-solid fa-minus text-[10px]"></i>
                                                 </button>
@@ -1894,90 +1956,90 @@
                                         <div className="flex justify-between items-center">
                                         <label className="text-xs font-bold text-rose-500">월 생활비 (원)</label>
                                         <input type="text" className="apple-input !w-32 !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.monthlyLiving} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, monthlyLiving: v}))}/>
-                                    </div>
+                                        </div>
                                     
-                                    {/* 주택 가격 입력 (건보료 계산용) */}
-                                    <div className="flex justify-between items-center pt-1">
-                                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400">보유 주택 시세 (억)</label>
-                                        <input type="number" step="0.1" className="apple-input !w-32 !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.housingMarketPrice} onChange={e=>setSimInputs({...simInputs, housingMarketPrice: e.target.value})}/>
-                                    </div>
-
-                                    {/* 추가된 부분: 예상 지역 건보료 + 자동 계산 버튼 */}
-                                    <div className="bg-orange-50 dark:bg-orange-900/10 p-2 rounded-lg border border-orange-100 dark:border-orange-900/30">
-                                        <div className="flex justify-between items-center mb-1">
-                                            <label className="text-[11px] font-bold text-orange-600 dark:text-orange-400 flex items-center gap-1">
-                                                <i className="fa-solid fa-hospital-user"></i>
-                                                지역 건보료 ({simInputs.regionalInsStartAge || 60}세~)
-                                            </label>
-                                            <button 
-                                                onClick={calculateAutoRegionalIns}
-                                                className="text-[10px] bg-orange-100 dark:bg-orange-800 text-orange-700 dark:text-orange-100 px-2 py-0.5 rounded-md hover:bg-orange-200 transition font-bold"
-                                            >
-                                                <i className="fa-solid fa-calculator mr-1"></i>자동 계산
-                                            </button>
+                                        {/* 주택 가격 입력 (건보료 계산용) */}
+                                        <div className="flex justify-between items-center pt-1">
+                                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400">보유 주택 시세 (억)</label>
+                                            <input type="number" step="0.1" className="apple-input !w-32 !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.housingMarketPrice} onChange={e=>setSimInputs({...simInputs, housingMarketPrice: e.target.value})}/>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <input type="text" className="apple-input !py-1 !text-sm !bg-white dark:!bg-white/10 !text-right" value={simInputs.monthlyRegionalIns || ''} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, monthlyRegionalIns: v}))}/>
-                                            <span className="text-xs font-bold text-gray-500">원/월</span>
-                                        </div>
-                                        <p className="text-[9px] text-gray-400 mt-1 text-right">
-                                            *현재 가치(소득+재산) 기준 산출 (물가상승 자동 반영됨)
-                                        </p>
-                                    </div>
 
-                                    <div className="flex justify-between items-center mt-2">
-                                        {/* 수정됨: 의료비 적용 시작 나이(highCostStartAge)를 명시 */}
-                                        <label className="text-xs font-bold text-rose-500">월 의료비 (간병, {simInputs.highCostStartAge}세~)</label>
-                                        <input type="text" className="apple-input !w-32 !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.monthlyMedical} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, monthlyMedical: v}))}/>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                        <label className="text-xs font-bold text-rose-500">연간 비상금/예비비</label>
-                                        <input type="text" className="apple-input !w-32 !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.extraReserve} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, extraReserve: v}))}/>
-                                    </div>
-                                    <div className="border-t border-gray-200 dark:border-white/10 my-1"></div>
-                                        <div className="flex justify-between items-center">
-                                            <label className="text-xs font-bold text-blue-500">월 연금 (본인)</label>
-                                            <input type="text" className="apple-input !w-32 !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.pensionSelf} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, pensionSelf: v}))}/>
+                                        {/* 추가된 부분: 예상 지역 건보료 + 자동 계산 버튼 */}
+                                        <div className="bg-orange-50 dark:bg-orange-900/10 p-2 rounded-lg border border-orange-100 dark:border-orange-900/30">
+                                            <div className="flex justify-between items-center mb-1">
+                                                <label className="text-[11px] font-bold text-orange-600 dark:text-orange-400 flex items-center gap-1">
+                                                    <i className="fa-solid fa-hospital-user"></i>
+                                                    지역 건보료 ({simInputs.regionalInsStartAge || 60}세~)
+                                                </label>
+                                                <button 
+                                                    onClick={calculateAutoRegionalIns}
+                                                    className="text-[10px] bg-orange-100 dark:bg-orange-800 text-orange-700 dark:text-orange-100 px-2 py-0.5 rounded-md hover:bg-orange-200 transition font-bold"
+                                                >
+                                                    <i className="fa-solid fa-calculator mr-1"></i>자동 계산
+                                                </button>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <input type="text" className="apple-input !py-1 !text-sm !bg-white dark:!bg-white/10 !text-right" value={simInputs.monthlyRegionalIns || ''} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, monthlyRegionalIns: v}))}/>
+                                                <span className="text-xs font-bold text-gray-500">원/월</span>
+                                            </div>
+                                            <p className="text-[9px] text-gray-400 mt-1 text-right">
+                                                *현재 가치(소득+재산) 기준 산출 (물가상승 자동 반영됨)
+                                            </p>
+                                        </div>
+
+                                        <div className="flex justify-between items-center mt-2">
+                                            {/* 수정됨: 의료비 적용 시작 나이(highCostStartAge)를 명시 */}
+                                            <label className="text-xs font-bold text-rose-500">월 의료비 (간병, {simInputs.highCostStartAge}세~)</label>
+                                            <input type="text" className="apple-input !w-32 !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.monthlyMedical} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, monthlyMedical: v}))}/>
                                         </div>
                                         <div className="flex justify-between items-center">
-                                            <label className="text-xs font-bold text-blue-500">월 연금 (배우자)</label>
-                                            <input type="text" className="apple-input !w-32 !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.pensionSpouse} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, pensionSpouse: v}))}/>
+                                            <label className="text-xs font-bold text-rose-500">연간 비상금/예비비</label>
+                                            <input type="text" className="apple-input !w-32 !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.extraReserve} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, extraReserve: v}))}/>
                                         </div>
-                                        
-                                        {/* 기타 수익 상세 입력 (항목별 입력 기능 추가) */}
-                                        <div className="pt-2 border-t border-gray-200 dark:border-white/10 mt-2">
-                                            <label className="text-xs font-bold text-indigo-500 mb-2 block">기타 연간 수익 (상세)</label>
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <div>
-                                                    <label className="text-[10px] text-gray-400 block mb-0.5">공모주 수익</label>
-                                                    <input type="text" className="apple-input !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.ipoProfit} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, ipoProfit: v}))} />
+                                        <div className="border-t border-gray-200 dark:border-white/10 my-1"></div>
+                                            <div className="flex justify-between items-center">
+                                                <label className="text-xs font-bold text-blue-500">월 연금 (본인)</label>
+                                                <input type="text" className="apple-input !w-32 !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.pensionSelf} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, pensionSelf: v}))}/>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <label className="text-xs font-bold text-blue-500">월 연금 (배우자)</label>
+                                                <input type="text" className="apple-input !w-32 !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.pensionSpouse} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, pensionSpouse: v}))}/>
+                                            </div>
+                                            
+                                            {/* 기타 수익 상세 입력 (항목별 입력 기능 추가) */}
+                                            <div className="pt-2 border-t border-gray-200 dark:border-white/10 mt-2">
+                                                <label className="text-xs font-bold text-indigo-500 mb-2 block">기타 연간 수익 (상세)</label>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <div>
+                                                        <label className="text-[10px] text-gray-400 block mb-0.5">공모주 수익</label>
+                                                        <input type="text" className="apple-input !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.ipoProfit} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, ipoProfit: v}))} />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] text-gray-400 block mb-0.5">기타 수입</label>
+                                                        <input type="text" className="apple-input !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.otherIncome} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, otherIncome: v}))} />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] text-gray-400 block mb-0.5">대여금/이자</label>
+                                                        <input type="text" className="apple-input !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.stockLending} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, stockLending: v}))} />
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] text-gray-400 block mb-0.5">임대 소득</label>
+                                                        <input type="text" className="apple-input !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.rentalIncome} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, rentalIncome: v}))} />
+                                                    </div>
+                                                    {/* 매매 수익 입력창 추가 */}
+                                                    <div>
+                                                        <label className="text-[10px] text-gray-400 block mb-0.5">매매 수익</label>
+                                                        <input type="text" className="apple-input !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.tradingProfit} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, tradingProfit: v}))} />
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <label className="text-[10px] text-gray-400 block mb-0.5">기타 수입</label>
-                                                    <input type="text" className="apple-input !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.otherIncome} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, otherIncome: v}))} />
-                                                </div>
-                                                <div>
-                                                    <label className="text-[10px] text-gray-400 block mb-0.5">대여금/이자</label>
-                                                    <input type="text" className="apple-input !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.stockLending} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, stockLending: v}))} />
-                                                </div>
-                                                <div>
-                                                    <label className="text-[10px] text-gray-400 block mb-0.5">임대 소득</label>
-                                                    <input type="text" className="apple-input !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.rentalIncome} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, rentalIncome: v}))} />
-                                                </div>
-                                                {/* 매매 수익 입력창 추가 */}
-                                                <div>
-                                                    <label className="text-[10px] text-gray-400 block mb-0.5">매매 수익</label>
-                                                    <input type="text" className="apple-input !py-1 !text-sm !bg-white dark:!bg-white/10" value={simInputs.tradingProfit} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, tradingProfit: v}))} />
+                                                <div className="text-right mt-2">
+                                                     <span className="text-[10px] text-gray-400 mr-2">합계:</span>
+                                                    <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
+                                                        {/* 합계 계산에 tradingProfit 포함 */}
+                                                        {formatNumber(parseFormattedNumber(simInputs.ipoProfit) + parseFormattedNumber(simInputs.otherIncome) + parseFormattedNumber(simInputs.stockLending) + parseFormattedNumber(simInputs.rentalIncome) + parseFormattedNumber(simInputs.tradingProfit || "0"))}원
+                                                     </span>
                                                 </div>
                                             </div>
-                                            <div className="text-right mt-2">
-                                                 <span className="text-[10px] text-gray-400 mr-2">합계:</span>
-                                                 <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
-                                                    {/* 합계 계산에 tradingProfit 포함 */}
-                                                    {formatNumber(parseFormattedNumber(simInputs.ipoProfit) + parseFormattedNumber(simInputs.otherIncome) + parseFormattedNumber(simInputs.stockLending) + parseFormattedNumber(simInputs.rentalIncome) + parseFormattedNumber(simInputs.tradingProfit || "0"))}원
-                                                 </span>
-                                            </div>
-                                        </div>
                                     </div>
 
                                     {/* Target */}
@@ -2070,20 +2132,20 @@
                             <table className="w-full text-[11px] sm:text-[12px] text-left border-collapse table-auto min-w-max">
                                 <thead className="bg-slate-100 dark:bg-slate-900 sticky top-0 z-10">
                                     <tr className="text-slate-900 dark:text-white font-black leading-tight">
-                                        <th className="px-2 py-3 border-b dark:border-slate-700 text-center sticky left-0 bg-slate-100 dark:bg-slate-900 z-20">나이</th>
-                                        <th className="px-2 py-3 border-b dark:border-slate-700 text-center">총자산(억)</th>
-                                        <th className="px-2 py-3 border-b dark:border-slate-700 text-center">잔고상세</th>
-                                        {simTableVisibleCols.taxable && <th className="px-2 py-3 border-b dark:border-slate-700 text-indigo-600 dark:text-indigo-400 text-right">종합과세 대상(원)</th>}
-                                        {simTableVisibleCols.exempt && <th className="px-2 py-3 border-b dark:border-slate-700 text-emerald-600 dark:text-emerald-400 text-right">비과세/분리수익(원)</th>}
-                                        {simTableVisibleCols.income && <th className="px-2 py-3 border-b dark:border-slate-700 text-blue-600 dark:text-blue-300 text-right">기타수입/연금(원)</th>}
-                                        {simTableVisibleCols.expense && <th className="px-2 py-3 border-b dark:border-slate-700 text-rose-600 dark:text-rose-400 text-right">총 지출(원)</th>}
-                                        {simTableVisibleCols.flow && <><th className="px-2 py-3 border-b dark:border-slate-700 text-center">흐름%</th><th className="px-2 py-3 border-b dark:border-slate-700 text-right">연간증감(원)</th></>}
-                                        {simTableVisibleCols.status && <th className="px-2 py-3 border-b dark:border-slate-700 text-center">상태</th>}
+                                            <th className="px-2 py-3 border-b dark:border-slate-700 text-center sticky left-0 bg-slate-100 dark:bg-slate-900 z-20">나이</th>
+                                            <th className="px-2 py-3 border-b dark:border-slate-700 text-center">총자산(억)</th>
+                                            <th className="px-2 py-3 border-b dark:border-slate-700 text-center">잔고상세</th>
+                                            {simTableVisibleCols.taxable && <th className="px-2 py-3 border-b dark:border-slate-700 text-indigo-600 dark:text-indigo-400 text-right">종합과세 대상(원)</th>}
+                                            {simTableVisibleCols.exempt && <th className="px-2 py-3 border-b dark:border-slate-700 text-emerald-600 dark:text-emerald-400 text-right">비과세/분리수익(원)</th>}
+                                            {simTableVisibleCols.income && <th className="px-2 py-3 border-b dark:border-slate-700 text-blue-600 dark:text-blue-300 text-right">기타수입/연금(원)</th>}
+                                            {simTableVisibleCols.expense && <th className="px-2 py-3 border-b dark:border-slate-700 text-rose-600 dark:text-rose-400 text-right">총 지출(원)</th>}
+                                            {simTableVisibleCols.flow && <><th className="px-2 py-3 border-b dark:border-slate-700 text-center">흐름%</th><th className="px-2 py-3 border-b dark:border-slate-700 text-right">연간증감(원)</th></>}
+                                            {simTableVisibleCols.status && <th className="px-2 py-3 border-b dark:border-slate-700 text-center">상태</th>}
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white dark:bg-slate-800">
                                     {simResult.history.map((h, idx) => {
-                                        const totalExpense = h.living + h.tax;                                          const cashFlowIndex = totalExpense > 0 ? (h.annualProfit / totalExpense) * 100 : 0;                                          const rowBgClass = h.isHighCost ? 'bg-amber-50 dark:bg-amber-900/30' : h.isWarn ? 'bg-rose-50/70 dark:bg-rose-900/60' : '';
+                                        const totalExpense = h.living + h.tax;                                  const cashFlowIndex = totalExpense > 0 ? (h.annualProfit / totalExpense) * 100 : 0;                                  const rowBgClass = h.isHighCost ? 'bg-amber-50 dark:bg-amber-900/30' : h.isWarn ? 'bg-rose-50/70 dark:bg-rose-900/60' : '';
                                         return (
                                             <tr key={idx} className={`hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors border-b dark:border-slate-700 ${rowBgClass}`}>
                                                 <td className="px-2 py-2.5 font-black text-slate-900 dark:text-white text-center sticky left-0 bg-inherit z-10 border-r dark:border-slate-700">{h.age}</td>
