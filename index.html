@@ -349,6 +349,44 @@
             return <div ref={ref} className="h-full w-full"></div>;
         });
 
+        // --- NEW: Bitcoin Mini Chart Component ---
+        const BitcoinMiniChart = memo(({ theme }) => {
+            const ref = useRef(null);
+            useEffect(() => {
+                if (!ref.current) return;
+                ref.current.innerHTML = '';
+                
+                const containerDiv = document.createElement('div');
+                containerDiv.className = 'tradingview-widget-container';
+                containerDiv.style.height = '100%';
+                containerDiv.style.width = '100%';
+                
+                const widgetDiv = document.createElement('div');
+                widgetDiv.className = 'tradingview-widget-container__widget';
+                widgetDiv.style.height = '100%';
+                widgetDiv.style.width = '100%';
+                containerDiv.appendChild(widgetDiv);
+                
+                const script = document.createElement('script');
+                script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
+                script.async = true;
+                script.innerHTML = JSON.stringify({
+                    "symbol": "BINANCE:BTCUSDT",
+                    "width": "100%",
+                    "height": "100%",
+                    "locale": "kr",
+                    "dateRange": "12M",
+                    "colorTheme": theme,
+                    "isTransparent": true,
+                    "autosize": true,
+                    "largeChartUrl": ""
+                });
+                containerDiv.appendChild(script);
+                ref.current.appendChild(containerDiv);
+            }, [theme]);
+            return <div ref={ref} className="h-full w-full"></div>;
+        });
+
         // --- NEW: Gold Mini Chart Component ---
         const GoldMiniChart = memo(({ theme }) => {
             const ref = useRef(null);
@@ -420,6 +458,55 @@
                             >
                                 <span className="text-sm font-bold text-slate-700 dark:text-slate-200">🇰🇷 국내 매도시세 (순수한금)</span>
                                 <i className="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400 group-hover:text-green-500"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            );
+        });
+
+        // --- NEW: Bitcoin Link Panel ---
+        const BitcoinLinkPanel = memo(({ theme }) => {
+            return (
+                <div className="h-full w-full flex flex-col items-center justify-center p-6 bg-[#F9F9F9] dark:bg-[#2C2C2E] rounded-2xl border border-dashed border-gray-300 dark:border-gray-600">
+                    <div className="text-center space-y-4">
+                        <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <i className="fa-brands fa-bitcoin text-3xl text-orange-500"></i>
+                        </div>
+                        <div>
+                            <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-1">가상화폐 시세 확인</h4>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                국내외 거래소 시세를 확인하고<br/>
+                                프리미엄을 분석하세요.
+                            </p>
+                        </div>
+                        <div className="flex flex-col gap-2 w-full max-w-xs mx-auto pt-2">
+                            <a 
+                                href="https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-between px-4 py-3 bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition shadow-sm group"
+                            >
+                                <span className="text-sm font-bold text-slate-700 dark:text-slate-200">🇰🇷 업비트 (Upbit)</span>
+                                <i className="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400 group-hover:text-blue-500"></i>
+                            </a>
+                            <a 
+                                href="https://www.binance.com/en/trade/BTC_USDT?type=spot" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-between px-4 py-3 bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition shadow-sm group"
+                            >
+                                <span className="text-sm font-bold text-slate-700 dark:text-slate-200">🌍 바이낸스 (Binance)</span>
+                                <i className="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400 group-hover:text-yellow-500"></i>
+                            </a>
+                            <a 
+                                href="https://kimpga.com/" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-between px-4 py-3 bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition shadow-sm group"
+                            >
+                                <span className="text-sm font-bold text-slate-700 dark:text-slate-200">📊 김프가 (Kimpga)</span>
+                                <i className="fa-solid fa-arrow-up-right-from-square text-xs text-gray-400 group-hover:text-orange-500"></i>
                             </a>
                         </div>
                     </div>
@@ -670,6 +757,93 @@
                 </div>
             );
         });
+
+        // --- NEW: Bitcoin Premium Bridge Chart ---
+        const BitcoinBridgeChart = memo(({ profitData, isDark }) => {
+            const canvasRef = useRef(null);
+            const chartInstance = useRef(null);
+            useEffect(() => {
+                if (!canvasRef.current || !profitData) return;
+                const ctx = canvasRef.current.getContext('2d');
+                if (chartInstance.current) chartInstance.current.destroy();
+                
+                const MAN_WON = 10000;
+                const theoretical = Math.round(profitData.theoreticalKrwPrice / MAN_WON);
+                const premium = Math.round(profitData.kPremium / MAN_WON);
+                const actual = Math.round(profitData.actualPrice / MAN_WON);
+                
+                // Waterfall: Theoretical -> + Premium -> Actual
+                const bar1 = [0, theoretical]; 
+                const bar2 = [theoretical, actual];
+                const bar3 = [0, actual];
+                
+                const baseColor = isDark ? '#48484A' : '#D1D1D6';
+                const premiumColor = profitData.kPremium >= 0 ? '#34C759' : '#0071E3'; // Green for positive Kimchi Premium
+                const finalColor = '#FF9F0A'; // Orange for Bitcoin
+
+                chartInstance.current = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['국제시세(원)', '김치 프리미엄', '국내 시세'],
+                        datasets: [{
+                            label: '가격 구성',
+                            data: [ bar1, bar2, bar3 ],
+                            backgroundColor: [ baseColor, premiumColor, finalColor ],
+                            borderRadius: 4,
+                            borderSkipped: false
+                        }]
+                    },
+                    options: {
+                        layout: { padding: { top: 30 } },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const raw = context.raw;
+                                        const val = raw[1] - raw[0];
+                                        return `금액: ${val.toLocaleString()}만원`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { grid: { display: false }, ticks: { font: { size: 11, weight: 'bold' }, color: isDark ? '#aaa' : '#555' } },
+                            y: { display: false, min: Math.min(theoretical, actual) * 0.8 }
+                        }
+                    },
+                    plugins: [{
+                        id: 'btcLabels',
+                        afterDraw(chart) {
+                            const { ctx } = chart;
+                            chart.data.datasets[0].data.forEach((datapoint, index) => {
+                                const meta = chart.getDatasetMeta(0);
+                                const bar = meta.data[index];
+                                if(bar) {
+                                    ctx.save();
+                                    ctx.textAlign = 'center';
+                                    ctx.textBaseline = 'bottom';
+                                    ctx.font = 'bold 12px Pretendard';
+                                    ctx.fillStyle = isDark ? '#fff' : '#000';
+                                    
+                                    let label;
+                                    if(index === 1) label = `${profitData.kPremiumPercent.toFixed(1)}%`;
+                                    else label = `${(datapoint[1]).toLocaleString()}만`;
+                                    
+                                    ctx.fillText(label, bar.x, bar.y - 5);
+                                    ctx.restore();
+                                }
+                            });
+                        }
+                    }]
+                });
+                return () => { if (chartInstance.current) chartInstance.current.destroy(); };
+            }, [profitData, isDark]);
+            return <div className="h-full w-full min-h-[200px]"><canvas ref={canvasRef}></canvas></div>;
+        });
+
         // --- APPLE STYLE COMPONENTS (Internal) ---
         const AppleCard = ({ title, subTitle, children, className = "" }) => (
             <div className={`apple-card flex flex-col ${className}`}>
@@ -704,6 +878,8 @@
             const [isDark, setIsDark] = useState(false);
             // ... existing state ...
             const [linkMode, setLinkMode] = useState('investment');
+            // State for Analysis Mode (Silver / Bitcoin)
+            const [analysisMode, setAnalysisMode] = useState('silver'); 
             const [marketStatus, setMarketStatus] = useState({ text: '장 마감', color: 'bg-red-600' });
             
             // Dashboard Chart Tab State
@@ -736,15 +912,33 @@
                     };
                 }
             });
+            // Bitcoin Analysis State
+            const [bitcoinAnalysisInputs, setBitcoinAnalysisInputs] = useState(() => {
+                try {
+                    // 키를 변경하여 새로운 단위(만원)가 적용된 초기값을 로드하도록 함
+                    const saved = localStorage.getItem('invNav_btcInputs_v2');
+                    return saved ? JSON.parse(saved) : {
+                        currentBtcUsd: '95,000',
+                        currentDomesticPrice: '14,000' // 만원 단위 (1억 4천만원)
+                    };
+                } catch(e) { return { currentBtcUsd: '95,000', currentDomesticPrice: '14,000' }; }
+            });
+
             useEffect(() => {
                 localStorage.setItem('invNav_silverInputs_v4', JSON.stringify(silverAnalysisInputs));
             }, [silverAnalysisInputs]);
+            
+            useEffect(() => {
+                localStorage.setItem('invNav_btcInputs_v2', JSON.stringify(bitcoinAnalysisInputs));
+            }, [bitcoinAnalysisInputs]);
+
             const [favorites, setFavorites] = useState(() => {
                 try {
                     const saved = localStorage.getItem('invNav_favorites');
                     return saved ? JSON.parse(saved) : DEFAULT_FAVORITES;
                 } catch (e) { return DEFAULT_FAVORITES; }
             });
+            // ... existing routine state ...
             const [routineLinks, setRoutineLinks] = useState(() => {
                 try {
                     // 키 이름을 _v2로 변경하여 강제로 새 기본값을 불러오도록 함 (1번 방법)
@@ -763,11 +957,13 @@
             // 저장할 때도 변경된 _v2 키를 사용
             useEffect(() => { localStorage.setItem('invNav_routineLinks_v2', JSON.stringify(routineLinks)); }, [routineLinks]);
             useEffect(() => { localStorage.setItem('invNav_blogLinks_v2', JSON.stringify(blogInsightLinks)); }, [blogInsightLinks]);
+            // ... existing tools/sim inputs ...
             const [targetInputs, setTargetInputs] = useState({ mode: 'cap', price: '', shares: '', currentCap: '', targetCap: '', targetRate: '' });
             const [ipoCalcInputs, setIpoCalcInputs] = useState({ price: '', qty: '', fee: '', rate: 50 });
             const [avgRows, setAvgRows] = useState([{ id: 1, q: '', p: '' }]);
             const [exchInputs, setExchInputs] = useState({ base: 'USD', target: 'KRW', amount: '' });
             
+            // ... existing DEFAULT_SIM_INPUTS and simInputs state ...
             const DEFAULT_SIM_INPUTS = {
                 currentAge: 52, spouseCurrentAge: 48, simulationStartAge: 53,
                 pensionStartAgeUser: 65, pensionStartAgeSpouse: 65,
@@ -832,6 +1028,17 @@
                 });
             };
 
+            // Bitcoin adjust helper
+            const adjustBitcoinValue = (field, delta) => {
+                setBitcoinAnalysisInputs(prev => {
+                    const currentValStr = String(prev[field]).replace(/[^0-9.-]/g, '');
+                    let val = parseFloat(currentValStr) || 0;
+                    val += delta;
+                    if (val < 0) val = 0;
+                    return { ...prev, [field]: Math.round(val).toLocaleString('ko-KR') };
+                });
+            }
+
             const fetchRealTimeRates = useCallback(async () => {
                 setIsFetching(true);
                 try {
@@ -869,196 +1076,65 @@
                 else document.documentElement.classList.remove('dark');
             }, [isDark]);
             
-            // 검색 기능 수정: 한글 검색 시 에러 화면(잘못된 URL)이 뜨지 않도록 분기 처리 개선
+            // ... searchSymbol, getAdjustedPensionAmount, calculateAutoRegionalIns, runSimulation ...
             const searchSymbol = (query) => {
                 if(!query || query.trim() === "") { window.open('https://stock.naver.com/', '_blank'); return; }
                 const trimmed = query.trim();
-                
-                // 1. 영어가 포함된 경우 -> 해외 주식 티커로 간주하고 상세 페이지로 이동
-                if (/[a-zA-Z]/.test(trimmed)) {
-                    window.open(`https://finance.naver.com/world/sise.naver?symbol=${trimmed.toUpperCase()}`, '_blank');
-                } 
-                // 2. 숫자만 있는 경우 -> 국내 종목 코드로 간주하고 상세 페이지로 이동
-                else if (/^\d+$/.test(trimmed)) {
-                      window.open(`https://finance.naver.com/item/main.naver?code=${trimmed}`, '_blank');
-                }
-                // 3. 그 외 (한글 등) -> 네이버 증권 '통합 검색 결과' 페이지로 이동 (에러 방지)
-                else {
-                    window.open(`https://finance.naver.com/search/search.naver?query=${encodeURIComponent(trimmed)}`, '_blank');
-                }
+                if (/[a-zA-Z]/.test(trimmed)) { window.open(`https://finance.naver.com/world/sise.naver?symbol=${trimmed.toUpperCase()}`, '_blank'); } 
+                else if (/^\d+$/.test(trimmed)) { window.open(`https://finance.naver.com/item/main.naver?code=${trimmed}`, '_blank'); }
+                else { window.open(`https://finance.naver.com/search/search.naver?query=${encodeURIComponent(trimmed)}`, '_blank'); }
             };
-
             const getAdjustedPensionAmount = (baseAmount, strategy) => {
                 let ageAdj = 0;
                 let amountMult = 1.0;
-                if (strategy.startsWith('early')) {
-                    const years = parseInt(strategy.replace('early', ''));
-                    ageAdj = -years;
-                    amountMult = 1 - (years * 0.06);
-                } else if (strategy.startsWith('defer')) {
-                    const deferYears = parseInt(strategy.replace('defer', ''));
-                    ageAdj = deferYears;
-                    amountMult = 1 + (deferYears * 0.072);
-                }
+                if (strategy.startsWith('early')) { const years = parseInt(strategy.replace('early', '')); ageAdj = -years; amountMult = 1 - (years * 0.06); } 
+                else if (strategy.startsWith('defer')) { const deferYears = parseInt(strategy.replace('defer', '')); ageAdj = deferYears; amountMult = 1 + (deferYears * 0.072); }
                 return { startAge: 65 + ageAdj, monthlyAmount: baseAmount * amountMult };
             };
-
-            // 지역가입자 건보료 자동 계산 함수 (수정됨: 현재 가치 기준 단순화 모델)
-            // 논리: "지금 은퇴한다고 가정했을 때의 보험료"를 계산하고, 
-            // 시뮬레이션 엔진이 이를 매년 물가상승률만큼 증액시키도록 함 (가장 확률 높은 단순화 모델)
             const calculateAutoRegionalIns = () => {
-                // 1. 소득 등급 (연소득)
-                // 연금 50%, 기타소득 100%
                 const annualPension = (parseFormattedNumber(simInputs.pensionSelf) + parseFormattedNumber(simInputs.pensionSpouse)) * 12 * 0.5;
                 const annualOthers = parseFormattedNumber(simInputs.ipoProfit) + parseFormattedNumber(simInputs.otherIncome) + parseFormattedNumber(simInputs.stockLending) + parseFormattedNumber(simInputs.rentalIncome) + parseFormattedNumber(simInputs.tradingProfit);
                 const annualScoreIncome = annualPension + annualOthers;
-                
-                // 소득 보험료 (월) = (연 환산 소득 * 7.09%) / 12
                 const incomePremium = (annualScoreIncome * 0.0709) / 12;
-
-                // 2. 재산 등급 (주택)
-                // 시세 -> 과세표준 (약 45% 가정: 공시가율 * 공정시장가액비율) - 기본공제 5000만원
                 const housePrice = parseFloat(simInputs.housingMarketPrice) * ONE_HUNDRED_MILLION;
                 const propertyTaxBase = (housePrice * 0.45) - 50000000;
-                
                 let propertyPremium = 0;
-                if (propertyTaxBase > 0) {
-                    // 재산 보험료 약식 계산 (2024년 기준 근사치)
-                    // 재산 과표 1억당 월 약 4.5만원~5만원 꼴 (점수당 208.4원 반영 시)
-                    // 복잡한 등급표 대신 선형 근사식 적용: 과표 * 0.00045 (오차 범위 내 적절)
-                    propertyPremium = propertyTaxBase * 0.00045; 
-                }
-
-                // 3. 합산 및 장기요양보험료(12.95%) 추가
+                if (propertyTaxBase > 0) { propertyPremium = propertyTaxBase * 0.00045; }
                 const totalPremium = (incomePremium + propertyPremium) * 1.1295;
-                
-                // 4. 결과 적용 (천원 단위 절사)
                 const finalPremium = Math.floor(totalPremium / 1000) * 1000;
-                
-                setSimInputs(prev => ({
-                    ...prev,
-                    monthlyRegionalIns: finalPremium.toLocaleString('ko-KR')
-                }));
+                setSimInputs(prev => ({ ...prev, monthlyRegionalIns: finalPremium.toLocaleString('ko-KR') }));
             };
-
             const runSimulation = useCallback(() => {
-                const s = simInputs;
-                const ageDiff = s.currentAge - s.spouseCurrentAge;
-                
-                let cUserNon = s.capUserNonISA * ONE_HUNDRED_MILLION;
-                let cSpouseNon = s.capSpouseNonISA * ONE_HUNDRED_MILLION;
-                let cUserISA = s.capUserISA * ONE_HUNDRED_MILLION;
-                let cSpouseISA = s.capSpouseISA * ONE_HUNDRED_MILLION;
-                let cIPO = (s.capIPO || 0) * ONE_HUNDRED_MILLION;
-                
-                const targetLegacyValue = parseFormattedNumber(s.targetLegacy);
-                const extraReserveValue = parseFormattedNumber(s.extraReserve);
-                const medicalCostMonthly = parseFormattedNumber(s.monthlyMedical);
-                const regionalInsMonthly = parseFormattedNumber(s.monthlyRegionalIns);
-                const initLiving = parseFormattedNumber(s.monthlyLiving) * 12;
-                
-                const userPenInfo = getAdjustedPensionAmount(parseFormattedNumber(s.pensionSelf), s.pensionStrategyUser);
-                const spousePenInfo = getAdjustedPensionAmount(parseFormattedNumber(s.pensionSpouse), s.pensionStrategySpouse);
-                
+                const s = simInputs; const ageDiff = s.currentAge - s.spouseCurrentAge;
+                let cUserNon = s.capUserNonISA * ONE_HUNDRED_MILLION; let cSpouseNon = s.capSpouseNonISA * ONE_HUNDRED_MILLION; let cUserISA = s.capUserISA * ONE_HUNDRED_MILLION; let cSpouseISA = s.capSpouseISA * ONE_HUNDRED_MILLION; let cIPO = (s.capIPO || 0) * ONE_HUNDRED_MILLION;
+                const targetLegacyValue = parseFormattedNumber(s.targetLegacy); const extraReserveValue = parseFormattedNumber(s.extraReserve); const medicalCostMonthly = parseFormattedNumber(s.monthlyMedical); const regionalInsMonthly = parseFormattedNumber(s.monthlyRegionalIns); const initLiving = parseFormattedNumber(s.monthlyLiving) * 12;
+                const userPenInfo = getAdjustedPensionAmount(parseFormattedNumber(s.pensionSelf), s.pensionStrategyUser); const spousePenInfo = getAdjustedPensionAmount(parseFormattedNumber(s.pensionSpouse), s.pensionStrategySpouse);
                 const initOtherTotal = parseFormattedNumber(s.ipoProfit) + parseFormattedNumber(s.otherIncome) + parseFormattedNumber(s.stockLending) + parseFormattedNumber(s.rentalIncome) + parseFormattedNumber(s.tradingProfit || "0");
-                
-                let history = [];                  let totalTaxAccum = 0;                  let depletionYear = null;
-                const period = Math.max(1, 96 - s.simulationStartAge);
-                
+                let history = []; let totalTaxAccum = 0; let depletionYear = null; const period = Math.max(1, 96 - s.simulationStartAge);
                 for (let year = 1; year <= period; year++) {
-                    const age = s.simulationStartAge + year - 1;
-                    const spouseAge = age - ageDiff;
-                    
-                    const pInf = Math.pow(1 + (s.inflationRate / 100), year - 1);
-                    const lInf = Math.pow(1 + (s.livingCostInflationRate / 100), year - 1);
-                    
+                    const age = s.simulationStartAge + year - 1; const spouseAge = age - ageDiff;
+                    const pInf = Math.pow(1 + (s.inflationRate / 100), year - 1); const lInf = Math.pow(1 + (s.livingCostInflationRate / 100), year - 1);
                     const startTotalAssets = cUserNon + cSpouseNon + cUserISA + cSpouseISA + cIPO;
-                    
-                    const grossUserNon = cUserNon * (s.returnUserNonISA / 100);
-                    const grossSpouseNon = cSpouseNon * (s.returnSpouseNonISA / 100);
-                    const ipoCmaProfit = cIPO * (s.returnCMA / 100);                      const ipoCapitalProfit = cIPO * (s.returnIPO / 100);                      const grossUserISA = cUserISA * (s.returnUserISA / 100);
-                    const grossSpouseISA = cSpouseISA * (s.returnSpouseISA / 100);
-                    const taxableProfitYear = grossUserNon + grossSpouseNon + ipoCmaProfit;
-                    const exemptProfitYear = ipoCapitalProfit + grossUserISA + grossSpouseISA;
-                    const netProfUserNon = grossUserNon * 0.846;
-                    const netProfSpouseNon = grossSpouseNon * 0.846;
-                    const netProfUserISA = grossUserISA * 0.901;                      const netProfSpouseISA = grossSpouseISA * 0.901;
-                    const netProfIPO = (ipoCmaProfit * 0.846) + ipoCapitalProfit;                      
+                    const grossUserNon = cUserNon * (s.returnUserNonISA / 100); const grossSpouseNon = cSpouseNon * (s.returnSpouseNonISA / 100); const ipoCmaProfit = cIPO * (s.returnCMA / 100); const ipoCapitalProfit = cIPO * (s.returnIPO / 100); const grossUserISA = cUserISA * (s.returnUserISA / 100); const grossSpouseISA = cSpouseISA * (s.returnSpouseISA / 100);
+                    const taxableProfitYear = grossUserNon + grossSpouseNon + ipoCmaProfit; const exemptProfitYear = ipoCapitalProfit + grossUserISA + grossSpouseISA;
+                    const netProfUserNon = grossUserNon * 0.846; const netProfSpouseNon = grossSpouseNon * 0.846; const netProfUserISA = grossUserISA * 0.901; const netProfSpouseISA = grossSpouseISA * 0.901; const netProfIPO = (ipoCmaProfit * 0.846) + ipoCapitalProfit;
                     const totalNetInvestmentProfit = netProfUserNon + netProfSpouseNon + netProfUserISA + netProfSpouseISA + netProfIPO;
-                    
-                    // 지출 계산 로직 (상세 내역 저장을 위해 변수 분리)
-                    let weight = 1.0;                       
-                    let lateLifeMedicalAnnual = 0;
-                    if (age >= Math.min(userPenInfo.startAge, spousePenInfo.startAge)) {
-                        if (age < s.highCostStartAge - 5) weight = 1.1;                          else if (age < s.highCostStartAge) weight = 0.9;                          else { weight = 0.7; lateLifeMedicalAnnual = medicalCostMonthly * 12 * lInf; }
-                    }
-                    
-                    // 기본 생활비 (가중치 적용)
+                    let weight = 1.0; let lateLifeMedicalAnnual = 0;
+                    if (age >= Math.min(userPenInfo.startAge, spousePenInfo.startAge)) { if (age < s.highCostStartAge - 5) weight = 1.1; else if (age < s.highCostStartAge) weight = 0.9; else { weight = 0.7; lateLifeMedicalAnnual = medicalCostMonthly * 12 * lInf; } }
                     const basicLivingAnnual = initLiving * lInf * weight;
-
-                    // 지역가입자 건보료
-                    let regionalInsAnnual = 0;
-                    const safeRegionalAge = s.regionalInsStartAge || 60;
-                    if (age >= safeRegionalAge) {
-                        regionalInsAnnual = regionalInsMonthly * 12 * lInf;
-                    }
-
-                    // 총 생활비 합산
+                    let regionalInsAnnual = 0; const safeRegionalAge = s.regionalInsStartAge || 60; if (age >= safeRegionalAge) { regionalInsAnnual = regionalInsMonthly * 12 * lInf; }
                     const annualLivingCost = basicLivingAnnual + lateLifeMedicalAnnual + regionalInsAnnual + extraReserveValue;
-                    
-                    let pension = 0;
-                    if (age >= userPenInfo.startAge) pension += userPenInfo.monthlyAmount * 12;                      if (spouseAge >= spousePenInfo.startAge) pension += spousePenInfo.monthlyAmount * 12;
-                    
-                    const annualPension = pension * pInf;
-                    const annualOthers = initOtherTotal * pInf;
-                    const annualBaseIncome = annualPension + annualOthers;
-                    const incTax = calculateProgressiveIncomeTax(annualBaseIncome, { rate1: s.taxRate1, rate2: s.taxRate2, rate3: s.taxRate3 });
-                    totalTaxAccum += incTax;
-                    const annualTotalExpenses = annualLivingCost + incTax;
-                    
-                    cUserNon += netProfUserNon;
-                    cSpouseNon += netProfSpouseNon;
-                    cUserISA += netProfUserISA;
-                    cSpouseISA += netProfSpouseISA;
-                    cIPO += netProfIPO;
+                    let pension = 0; if (age >= userPenInfo.startAge) pension += userPenInfo.monthlyAmount * 12; if (spouseAge >= spousePenInfo.startAge) pension += spousePenInfo.monthlyAmount * 12;
+                    const annualPension = pension * pInf; const annualOthers = initOtherTotal * pInf; const annualBaseIncome = annualPension + annualOthers;
+                    const incTax = calculateProgressiveIncomeTax(annualBaseIncome, { rate1: s.taxRate1, rate2: s.taxRate2, rate3: s.taxRate3 }); totalTaxAccum += incTax; const annualTotalExpenses = annualLivingCost + incTax;
+                    cUserNon += netProfUserNon; cSpouseNon += netProfSpouseNon; cUserISA += netProfUserISA; cSpouseISA += netProfSpouseISA; cIPO += netProfIPO;
                     const cashSurplus = annualBaseIncome - annualTotalExpenses;
-                    if (cashSurplus < 0) {
-                        let rem = Math.abs(cashSurplus);
-                        let w1 = Math.min(rem, cIPO); cIPO -= w1; rem -= w1;
-                        let w2 = Math.min(rem, cSpouseNon); cSpouseNon -= w2; rem -= w2;
-                        let w3 = Math.min(rem, cUserNon); cUserNon -= w3; rem -= w3;
-                        let w4 = Math.min(rem, cSpouseISA); cSpouseISA -= w4; rem -= w4;
-                        let w5 = Math.min(rem, cUserISA); cUserISA -= w5; rem -= w5;
-                        if (rem > 0 && !depletionYear) depletionYear = age;
-                    } else {
-                        cUserNon += cashSurplus;
-                    }
-                    const currentTotalAssets = cUserNon + cSpouseNon + cUserISA + cSpouseISA + cIPO;
-                    const annualNetChange = currentTotalAssets - startTotalAssets;
-                    history.push({                          age,                          total: Math.max(0, currentTotalAssets / ONE_HUNDRED_MILLION),                          tax: incTax,                          living: annualLivingCost,                          profInvestment: totalNetInvestmentProfit,                          taxableProfit: taxableProfitYear,
-                        separateExemptProfit: exemptProfitYear,                          baseIncome: annualBaseIncome,
-                        annualProfit: totalNetInvestmentProfit + annualBaseIncome,
-                        netChange: annualNetChange,                          un: Math.max(0, cUserNon), sn: Math.max(0, cSpouseNon), ui: Math.max(0, cUserISA), si: Math.max(0, cSpouseISA), cip: Math.max(0, cIPO),
-                        isHighCost: age >= s.highCostStartAge,
-                        isWarn: currentTotalAssets < targetLegacyValue,
-                        details: {
-                            taxable: { u: grossUserNon, s: grossSpouseNon, c: ipoCmaProfit },
-                            exempt: { i: ipoCapitalProfit, ui: grossUserISA, si: grossSpouseISA },
-                            income: { p: annualPension, o: annualOthers },
-                            // 추가: 지출 상세 내역 저장
-                            expense: {
-                                l: basicLivingAnnual, // 순수 생활비
-                                m: lateLifeMedicalAnnual, // 의료/간병비
-                                r: regionalInsAnnual, // 건보료
-                                t: incTax, // 세금
-                                e: extraReserveValue // 예비비
-                            }
-                        }
-                    });
-                    
-                    if (currentTotalAssets <= -1000000 && year > 1) break;                  }
-                
-                setSimResult({                      history,                      summary: {                          initial: s.capUserNonISA + s.capSpouseNonISA + s.capUserISA + s.capSpouseISA + s.capIPO,                          final: (history[history.length-1]?.total * ONE_HUNDRED_MILLION) || 0,                          tax: totalTaxAccum,                          depletion: depletionYear,                          isSuccess: (history[history.length-1]?.total * ONE_HUNDRED_MILLION) >= targetLegacyValue                      }                  });
+                    if (cashSurplus < 0) { let rem = Math.abs(cashSurplus); let w1 = Math.min(rem, cIPO); cIPO -= w1; rem -= w1; let w2 = Math.min(rem, cSpouseNon); cSpouseNon -= w2; rem -= w2; let w3 = Math.min(rem, cUserNon); cUserNon -= w3; rem -= w3; let w4 = Math.min(rem, cSpouseISA); cSpouseISA -= w4; rem -= w4; let w5 = Math.min(rem, cUserISA); cUserISA -= w5; rem -= w5; if (rem > 0 && !depletionYear) depletionYear = age; } else { cUserNon += cashSurplus; }
+                    const currentTotalAssets = cUserNon + cSpouseNon + cUserISA + cSpouseISA + cIPO; const annualNetChange = currentTotalAssets - startTotalAssets;
+                    history.push({ age, total: Math.max(0, currentTotalAssets / ONE_HUNDRED_MILLION), tax: incTax, living: annualLivingCost, profInvestment: totalNetInvestmentProfit, taxableProfit: taxableProfitYear, separateExemptProfit: exemptProfitYear, baseIncome: annualBaseIncome, annualProfit: totalNetInvestmentProfit + annualBaseIncome, netChange: annualNetChange, un: Math.max(0, cUserNon), sn: Math.max(0, cSpouseNon), ui: Math.max(0, cUserISA), si: Math.max(0, cSpouseISA), cip: Math.max(0, cIPO), isHighCost: age >= s.highCostStartAge, isWarn: currentTotalAssets < targetLegacyValue, details: { taxable: { u: grossUserNon, s: grossSpouseNon, c: ipoCmaProfit }, exempt: { i: ipoCapitalProfit, ui: grossUserISA, si: grossSpouseISA }, income: { p: annualPension, o: annualOthers }, expense: { l: basicLivingAnnual, m: lateLifeMedicalAnnual, r: regionalInsAnnual, t: incTax, e: extraReserveValue } } });
+                    if (currentTotalAssets <= -1000000 && year > 1) break;
+                }
+                setSimResult({ history, summary: { initial: s.capUserNonISA + s.capSpouseNonISA + s.capUserISA + s.capSpouseISA + s.capIPO, final: (history[history.length-1]?.total * ONE_HUNDRED_MILLION) || 0, tax: totalTaxAccum, depletion: depletionYear, isSuccess: (history[history.length-1]?.total * ONE_HUNDRED_MILLION) >= targetLegacyValue } });
             }, [simInputs]);
             useEffect(() => { runSimulation(); }, [runSimulation]);
             const removeFavorite = (code) => { setFavorites(favorites.filter(f => f.code !== code)); };
@@ -1108,6 +1184,26 @@
                     priceChangeRate, exchChangeRate // 추가된 값 반환
                 };
             }, [silverAnalysisInputs, exchangeRates]);
+
+            // Bitcoin Profit Data
+            const bitcoinProfitData = useMemo(() => {
+                const exch = parseFloat(silverAnalysisInputs.currentExch.replace(/[^0-9.]/g, '')) || 0;
+                const btcUsd = parseFloat(bitcoinAnalysisInputs.currentBtcUsd.replace(/[^0-9.]/g, '')) || 0;
+                
+                // 입력값(만원)을 파싱한 후 10,000을 곱해 원단위로 변환
+                const domesticPriceMan = parseFloat(bitcoinAnalysisInputs.currentDomesticPrice.replace(/[^0-9.]/g, '')) || 0;
+                const domesticPrice = domesticPriceMan * 10000;
+
+                const theoreticalKrwPrice = btcUsd * exch;
+                const kPremium = domesticPrice - theoreticalKrwPrice;
+                const kPremiumPercent = theoreticalKrwPrice > 0 ? (kPremium / theoreticalKrwPrice) * 100 : 0;
+
+                return {
+                    theoreticalKrwPrice, actualPrice: domesticPrice,
+                    kPremium, kPremiumPercent
+                };
+            }, [bitcoinAnalysisInputs, silverAnalysisInputs]);
+
             // --- 1. NEW APPLE STYLE DASHBOARD ---
             const renderDashboard = () => (
                 <div className="animate-fade-in space-y-6">
@@ -1130,134 +1226,257 @@
                     {/* Bento Grid Layout */}
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                           {/* 1. Silver Analysis (Large Block) */}
-                        <AppleCard title="은(Silver) 분석" subTitle="한중일 프리미엄 비교" className="lg:col-span-8 h-full min-h-[320px]">
+                        <AppleCard className="lg:col-span-8 h-full min-h-[320px]">
+                            {/* Analysis Header with Tab Switch */}
+                            <div className="flex justify-between items-center mb-5">
+                                <div className="flex flex-col">
+                                    <h3 className="text-lg font-bold text-slate-900 force-dark-white tracking-tight leading-none">
+                                        {analysisMode === 'silver' ? '은(Silver) 분석' : '비트코인(BTC) 분석'}
+                                    </h3>
+                                    <span className="text-xs font-semibold text-gray-400 dark:text-gray-400 mt-1">
+                                        {analysisMode === 'silver' ? '한중일 프리미엄 비교' : '김치 프리미엄 및 시세'}
+                                    </span>
+                                </div>
+                                <div className="bg-[#E5E5EA] dark:bg-[#2C2C2E] p-1 rounded-full flex">
+                                    <button 
+                                        onClick={() => setAnalysisMode('silver')}
+                                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${analysisMode === 'silver' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-500 dark:text-gray-300'}`}
+                                    >
+                                        Silver
+                                    </button>
+                                    <button 
+                                        onClick={() => { setAnalysisMode('bitcoin'); if(dashChartTab !== 'btc') setDashChartTab('btc'); }}
+                                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${analysisMode === 'bitcoin' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-500 dark:text-gray-300'}`}
+                                    >
+                                        Bitcoin
+                                    </button>
+                                </div>
+                            </div>
+
                             <div className="flex flex-col md:flex-row gap-8 h-full">
                                 {/* Inputs - Clean Apple Style with Steppers */}
                                 <div className="w-full md:w-1/3 space-y-4">
-                                    <div>
-                                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">국제 시세 (USD/oz)</label>
-                                        {/* 수정됨: 다크모드에서 배경을 밝게(E5E5EA) 변경하여 검정 글씨 가독성 확보 */}
-                                        <div className="relative flex items-center bg-[#F2F2F7] dark:bg-[#E5E5EA] rounded-xl overflow-hidden group">
-                                            <button onClick={() => adjustSilverValue('currentUsdPrice', -0.1)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-minus text-[10px]"></i></button>
-                                            {/* 수정됨: dark:!text-black 추가 */}
-                                            <input className="apple-input flex-1 !rounded-none !bg-transparent text-center !px-0 dark:!text-black" value={silverAnalysisInputs.currentUsdPrice} onChange={e=>handleCommaChange(e, v=>setSilverAnalysisInputs({...silverAnalysisInputs, currentUsdPrice:v}))} />
-                                            <button onClick={() => adjustSilverValue('currentUsdPrice', 0.1)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-plus text-[10px]"></i></button>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">원달러 환율 ($/₩)</label>
-                                        <div className="apple-input flex justify-between items-center text-slate-400 cursor-default bg-slate-50 dark:bg-white/5">
-                                            <span className="text-xs">실시간</span>
-                                            <span className="text-slate-900 force-dark-white">{silverAnalysisInputs.currentExch}</span>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">국내 매도가 (원/kg)</label>
-                                        {/* 수정됨: 다크모드에서 배경을 밝게(E5E5EA) 변경하여 검정 글씨 가독성 확보 */}
-                                        <div className="relative flex items-center bg-[#F2F2F7] dark:bg-[#E5E5EA] rounded-xl overflow-hidden group">
-                                            <button onClick={() => adjustSilverValue('currentDomesticPrice', -10000)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-minus text-[10px]"></i></button>
-                                            {/* 수정됨: dark:!text-black 추가 */}
-                                            <input className="apple-input flex-1 !rounded-none !bg-transparent text-center !px-0 dark:!text-black" value={silverAnalysisInputs.currentDomesticPrice} onChange={e=>handleCommaChange(e, v=>setSilverAnalysisInputs({...silverAnalysisInputs, currentDomesticPrice:v}))} />
-                                            <button onClick={() => adjustSilverValue('currentDomesticPrice', 10000)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-plus text-[10px]"></i></button>
-                                        </div>
-                                    </div>
-                                    <div className="pt-2 border-t border-dashed border-gray-200 dark:border-white/10">
-                                        {/* 라벨 이름을 다시 CNY/kg로 복구 */}
-                                        <label className="text-xs font-bold text-red-500/80 dark:text-red-400/80 pl-1 mb-1 block">상하이 시세 (CNY/kg)</label>
-                                        <div className="relative flex items-center bg-red-50 dark:bg-red-900/10 rounded-xl overflow-hidden group">
-                                            <button onClick={() => adjustSilverValue('currentShanghaiPrice', -10)} className="w-8 h-10 flex items-center justify-center text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-minus text-[10px]"></i></button>
-                                            <input className="apple-input flex-1 !rounded-none !bg-transparent !text-red-600 dark:!text-red-300 text-center !px-0 focus:!bg-transparent" value={silverAnalysisInputs.currentShanghaiPrice} onChange={e=>handleCommaChange(e, v=>setSilverAnalysisInputs({...silverAnalysisInputs, currentShanghaiPrice:v}))} />
-                                            <button onClick={() => adjustSilverValue('currentShanghaiPrice', 10)} className="w-8 h-10 flex items-center justify-center text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-plus text-[10px]"></i></button>
-                                        </div>
-                                    </div>
+                                    {analysisMode === 'silver' ? (
+                                        <>
+                                            <div>
+                                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">국제 시세 (USD/oz)</label>
+                                                {/* 수정됨: 다크모드에서 배경을 밝게(E5E5EA) 변경하여 검정 글씨 가독성 확보 */}
+                                                <div className="relative flex items-center bg-[#F2F2F7] dark:bg-[#E5E5EA] rounded-xl overflow-hidden group">
+                                                    <button onClick={() => adjustSilverValue('currentUsdPrice', -0.1)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-minus text-[10px]"></i></button>
+                                                    {/* 수정됨: dark:!text-black 추가 */}
+                                                    <input className="apple-input flex-1 !rounded-none !bg-transparent text-center !px-0 dark:!text-black" value={silverAnalysisInputs.currentUsdPrice} onChange={e=>handleCommaChange(e, v=>setSilverAnalysisInputs({...silverAnalysisInputs, currentUsdPrice:v}))} />
+                                                    <button onClick={() => adjustSilverValue('currentUsdPrice', 0.1)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-plus text-[10px]"></i></button>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">원달러 환율 ($/₩)</label>
+                                                <div className="apple-input flex justify-between items-center text-slate-400 cursor-default bg-slate-50 dark:bg-white/5">
+                                                    <span className="text-xs">실시간</span>
+                                                    <span className="text-slate-900 force-dark-white">{silverAnalysisInputs.currentExch}</span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">국내 매도가 (원/kg)</label>
+                                                {/* 수정됨: 다크모드에서 배경을 밝게(E5E5EA) 변경하여 검정 글씨 가독성 확보 */}
+                                                <div className="relative flex items-center bg-[#F2F2F7] dark:bg-[#E5E5EA] rounded-xl overflow-hidden group">
+                                                    <button onClick={() => adjustSilverValue('currentDomesticPrice', -10000)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-minus text-[10px]"></i></button>
+                                                    {/* 수정됨: dark:!text-black 추가 */}
+                                                    <input className="apple-input flex-1 !rounded-none !bg-transparent text-center !px-0 dark:!text-black" value={silverAnalysisInputs.currentDomesticPrice} onChange={e=>handleCommaChange(e, v=>setSilverAnalysisInputs({...silverAnalysisInputs, currentDomesticPrice:v}))} />
+                                                    <button onClick={() => adjustSilverValue('currentDomesticPrice', 10000)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-plus text-[10px]"></i></button>
+                                                </div>
+                                            </div>
+                                            <div className="pt-2 border-t border-dashed border-gray-200 dark:border-white/10">
+                                                {/* 라벨 이름을 다시 CNY/kg로 복구 */}
+                                                <label className="text-xs font-bold text-red-500/80 dark:text-red-400/80 pl-1 mb-1 block">상하이 시세 (CNY/kg)</label>
+                                                <div className="relative flex items-center bg-red-50 dark:bg-red-900/10 rounded-xl overflow-hidden group">
+                                                    <button onClick={() => adjustSilverValue('currentShanghaiPrice', -10)} className="w-8 h-10 flex items-center justify-center text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-minus text-[10px]"></i></button>
+                                                    <input className="apple-input flex-1 !rounded-none !bg-transparent !text-red-600 dark:!text-red-300 text-center !px-0 focus:!bg-transparent" value={silverAnalysisInputs.currentShanghaiPrice} onChange={e=>handleCommaChange(e, v=>setSilverAnalysisInputs({...silverAnalysisInputs, currentShanghaiPrice:v}))} />
+                                                    <button onClick={() => adjustSilverValue('currentShanghaiPrice', 10)} className="w-8 h-10 flex items-center justify-center text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-plus text-[10px]"></i></button>
+                                                </div>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div>
+                                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">국제 시세 (BTC/USD)</label>
+                                                <div className="relative flex items-center bg-[#F2F2F7] dark:bg-[#E5E5EA] rounded-xl overflow-hidden group">
+                                                    <button onClick={() => adjustBitcoinValue('currentBtcUsd', -100)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-minus text-[10px]"></i></button>
+                                                    <input className="apple-input flex-1 !rounded-none !bg-transparent text-center !px-0 dark:!text-black" value={bitcoinAnalysisInputs.currentBtcUsd} onChange={e=>handleCommaChange(e, v=>setBitcoinAnalysisInputs({...bitcoinAnalysisInputs, currentBtcUsd:v}))} />
+                                                    <button onClick={() => adjustBitcoinValue('currentBtcUsd', 100)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-plus text-[10px]"></i></button>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">환율 (USD/KRW)</label>
+                                                <div className="apple-input flex justify-between items-center text-slate-400 cursor-default bg-slate-50 dark:bg-white/5">
+                                                    <span className="text-xs">실시간</span>
+                                                    <span className="text-slate-900 force-dark-white">{silverAnalysisInputs.currentExch}</span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">국내 시세 (만원)</label>
+                                                <div className="relative flex items-center bg-[#F2F2F7] dark:bg-[#E5E5EA] rounded-xl overflow-hidden group">
+                                                    {/* 버튼 증감 단위: 10만원 (입력값이 만원 단위이므로 10) */}
+                                                    <button onClick={() => adjustBitcoinValue('currentDomesticPrice', -10)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-minus text-[10px]"></i></button>
+                                                    <input className="apple-input flex-1 !rounded-none !bg-transparent text-center !px-0 dark:!text-black" value={bitcoinAnalysisInputs.currentDomesticPrice} onChange={e=>handleCommaChange(e, v=>setBitcoinAnalysisInputs({...bitcoinAnalysisInputs, currentDomesticPrice:v}))} />
+                                                    <button onClick={() => adjustBitcoinValue('currentDomesticPrice', 10)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-plus text-[10px]"></i></button>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                                 {/* Stats & Charts Area */}
                                 <div className="w-full md:w-2/3 flex flex-col gap-4">
                                     {/* Stats Grid: Added Shanghai Premium */}
                                     <div className="grid grid-cols-3 gap-3">
                                         <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-2xl p-3">
-                                            <AppleStatBox
-                                                  label="수익률"
-                                                  value={`${silverProfitData.actualRate >= 0 ? '+' : ''}${silverProfitData.actualRate.toFixed(1)}%`}
-                                                  valueClassName={silverProfitData.actualRate >= 0 ? 'text-stat-up' : 'text-stat-down'}
-                                            />
+                                            {analysisMode === 'silver' ? (
+                                                <AppleStatBox
+                                                      label="수익률"
+                                                      value={`${silverProfitData.actualRate >= 0 ? '+' : ''}${silverProfitData.actualRate.toFixed(1)}%`}
+                                                      valueClassName={silverProfitData.actualRate >= 0 ? 'text-stat-up' : 'text-stat-down'}
+                                                />
+                                            ) : (
+                                                <AppleStatBox
+                                                      label="국제 이론가"
+                                                      value={`${(bitcoinProfitData.theoreticalKrwPrice/10000).toFixed(0)}만`}
+                                                      subValue="원"
+                                                      valueClassName="text-slate-900 dark:text-white"
+                                                />
+                                            )}
                                         </div>
                                         <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-2xl p-3 relative overflow-hidden flex flex-col justify-between">
-                                            <AppleStatBox
-                                                  label="김치 프리미엄"
-                                                  value={`${silverProfitData.kPremiumPercent.toFixed(1)}%`}
-                                                  valueClassName={
-                                                      silverProfitData.kPremiumPercent < 0 ? 'text-stat-down' : 
-                                                      silverProfitData.kPremiumPercent < 10 ? '!text-black' : 
-                                                      silverProfitData.kPremiumPercent < 20 ? 'text-green-600 dark:text-green-400' : 
-                                                      'text-stat-up'
-                                                  }
-                                            />
-                                            {/* 추가된 부분: 이론가 표시 */}
-                                            <div className="text-[10px] text-gray-500 dark:text-gray-400 font-bold mt-1 tracking-tight">
-                                                국제: {formatNumber(silverProfitData.theoreticalKrwPrice)}원
-                                            </div>
+                                            {analysisMode === 'silver' ? (
+                                                <>
+                                                    <AppleStatBox
+                                                          label="김치 프리미엄"
+                                                          value={`${silverProfitData.kPremiumPercent.toFixed(1)}%`}
+                                                          valueClassName={
+                                                              silverProfitData.kPremiumPercent < 0 ? 'text-stat-down' : 
+                                                              silverProfitData.kPremiumPercent < 10 ? '!text-black' : 
+                                                              silverProfitData.kPremiumPercent < 20 ? 'text-green-600 dark:text-green-400' : 
+                                                              'text-stat-up'
+                                                          }
+                                                    />
+                                                    <div className="text-[10px] text-gray-500 dark:text-gray-400 font-bold mt-1 tracking-tight">
+                                                        국제: {formatNumber(silverProfitData.theoreticalKrwPrice)}원
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <AppleStatBox
+                                                      label="김치 프리미엄"
+                                                      value={`${bitcoinProfitData.kPremiumPercent.toFixed(2)}%`}
+                                                      valueClassName={bitcoinProfitData.kPremiumPercent >= 5 ? 'text-stat-up animate-pulse' : (bitcoinProfitData.kPremiumPercent < 0 ? 'text-stat-down' : 'text-stat-neutral')}
+                                                />
+                                            )}
                                         </div>
                                         <div className="bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-2xl p-3 relative overflow-hidden">
-                                            <AppleStatBox
-                                                  label="상하이 프리미엄"
-                                                  value={`${silverProfitData.sPremiumPercent >= 0 ? '+' : ''}${silverProfitData.sPremiumPercent.toFixed(1)}%`}
-                                                  valueClassName="text-red-600 dark:text-red-400"
-                                            />
+                                            {analysisMode === 'silver' ? (
+                                                <AppleStatBox
+                                                      label="상하이 프리미엄"
+                                                      value={`${silverProfitData.sPremiumPercent >= 0 ? '+' : ''}${silverProfitData.sPremiumPercent.toFixed(1)}%`}
+                                                      valueClassName="text-red-600 dark:text-red-400"
+                                                />
+                                            ) : (
+                                                <AppleStatBox
+                                                      label="프리미엄 차액"
+                                                      value={`${bitcoinProfitData.kPremium >= 0 ? '+' : ''}${(bitcoinProfitData.kPremium/10000).toFixed(0)}만`}
+                                                      subValue="원"
+                                                      valueClassName="text-red-600 dark:text-red-400"
+                                                />
+                                            )}
                                         </div>
                                     </div>
                                     
                                     {/* Chart Tabs & Display Area */}
                                     <div className="flex-1 flex flex-col min-h-0">
                                         <div className="flex gap-2 mb-3 overflow-x-auto pb-1 scrollbar-hide">
-                                            {/* 1. 은 시세 (Silver) */}
-                                            <button 
-                                                onClick={() => setDashChartTab('price')} 
-                                                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab === 'price' ? 'bg-[#0071E3] text-white shadow-md' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}
-                                            >
-                                                <span className="sm:hidden">은시세</span>
-                                                <span className="hidden sm:inline">은 시세(Silver)</span>
-                                            </button>
-                                            {/* 2. 상하이 은 - 위치 변경됨 */}
-                                            <button 
-                                                onClick={() => setDashChartTab('shanghai')} 
-                                                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab === 'shanghai' ? 'bg-[#FF3B30] text-white shadow-md' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}
-                                            >
-                                                <span className="sm:hidden">상하이/국내</span>
-                                                <span className="hidden sm:inline">상하이/국내 시세</span>
-                                            </button>
-                                            {/* 3. 금 시세 (Gold) - 위치 변경됨 */}
-                                            <button 
-                                                onClick={() => setDashChartTab('gold')} 
-                                                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab === 'gold' ? 'bg-[#FF9F0A] text-white shadow-md' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}
-                                            >
-                                                <span className="sm:hidden">금시세</span>
-                                                <span className="hidden sm:inline">금 시세(Gold)</span>
-                                            </button>
-                                            {/* 4. 금은비 (Ratio) */}
-                                            <button 
-                                                onClick={() => setDashChartTab('ratio')} 
-                                                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab === 'ratio' ? 'bg-[#0071E3] text-white shadow-md' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}
-                                            >
-                                                <span className="sm:hidden">금은비</span>
-                                                <span className="hidden sm:inline">금은비(Ratio)</span>
-                                            </button>
+                                            {analysisMode === 'silver' ? (
+                                                <>
+                                                    {/* 1. 은 시세 (Silver) */}
+                                                    <button 
+                                                        onClick={() => setDashChartTab('price')} 
+                                                        className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab === 'price' ? 'bg-[#0071E3] text-white shadow-md' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}
+                                                    >
+                                                        <span className="sm:hidden">은시세</span>
+                                                        <span className="hidden sm:inline">은 시세(Silver)</span>
+                                                    </button>
+                                                    {/* 2. 상하이 은 - 위치 변경됨 */}
+                                                    <button 
+                                                        onClick={() => setDashChartTab('shanghai')} 
+                                                        className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab === 'shanghai' ? 'bg-[#FF3B30] text-white shadow-md' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}
+                                                    >
+                                                        <span className="sm:hidden">상하이/국내</span>
+                                                        <span className="hidden sm:inline">상하이/국내 시세</span>
+                                                    </button>
+                                                    {/* 3. 금 시세 (Gold) - 위치 변경됨 */}
+                                                    <button 
+                                                        onClick={() => setDashChartTab('gold')} 
+                                                        className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab === 'gold' ? 'bg-[#FF9F0A] text-white shadow-md' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}
+                                                    >
+                                                        <span className="sm:hidden">금시세</span>
+                                                        <span className="hidden sm:inline">금 시세(Gold)</span>
+                                                    </button>
+                                                    {/* 4. 금은비 (Ratio) */}
+                                                    <button 
+                                                        onClick={() => setDashChartTab('ratio')} 
+                                                        className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab === 'ratio' ? 'bg-[#0071E3] text-white shadow-md' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}
+                                                    >
+                                                        <span className="sm:hidden">금은비</span>
+                                                        <span className="hidden sm:inline">금은비(Ratio)</span>
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    {/* 5. Bitcoin (BTC) */}
+                                                    <button 
+                                                        onClick={() => setDashChartTab('btc')} 
+                                                        className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab === 'btc' ? 'bg-orange-500 text-white shadow-md' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}
+                                                    >
+                                                        <span className="sm:hidden">BTC</span>
+                                                        <span className="hidden sm:inline">비트코인(BTC)</span>
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => setDashChartTab('btc_link')} 
+                                                        className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab === 'btc_link' ? 'bg-[#0071E3] text-white shadow-md' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}
+                                                    >
+                                                        <span className="sm:hidden">주요시세</span>
+                                                        <span className="hidden sm:inline">주요 거래소 시세</span>
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
                                         {/* 차트 영역 높이 고정 (안정성 확보) */}
                                         <div className="h-[400px] rounded-2xl overflow-hidden border border-slate-100 dark:border-white/5 relative bg-white dark:bg-[#1C1C1E]">
-                                            {dashChartTab === 'price' && <SilverMiniChart theme={isDark ? 'dark' : 'light'} />}
-                                            {dashChartTab === 'gold' && <GoldMiniChart theme={isDark ? 'dark' : 'light'} />}
-                                            {dashChartTab === 'shanghai' && <TradingViewShanghaiChart theme={isDark ? 'dark' : 'light'} />}
-                                            {dashChartTab === 'ratio' && <TradingViewRatioChart theme={isDark ? 'dark' : 'light'} />}
+                                            {/* Silver Mode Charts */}
+                                            {analysisMode === 'silver' && (
+                                                <>
+                                                    {dashChartTab === 'price' && <SilverMiniChart theme={isDark ? 'dark' : 'light'} />}
+                                                    {dashChartTab === 'gold' && <GoldMiniChart theme={isDark ? 'dark' : 'light'} />}
+                                                    {dashChartTab === 'shanghai' && <TradingViewShanghaiChart theme={isDark ? 'dark' : 'light'} />}
+                                                    {dashChartTab === 'ratio' && <TradingViewRatioChart theme={isDark ? 'dark' : 'light'} />}
+                                                </>
+                                            )}
+                                            
+                                            {/* Bitcoin Mode Charts */}
+                                            {analysisMode === 'bitcoin' && (
+                                                <>
+                                                    {dashChartTab === 'btc' && <BitcoinMiniChart theme={isDark ? 'dark' : 'light'} />}
+                                                    {dashChartTab === 'btc_link' && <BitcoinLinkPanel theme={isDark ? 'dark' : 'light'} />}
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </AppleCard>
                         {/* 2. Bridge Chart (Side Block) */}
-                        <AppleCard title="성과 브릿지" subTitle="요인별 가격 변동 (Waterfall)" className="lg:col-span-4 h-full">
+                        <AppleCard title="성과 & 프리미엄" subTitle={analysisMode === 'silver' ? "요인별 가격 변동 (Waterfall)" : "김치 프리미엄 구조"} className="lg:col-span-4 h-full">
                             <div className="h-full">
-                                <SilverPerformanceBridgeChart profitData={silverProfitData} isDark={isDark} />
+                                {analysisMode === 'silver' ? (
+                                    <SilverPerformanceBridgeChart profitData={silverProfitData} isDark={isDark} />
+                                ) : (
+                                    <BitcoinBridgeChart profitData={bitcoinProfitData} isDark={isDark} />
+                                )}
                             </div>
                         </AppleCard>
                         {/* 3. Favorites & Search (Restored) */}
@@ -1346,17 +1565,17 @@
                         <div className="flex items-center gap-3">
                              {/* Segmented Control for Mode */}
                             <div className="bg-[#E5E5EA] dark:bg-[#2C2C2E] p-1 rounded-full flex">
-                                <button                                   onClick={() => setLinkMode('investment')}                                   className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${linkMode === 'investment' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-500 dark:text-gray-300'}`}
+                                <button                                      onClick={() => setLinkMode('investment')}                                      className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${linkMode === 'investment' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-500 dark:text-gray-300'}`}
                                 >
                                     투자 & 일상
                                 </button>
-                                <button                                   onClick={() => setLinkMode('blogs')}                                   className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${linkMode === 'blogs' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-500 dark:text-gray-300'}`}
+                                <button                                      onClick={() => setLinkMode('blogs')}                                      className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${linkMode === 'blogs' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-500 dark:text-gray-300'}`}
                                 >
                                     인사이트
                                 </button>
                             </div>
                             {/* Edit Toggle */}
-                            <button                                 onClick={() => setIsRoutineEditMode(!isRoutineEditMode)}                                 className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${isRoutineEditMode ? 'bg-[#0071E3] text-white' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-[#0071E3]'}`}
+                            <button                               onClick={() => setIsRoutineEditMode(!isRoutineEditMode)}                               className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${isRoutineEditMode ? 'bg-[#0071E3] text-white' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-[#0071E3]'}`}
                             >
                                 {isRoutineEditMode ? '완료' : '편집'}
                             </button>
@@ -1371,7 +1590,7 @@
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
                                 <div className="sm:col-span-3">
-                                    <select                                  className="apple-input w-full"                                  value={newRoutine.category}                                  onChange={e=>setNewRoutine({...newRoutine, category:e.target.value})}
+                                    <select                                      className="apple-input w-full"                                      value={newRoutine.category}                                      onChange={e=>setNewRoutine({...newRoutine, category:e.target.value})}
                                     >
                                             <option value="">카테고리 선택</option>
                                             {Object.keys(linkMode === 'blogs' ? blogInsightLinks : routineLinks).map(cat => <option key={cat} value={cat}>{cat}</option>)}
@@ -1384,7 +1603,7 @@
                                     <input type="text" placeholder="URL (https://...)" className="apple-input" value={newRoutine.url} onChange={e=>setNewRoutine({...newRoutine, url:e.target.value})} />
                                 </div>
                                 <div className="sm:col-span-2">
-                                    <button                                  onClick={() => {
+                                    <button                                      onClick={() => {
                                             if(linkMode === 'blogs') {
                                                 if (!newRoutine.category || !newRoutine.name || !newRoutine.url) return;
                                                 const updated = { ...blogInsightLinks };
@@ -1392,7 +1611,7 @@
                                                 setBlogInsightLinks(updated);
                                                 setNewRoutine({ category: '', name: '', url: '' });
                                             } else { addRoutineLink(); }
-                                        }}                                  className="w-full h-full bg-[#0071E3] hover:bg-blue-600 text-white rounded-xl font-bold text-xs transition py-3 sm:py-0"
+                                        }}                                      className="w-full h-full bg-[#0071E3] hover:bg-blue-600 text-white rounded-xl font-bold text-xs transition py-3 sm:py-0"
                                     >
                                         추가하기
                                     </button>
@@ -1407,7 +1626,7 @@
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     {links.map((l, i) => (
                                         <div key={i} className="relative group">
-                                            <a                                          href={l.url}                                          target="_blank"                                          className="flex items-center gap-3 p-3 rounded-xl bg-[#F2F2F7] dark:bg-[#2C2C2E] hover:bg-gray-200 dark:hover:bg-gray-700 transition-all group-hover:scale-[1.02]"
+                                            <a                                               href={l.url}                                               target="_blank"                                               className="flex items-center gap-3 p-3 rounded-xl bg-[#F2F2F7] dark:bg-[#2C2C2E] hover:bg-gray-200 dark:hover:bg-gray-700 transition-all group-hover:scale-[1.02]"
                                             >
                                                 <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${l.color ? l.color.replace('text-', 'text-opacity-80 text-') : 'bg-white dark:bg-white/10 text-gray-500'}`}>
                                                     <i className={`fa-solid ${l.icon || 'fa-link'} text-sm`}></i>
@@ -1417,11 +1636,11 @@
                                                 </span>
                                             </a>
                                             {isRoutineEditMode && (
-                                                <button                                              onClick={(e) => {
+                                                <button                                                   onClick={(e) => {
                                                         e.preventDefault();
                                                         if(linkMode === 'blogs') { const updated = { ...blogInsightLinks }; updated[cat] = updated[cat].filter((_, index) => index !== i); setBlogInsightLinks(updated); }
                                                         else { removeRoutineLink(cat, i); }
-                                                    }}                                              className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-[#FF3B30] text-white rounded-full flex items-center justify-center shadow-md hover:scale-110 transition z-10 border-2 border-white dark:border-[#1C1C1E]"
+                                                    }}                                                   className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-[#FF3B30] text-white rounded-full flex items-center justify-center shadow-md hover:scale-110 transition z-10 border-2 border-white dark:border-[#1C1C1E]"
                                                 >
                                                     <i className="fa-solid fa-minus text-[10px]"></i>
                                                 </button>
@@ -2171,7 +2390,7 @@
                                 </thead>
                                 <tbody className="bg-white dark:bg-slate-800">
                                     {simResult.history.map((h, idx) => {
-                                        const totalExpense = h.living + h.tax;                                  const cashFlowIndex = totalExpense > 0 ? (h.annualProfit / totalExpense) * 100 : 0;                                  const rowBgClass = h.isHighCost ? 'bg-amber-50 dark:bg-amber-900/30' : h.isWarn ? 'bg-rose-50/70 dark:bg-rose-900/60' : '';
+                                        const totalExpense = h.living + h.tax;                                          const cashFlowIndex = totalExpense > 0 ? (h.annualProfit / totalExpense) * 100 : 0;                                          const rowBgClass = h.isHighCost ? 'bg-amber-50 dark:bg-amber-900/30' : h.isWarn ? 'bg-rose-50/70 dark:bg-rose-900/60' : '';
                                         return (
                                             <tr key={idx} className={`hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors border-b dark:border-slate-700 ${rowBgClass}`}>
                                                 <td className="px-2 py-2.5 font-black text-slate-900 dark:text-white text-center sticky left-0 bg-inherit z-10 border-r dark:border-slate-700">{h.age}</td>
