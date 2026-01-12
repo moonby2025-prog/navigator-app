@@ -769,25 +769,26 @@
                 
                 const MAN_WON = 10000;
                 
-                // 모든 데이터는 '만원' 단위로 변환하여 차트에 표시
+                // 차트는 '단가' 기준 (막대 바 값은 그대로 유지)
                 const avgPrice = Math.round(profitData.avgPrice / MAN_WON); // 평단가
                 const currentPrice = Math.round(profitData.actualPrice / MAN_WON); // 현재가
 
-                // Effects (Calculated in Man Won)
-                const priceEffect = Math.round(profitData.priceContrib / MAN_WON); // 시세차익
-                const exchEffect = Math.round(profitData.exchContrib / MAN_WON); // 환차익
+                // Effects (Calculated in Man Won, Unit Base)
+                const priceEffect = Math.round(profitData.priceContrib / MAN_WON); // 시세차익(단가)
+                const exchEffect = Math.round(profitData.exchContrib / MAN_WON); // 환차익(단가)
+                const premiumEffect = Math.round(profitData.kPremium / MAN_WON); // 김프(단가)
 
                 // Waterfall Logic
                 // 1. 매입 평단 (Base)
                 const bar1 = [0, avgPrice];
                 
                 // 2. 시세 변동 (USD Price Effect)
-                const bar2 = [avgPrice, avgPrice + priceEffect];
                 const step2End = avgPrice + priceEffect;
+                const bar2 = [avgPrice, step2End]; // from avg to avg+price_diff
 
                 // 3. 환율 변동 (Exchange Effect)
-                const bar3 = [step2End, step2End + exchEffect];
                 const step3End = step2End + exchEffect;
+                const bar3 = [step2End, step3End];
 
                 // 4. 김치 프리미엄 (Residual)
                 // 현재가 - (평단 + 시세효과 + 환율효과)
@@ -812,7 +813,7 @@
                     data: {
                         labels: ['매입평단', '시세변동', '환율효과', '김치프리미엄', '현재가'],
                         datasets: [{
-                            label: '가격 변동',
+                            label: '가격 구성',
                             data: [ bar1, bar2, bar3, bar4, bar5 ],
                             backgroundColor: [ baseColor, getColor(priceEffect), getColor(exchEffect), premiumColor, finalColor ],
                             borderRadius: 4,
@@ -877,10 +878,10 @@
                                 }
                             });
 
-                            // 총 수익률 뱃지 (가운데)
+                            // 총 수익률 뱃지 (가운데) - Updated logic to include badge
                             const meta = chart.getDatasetMeta(0);
                             const startBar = meta.data[0];
-                            const endBar = meta.data[4]; // Last bar index changed to 4
+                            const endBar = meta.data[4]; 
                             if (startBar && endBar) {
                                 const startX = startBar.x;
                                 const startY = startBar.y; 
@@ -896,6 +897,46 @@
                                 ctx.setLineDash([5, 3]);
                                 ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)';
                                 ctx.stroke();
+                                
+                                // --- Badge Drawing Logic Added Here ---
+                                const midX = (startX + endX) / 2;
+                                const midY = (startY + endY) / 2;
+                                const percentage = profitData.profitRate;
+                                const text = `${percentage >= 0 ? '▲' : '▼'} ${Math.abs(percentage).toFixed(1)}%`;
+                                
+                                ctx.font = 'bold 12px Pretendard';
+                                const textMetrics = ctx.measureText(text);
+                                const boxWidth = textMetrics.width + 16;
+                                const boxHeight = 24;
+                                const bx = midX - boxWidth / 2;
+                                const by = midY - boxHeight / 2;
+                                
+                                // Shadow
+                                ctx.shadowColor = "rgba(0, 0, 0, 0.3)";
+                                ctx.shadowBlur = 6;
+                                ctx.shadowOffsetY = 3;
+
+                                // Badge Background
+                                ctx.fillStyle = isDark ? '#FFFFFF' : '#2C2C2E';
+                                ctx.setLineDash([]); // Reset dash for box
+                                if (ctx.roundRect) ctx.roundRect(bx, by, boxWidth, boxHeight, 12);
+                                else ctx.fillRect(bx, by, boxWidth, boxHeight);
+                                ctx.fill();
+                                
+                                ctx.shadowColor = "transparent";
+
+                                // Badge Border
+                                ctx.lineWidth = 1.5;
+                                ctx.strokeStyle = percentage >= 0 ? '#FF3B30' : '#0071E3'; 
+                                ctx.stroke();
+
+                                // Badge Text
+                                ctx.fillStyle = isDark ? '#000000' : '#FFFFFF'; 
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'middle';
+                                ctx.fillText(text, midX, midY + 1);
+                                // --------------------------------------
+
                                 ctx.restore();
                             }
                         }
@@ -904,22 +945,34 @@
                 return () => { if (chartInstance.current) chartInstance.current.destroy(); };
             }, [profitData, isDark]);
             
+            // 수량 반영된 값 계산 (총액 기준)
+            const qty = profitData.qty || 0;
+
             return (
                 <div className="flex flex-col h-full w-full">
                     <div className="flex-1 min-h-[200px]"><canvas ref={canvasRef}></canvas></div>
-                    {/* Bitcoin Factor Analysis Table */}
+                    {/* Bitcoin Factor Analysis Table (보유수량 반영) */}
                      <div className="mt-2 bg-slate-50 dark:bg-slate-900/50 rounded-xl p-3 grid grid-cols-3 gap-2 text-center">
                         <div>
                             <div className="text-[10px] text-slate-500 font-bold mb-1">비트코인 시세차익</div>
-                            <div className={`text-xs font-black ${profitData.priceContrib >= 0 ? 'text-red-500' : 'text-blue-500'}`}>{profitData.priceContrib > 0 ? '+' : ''}{formatManwon(profitData.priceContrib)}</div>
+                            {/* 가격 기여도 * 수량 */}
+                            <div className={`text-xs font-black ${profitData.priceContrib >= 0 ? 'text-red-500' : 'text-blue-500'}`}>
+                                {profitData.priceContrib > 0 ? '+' : ''}{formatManwon(profitData.priceContrib * qty)}
+                            </div>
                         </div>
                         <div className="border-l border-slate-200 dark:border-slate-700">
                             <div className="text-[10px] text-slate-500 font-bold mb-1">환율 기여(환차익)</div>
-                            <div className={`text-xs font-black ${profitData.exchContrib >= 0 ? 'text-red-500' : 'text-blue-500'}`}>{profitData.exchContrib > 0 ? '+' : ''}{formatManwon(profitData.exchContrib)}</div>
+                            {/* 환율 기여도 * 수량 */}
+                            <div className={`text-xs font-black ${profitData.exchContrib >= 0 ? 'text-red-500' : 'text-blue-500'}`}>
+                                {profitData.exchContrib > 0 ? '+' : ''}{formatManwon(profitData.exchContrib * qty)}
+                            </div>
                         </div>
                         <div className="border-l border-slate-200 dark:border-slate-700">
                             <div className="text-[10px] text-slate-500 font-bold mb-1">프리미엄 잔존</div>
-                            <div className="text-xs font-black text-amber-600 dark:text-amber-400">+{formatManwon(profitData.kPremium)}</div>
+                            {/* 김프 잔존액 * 수량 */}
+                            <div className="text-xs font-black text-amber-600 dark:text-amber-400">
+                                +{formatManwon(profitData.kPremium * qty)}
+                            </div>
                         </div>
                     </div>
                     {/* Bitcoin Summary Stats (Total) */}
@@ -976,11 +1029,11 @@
             // ... existing state ...
             const [linkMode, setLinkMode] = useState('investment');
             // State for Analysis Mode (Silver / Bitcoin)
-            const [analysisMode, setAnalysisMode] = useState('bitcoin'); 
+            const [analysisMode, setAnalysisMode] = useState('silver'); 
             const [marketStatus, setMarketStatus] = useState({ text: '장 마감', color: 'bg-red-600' });
             
             // Dashboard Chart Tab State
-            const [dashChartTab, setDashChartTab] = useState('btc'); // 'price', 'shanghai', 'ratio', 'btc'
+            const [dashChartTab, setDashChartTab] = useState('price'); // 'price', 'shanghai', 'ratio', 'btc'
 
             const [exchangeRates, setExchangeRates] = useState(DEFAULT_EXCHANGE_RATES);
             const [lastUpdated, setLastUpdated] = useState('연결 중...');
@@ -1012,16 +1065,16 @@
             // Bitcoin Analysis State
             const [bitcoinAnalysisInputs, setBitcoinAnalysisInputs] = useState(() => {
                 try {
-                    // v5로 업데이트하여 새로운 비트코인 시세 기본값 및 환율 필드 추가
-                    const saved = localStorage.getItem('invNav_btcInputs_v5');
+                    // v6로 업데이트하여 새로운 비트코인 시세 기본값 반영 (90k, 1.35억, 1.3억)
+                    const saved = localStorage.getItem('invNav_btcInputs_v6');
                     return saved ? JSON.parse(saved) : {
-                        currentBtcUsd: '52,592', // 요청하신 비트코인 시세
-                        currentDomesticPrice: '14,000', // 만원 단위 (1억 4천만원)
+                        currentBtcUsd: '90,000', // 요청하신 비트코인 시세
+                        currentDomesticPrice: '13,500', // 만원 단위 (1억 3천 5백만원)
                         holdingQty: '0.1', // 보유 수량 (BTC)
-                        avgPrice: '13,500', // 평단가 (만원)
+                        avgPrice: '13,000', // 평단가 (만원)
                         avgExch: '1,331' // 매입 환율 (요청값)
                     };
-                } catch(e) { return { currentBtcUsd: '52,592', currentDomesticPrice: '14,000', holdingQty: '0.1', avgPrice: '13,500', avgExch: '1,331' }; }
+                } catch(e) { return { currentBtcUsd: '90,000', currentDomesticPrice: '13,500', holdingQty: '0.1', avgPrice: '13,000', avgExch: '1,331' }; }
             });
 
             useEffect(() => {
@@ -1029,7 +1082,7 @@
             }, [silverAnalysisInputs]);
             
             useEffect(() => {
-                localStorage.setItem('invNav_btcInputs_v5', JSON.stringify(bitcoinAnalysisInputs));
+                localStorage.setItem('invNav_btcInputs_v6', JSON.stringify(bitcoinAnalysisInputs));
             }, [bitcoinAnalysisInputs]);
 
             const [favorites, setFavorites] = useState(() => {
