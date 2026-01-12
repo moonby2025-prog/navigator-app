@@ -1239,16 +1239,16 @@
                                 </div>
                                 <div className="bg-[#E5E5EA] dark:bg-[#2C2C2E] p-1 rounded-full flex">
                                     <button 
-                                        onClick={() => setAnalysisMode('silver')}
-                                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${analysisMode === 'silver' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-500 dark:text-gray-300'}`}
+                                        onClick={() => { setAnalysisMode('silver'); setDashChartTab('price'); }}
+                                        className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${analysisMode === 'silver' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-500 dark:text-gray-300'}`}
                                     >
-                                        Silver
+                                        은
                                     </button>
                                     <button 
                                         onClick={() => { setAnalysisMode('bitcoin'); if(dashChartTab !== 'btc') setDashChartTab('btc'); }}
-                                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${analysisMode === 'bitcoin' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-500 dark:text-gray-300'}`}
+                                        className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${analysisMode === 'bitcoin' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-500 dark:text-gray-300'}`}
                                     >
-                                        Bitcoin
+                                        비트코인
                                     </button>
                                 </div>
                             </div>
