@@ -768,27 +768,45 @@
                 if (chartInstance.current) chartInstance.current.destroy();
                 
                 const MAN_WON = 10000;
+                
+                // 모든 데이터는 '만원' 단위로 변환하여 차트에 표시
+                const avgPrice = Math.round(profitData.avgPrice / MAN_WON);
                 const theoretical = Math.round(profitData.theoreticalKrwPrice / MAN_WON);
-                const premium = Math.round(profitData.kPremium / MAN_WON);
                 const actual = Math.round(profitData.actualPrice / MAN_WON);
                 
-                // Waterfall: Theoretical -> + Premium -> Actual
-                const bar1 = [0, theoretical]; 
-                const bar2 = [theoretical, actual];
-                const bar3 = [0, actual];
+                // Waterfall Logic
+                // 1. 매입 평단 (Base)
+                const bar1 = [0, avgPrice];
                 
+                // 2. 시장 손익 (이론가 - 평단)
+                // 양수면 위로, 음수면 아래로
+                const bar2 = [avgPrice, theoretical];
+                
+                // 3. 김치 프리미엄 (현재가 - 이론가)
+                const bar3 = [theoretical, actual];
+                
+                // 4. 현재가 (Final)
+                const bar4 = [0, actual];
+                
+                // Colors
                 const baseColor = isDark ? '#48484A' : '#D1D1D6';
-                const premiumColor = profitData.kPremium >= 0 ? '#34C759' : '#0071E3'; // Green for positive Kimchi Premium
-                const finalColor = '#FF9F0A'; // Orange for Bitcoin
+                
+                // 시장 손익 색상 (이론가가 평단보다 높으면 빨강, 낮으면 파랑)
+                const marketColor = theoretical >= avgPrice ? '#FF3B30' : '#0071E3';
+                
+                // 김프 색상 (항상 양수라고 가정하면 초록/주황, 역프면 파랑)
+                const premiumColor = actual >= theoretical ? '#FF9F0A' : '#0071E3'; 
+                
+                const finalColor = profitData.profitRate >= 0 ? '#FF3B30' : '#0071E3';
 
                 chartInstance.current = new Chart(ctx, {
                     type: 'bar',
                     data: {
-                        labels: ['국제시세(원)', '김치 프리미엄', '국내 시세'],
+                        labels: ['매입평단', '시장손익', '현재김프', '현재가'],
                         datasets: [{
-                            label: '가격 구성',
-                            data: [ bar1, bar2, bar3 ],
-                            backgroundColor: [ baseColor, premiumColor, finalColor ],
+                            label: '가격 변동',
+                            data: [ bar1, bar2, bar3, bar4 ],
+                            backgroundColor: [ baseColor, marketColor, premiumColor, finalColor ],
                             borderRadius: 4,
                             borderSkipped: false
                         }]
@@ -804,14 +822,15 @@
                                     label: function(context) {
                                         const raw = context.raw;
                                         const val = raw[1] - raw[0];
-                                        return `금액: ${val.toLocaleString()}만원`;
+                                        if(context.dataIndex === 0 || context.dataIndex === 3) return `금액: ${raw[1].toLocaleString()}만원`;
+                                        return `변동: ${val > 0 ? '+' : ''}${val.toLocaleString()}만원`;
                                     }
                                 }
                             }
                         },
                         scales: {
                             x: { grid: { display: false }, ticks: { font: { size: 11, weight: 'bold' }, color: isDark ? '#aaa' : '#555' } },
-                            y: { display: false, min: Math.min(theoretical, actual) * 0.8 }
+                            y: { display: false, min: Math.min(avgPrice, theoretical, actual) * 0.8 }
                         }
                     },
                     plugins: [{
@@ -825,23 +844,77 @@
                                     ctx.save();
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'bottom';
-                                    ctx.font = 'bold 12px Pretendard';
+                                    ctx.font = 'bold 11px Pretendard';
                                     ctx.fillStyle = isDark ? '#fff' : '#000';
                                     
-                                    let label;
-                                    if(index === 1) label = `${profitData.kPremiumPercent.toFixed(1)}%`;
-                                    else label = `${(datapoint[1]).toLocaleString()}만`;
+                                    let label = "";
+                                    if(index === 0) label = `${datapoint[1].toLocaleString()}만`; // 평단
+                                    else if(index === 3) label = `${datapoint[1].toLocaleString()}만`; // 현재가
+                                    else if(index === 1) { // 시장손익
+                                        const diff = datapoint[1] - datapoint[0];
+                                        // 퍼센트 계산 (평단 대비)
+                                        const pct = avgPrice > 0 ? (diff / avgPrice) * 100 : 0;
+                                        label = `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%`;
+                                    }
+                                    else if(index === 2) { // 김프
+                                        // 김프 퍼센트 (이론가 대비)
+                                        label = `KP ${profitData.kPremiumPercent.toFixed(1)}%`;
+                                    }
                                     
-                                    ctx.fillText(label, bar.x, bar.y - 5);
+                                    // 막대 위에 그리기
+                                    const yPos = bar.y - 5;
+                                    ctx.fillText(label, bar.x, yPos);
                                     ctx.restore();
                                 }
                             });
+
+                            // 총 수익률 뱃지 (가운데)
+                            const meta = chart.getDatasetMeta(0);
+                            const startBar = meta.data[0];
+                            const endBar = meta.data[3];
+                            if (startBar && endBar) {
+                                const startX = startBar.x;
+                                const startY = startBar.y; 
+                                const endX = endBar.x;
+                                const endY = endBar.y;
+                                
+                                // 점선 연결
+                                ctx.save();
+                                ctx.beginPath();
+                                ctx.moveTo(startX, startY);
+                                ctx.lineTo(endX, endY);
+                                ctx.lineWidth = 2;
+                                ctx.setLineDash([5, 3]);
+                                ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)';
+                                ctx.stroke();
+                                ctx.restore();
+                            }
                         }
                     }]
                 });
                 return () => { if (chartInstance.current) chartInstance.current.destroy(); };
             }, [profitData, isDark]);
-            return <div className="h-full w-full min-h-[200px]"><canvas ref={canvasRef}></canvas></div>;
+            
+            return (
+                <div className="flex flex-col h-full w-full">
+                    <div className="flex-1 min-h-[200px]"><canvas ref={canvasRef}></canvas></div>
+                    {/* Bitcoin Summary Stats */}
+                    <div className="mt-3 bg-orange-50 dark:bg-orange-900/10 rounded-xl p-3 grid grid-cols-2 gap-2 text-center border border-orange-100 dark:border-orange-900/30">
+                        <div>
+                            <p className="text-[10px] font-bold text-orange-600/70 dark:text-orange-400/70 mb-1">총 평가금액</p>
+                            <p className="text-sm font-black text-slate-800 dark:text-white">
+                                {Math.round(profitData.totalValuation/10000).toLocaleString()}만원
+                            </p>
+                        </div>
+                        <div className="border-l border-orange-200 dark:border-orange-800/30">
+                            <p className="text-[10px] font-bold text-orange-600/70 dark:text-orange-400/70 mb-1">총 평가손익</p>
+                            <p className={`text-sm font-black ${profitData.totalProfit >= 0 ? 'text-red-500' : 'text-blue-500'}`}>
+                                {profitData.totalProfit > 0 ? '+' : ''}{Math.round(profitData.totalProfit/10000).toLocaleString()}만원
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            );
         });
 
         // --- APPLE STYLE COMPONENTS (Internal) ---
@@ -916,12 +989,15 @@
             const [bitcoinAnalysisInputs, setBitcoinAnalysisInputs] = useState(() => {
                 try {
                     // 키를 변경하여 새로운 단위(만원)가 적용된 초기값을 로드하도록 함
-                    const saved = localStorage.getItem('invNav_btcInputs_v2');
+                    // v3로 업데이트하여 수량/평단가 필드 추가
+                    const saved = localStorage.getItem('invNav_btcInputs_v3');
                     return saved ? JSON.parse(saved) : {
                         currentBtcUsd: '95,000',
-                        currentDomesticPrice: '14,000' // 만원 단위 (1억 4천만원)
+                        currentDomesticPrice: '14,000', // 만원 단위 (1억 4천만원)
+                        holdingQty: '0.1', // 보유 수량 (BTC)
+                        avgPrice: '13,500' // 평단가 (만원)
                     };
-                } catch(e) { return { currentBtcUsd: '95,000', currentDomesticPrice: '14,000' }; }
+                } catch(e) { return { currentBtcUsd: '95,000', currentDomesticPrice: '14,000', holdingQty: '0.1', avgPrice: '13,500' }; }
             });
 
             useEffect(() => {
@@ -929,7 +1005,7 @@
             }, [silverAnalysisInputs]);
             
             useEffect(() => {
-                localStorage.setItem('invNav_btcInputs_v2', JSON.stringify(bitcoinAnalysisInputs));
+                localStorage.setItem('invNav_btcInputs_v3', JSON.stringify(bitcoinAnalysisInputs));
             }, [bitcoinAnalysisInputs]);
 
             const [favorites, setFavorites] = useState(() => {
@@ -1035,6 +1111,10 @@
                     let val = parseFloat(currentValStr) || 0;
                     val += delta;
                     if (val < 0) val = 0;
+                    
+                    // 수량은 소수점 허용, 나머지는 정수(콤마)
+                    if (field === 'holdingQty') return { ...prev, [field]: val.toFixed(3) }; // 소수점 3자리까지
+                    
                     return { ...prev, [field]: Math.round(val).toLocaleString('ko-KR') };
                 });
             }
@@ -1194,13 +1274,33 @@
                 const domesticPriceMan = parseFloat(bitcoinAnalysisInputs.currentDomesticPrice.replace(/[^0-9.]/g, '')) || 0;
                 const domesticPrice = domesticPriceMan * 10000;
 
+                // 보유 정보 파싱
+                const qty = parseFloat(bitcoinAnalysisInputs.holdingQty) || 0;
+                const avgPriceMan = parseFloat(bitcoinAnalysisInputs.avgPrice.replace(/[^0-9.]/g, '')) || 0;
+                const avgPrice = avgPriceMan * 10000;
+
                 const theoreticalKrwPrice = btcUsd * exch;
                 const kPremium = domesticPrice - theoreticalKrwPrice;
                 const kPremiumPercent = theoreticalKrwPrice > 0 ? (kPremium / theoreticalKrwPrice) * 100 : 0;
 
+                // 개인 수익 분석
+                const totalValuation = domesticPrice * qty;
+                const totalCost = avgPrice * qty;
+                const totalProfit = totalValuation - totalCost;
+                const profitRate = avgPrice > 0 ? ((domesticPrice - avgPrice) / avgPrice) * 100 : 0;
+                
+                // Waterfall 구성 요소 (단가 기준)
+                // Start: 평단가
+                // Step 1: 시장 가치 차이 (이론가 - 평단가)
+                // Step 2: 김치 프리미엄 (현재가 - 이론가)
+                // End: 현재가
+                const marketDiff = theoreticalKrwPrice - avgPrice;
+                
                 return {
                     theoreticalKrwPrice, actualPrice: domesticPrice,
-                    kPremium, kPremiumPercent
+                    kPremium, kPremiumPercent,
+                    avgPrice, qty, totalValuation, totalCost, totalProfit, profitRate,
+                    marketDiff // 시장가치 차이 (이론가 - 평단)
                 };
             }, [bitcoinAnalysisInputs, silverAnalysisInputs]);
 
@@ -1319,6 +1419,27 @@
                                                     <button onClick={() => adjustBitcoinValue('currentDomesticPrice', -10)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-minus text-[10px]"></i></button>
                                                     <input className="apple-input flex-1 !rounded-none !bg-transparent text-center !px-0 dark:!text-black" value={bitcoinAnalysisInputs.currentDomesticPrice} onChange={e=>handleCommaChange(e, v=>setBitcoinAnalysisInputs({...bitcoinAnalysisInputs, currentDomesticPrice:v}))} />
                                                     <button onClick={() => adjustBitcoinValue('currentDomesticPrice', 10)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-plus text-[10px]"></i></button>
+                                                </div>
+                                            </div>
+                                            {/* 추가된 입력: 보유수량 및 평단가 */}
+                                            <div className="pt-2 border-t border-dashed border-gray-200 dark:border-white/10 mt-2">
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">보유수량 (BTC)</label>
+                                                        <div className="relative flex items-center bg-[#F2F2F7] dark:bg-[#E5E5EA] rounded-xl overflow-hidden group">
+                                                             <input className="apple-input !rounded-none !bg-transparent text-center !px-0 dark:!text-black !text-sm" value={bitcoinAnalysisInputs.holdingQty} onChange={e=>{
+                                                                 // 소수점 허용
+                                                                 const v = e.target.value.replace(/[^0-9.]/g, '');
+                                                                 setBitcoinAnalysisInputs({...bitcoinAnalysisInputs, holdingQty:v});
+                                                             }} />
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">평단가 (만원)</label>
+                                                        <div className="relative flex items-center bg-[#F2F2F7] dark:bg-[#E5E5EA] rounded-xl overflow-hidden group">
+                                                             <input className="apple-input !rounded-none !bg-transparent text-center !px-0 dark:!text-black !text-sm" value={bitcoinAnalysisInputs.avgPrice} onChange={e=>handleCommaChange(e, v=>setBitcoinAnalysisInputs({...bitcoinAnalysisInputs, avgPrice:v}))} />
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </>
