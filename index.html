@@ -1318,6 +1318,10 @@
                 
                 const theoreticalShanghaiCNY = usd * usdToCny * TROY_OZ_TO_KG;
                 const sPremiumPercent = theoreticalShanghaiCNY > 0 ? ((shanghaiCNY - theoreticalShanghaiCNY) / theoreticalShanghaiCNY) * 100 : 0;
+                
+                // 상하이 시세 USD 환산 (CNY/kg -> USD/oz)
+                // 환산식: (상하이CNY / 위안달러환율) / TROY_OZ_TO_KG
+                const shanghaiUsdEquivalent = (usdToCny > 0 && TROY_OZ_TO_KG > 0) ? (shanghaiCNY / usdToCny / TROY_OZ_TO_KG) : 0;
 
                 const priceContrib = (usd - BASE_USD_PRICE) * BASE_EXCH_RATE * TROY_OZ_TO_KG;
                 const exchContrib = (exch - BASE_EXCH_RATE) * BASE_USD_PRICE * TROY_OZ_TO_KG;
@@ -1333,7 +1337,7 @@
                 return {                      
                     actualRate, theoreticalKrwPrice, actualPrice: domesticPrice,
                     kPremium, kPremiumPercent, 
-                    sPremiumPercent, theoreticalShanghaiCNY, 
+                    sPremiumPercent, theoreticalShanghaiCNY, shanghaiUsdEquivalent, // 환산 가격 추가 반환
                     priceContrib, exchContrib, residualContrib, totalProfit,
                     exchPerc: (exchContrib / absProfit) * 100,
                     pricePerc: (priceContrib / absProfit) * 100,
@@ -1555,9 +1559,10 @@
                                                 />
                                             ) : (
                                                 <AppleStatBox
-                                                      label="수익률"
-                                                      value={`${bitcoinProfitData.profitRate >= 0 ? '+' : ''}${bitcoinProfitData.profitRate.toFixed(1)}%`}
-                                                      valueClassName={bitcoinProfitData.profitRate >= 0 ? 'text-stat-up' : 'text-stat-down'}
+                                                      label="국제 이론가"
+                                                      value={`${(bitcoinProfitData.theoreticalKrwPrice/10000).toFixed(0)}만`}
+                                                      subValue="원"
+                                                      valueClassName="text-slate-900 dark:text-white"
                                                 />
                                             )}
                                         </div>
@@ -1593,11 +1598,17 @@
                                         </div>
                                         <div className="bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-2xl p-3 relative overflow-hidden">
                                             {analysisMode === 'silver' ? (
-                                                <AppleStatBox
-                                                      label="상하이 프리미엄"
-                                                      value={`${silverProfitData.sPremiumPercent >= 0 ? '+' : ''}${silverProfitData.sPremiumPercent.toFixed(1)}%`}
-                                                      valueClassName="text-red-600 dark:text-red-400"
-                                                />
+                                                <>
+                                                    <AppleStatBox
+                                                          label="상하이 프리미엄"
+                                                          value={`${silverProfitData.sPremiumPercent >= 0 ? '+' : ''}${silverProfitData.sPremiumPercent.toFixed(1)}%`}
+                                                          valueClassName="text-red-600 dark:text-red-400"
+                                                    />
+                                                    {/* 상하이 시세 환산 표시 수정: 소수 첫째 자리, 단위 생략 */}
+                                                    <div className="text-[10px] text-red-500/80 dark:text-red-400/80 font-bold mt-1 tracking-tight">
+                                                        환산: ${silverProfitData.shanghaiUsdEquivalent.toFixed(1)}
+                                                    </div>
+                                                </>
                                             ) : (
                                                 <AppleStatBox
                                                       label="프리미엄 차액"
