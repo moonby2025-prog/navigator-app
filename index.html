@@ -31,7 +31,7 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         /* Legacy Styles for Other Tabs (Preserved) */
-        .sim-input {              @apply mt-1 block w-full rounded-md border-gray-300 dark:border-slate-500 shadow-sm p-2 border bg-white dark:bg-slate-100 focus:ring-indigo-500 focus:border-indigo-500 text-sm font-bold !text-black dark:!text-black dark:placeholder-slate-500;          }
+        .sim-input { @apply mt-1 block w-full rounded-md border-gray-300 dark:border-slate-500 shadow-sm p-2 border bg-white dark:bg-slate-100 focus:ring-indigo-500 focus:border-indigo-500 text-sm font-bold !text-black dark:!text-black dark:placeholder-slate-500; }
         .num-font { font-variant-numeric: tabular-nums; }
         .guide-card { @apply p-4 rounded-xl border border-slate-100 dark:border-slate-600 bg-white dark:bg-slate-800 shadow-sm; }
         .nav-container { overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
@@ -39,7 +39,7 @@
         .ticker-fallback { display: flex; white-space: nowrap; overflow: hidden; align-items: center; height: 100%; width: 100%; }
         .ticker-scroll { display: inline-flex; gap: 2rem; animation: tickerScroll 40s linear infinite; padding-left: 20px; white-space: nowrap; }
         @keyframes tickerScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
-        .tool-input {              @apply !bg-slate-100 dark:!bg-slate-100 border border-slate-300 dark:border-slate-500 shadow-sm focus:!bg-white dark:focus:!bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all !text-black dark:!text-black placeholder-slate-400 dark:placeholder-slate-500 font-bold;          }
+        .tool-input { @apply !bg-slate-100 dark:!bg-slate-100 border border-slate-300 dark:border-slate-500 shadow-sm focus:!bg-white dark:focus:!bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all !text-black dark:!text-black placeholder-slate-400 dark:placeholder-slate-500 font-bold; }
         .dark input.sim-input, .dark input.tool-input, .dark select.sim-input, .dark select.tool-input, .dark .fav-item-btn { color: #000000 !important; }
         .fav-item-btn { @apply bg-slate-100 dark:bg-slate-100 border-slate-300 dark:border-slate-400 !text-black transition-all; }
         .tool-result-container { @apply mt-4 p-4 rounded-xl border-2 transition-all text-right shadow-sm; }
@@ -92,7 +92,7 @@
         }
         /* Dark mode label color fix */
         .dark .apple-stat-label { 
-            color: #9ca3af;          }
+            color: #9ca3af; }
         .apple-stat-value { 
             font-size: 24px; 
             font-weight: 700; 
@@ -128,10 +128,9 @@
         const FIXED_BUY_PRICE_KG = 1530000;          
         const BASE_USD_PRICE = 40.0;
         const BASE_EXCH_RATE = 1080.0;
-        const DEFAULT_EXCHANGE_RATES = {              'KRW': { krw: 1 }, 'USD': { krw: 1380 }, 'JPY': { krw: 8.90 }, 'EUR': { krw: 1480 }, 'CNY': { krw: 190 }, 'ARS': { krw: 1.35 }, 'INR': { krw: 16.5 }
-        };
+        const DEFAULT_EXCHANGE_RATES = { 'KRW': { krw: 1 }, 'USD': { krw: 1380 }, 'JPY': { krw: 8.90 }, 'EUR': { krw: 1480 }, 'CNY': { krw: 190 }, 'ARS': { krw: 1.35 }, 'INR': { krw: 16.5 } };
         const DEFAULT_FAVORITES = [
-            { code: "005930", name: "삼성전자" }, { code: "005380", name: "현대차" },              { code: "237690", name: "에스티팜" }, { code: "445680", name: "큐리옥스" }
+            { code: "005930", name: "삼성전자" }, { code: "005380", name: "현대차" }, { code: "237690", name: "에스티팜" }, { code: "445680", name: "큐리옥스" }
         ];
         const DEFAULT_ROUTINE_LINKS = {
             "🌅 아침 필수 체크 (Morning Routine)": [
@@ -236,7 +235,7 @@
                             { label: '배우자 ISA', data: history.map(h => h.si / ONE_HUNDRED_MILLION), borderColor: '#3b82f6', pointRadius: 0 }
                         ]
                     },
-                    options: {              responsive: true, maintainAspectRatio: false, animation: false,
+                    options: { responsive: true, maintainAspectRatio: false, animation: false,
                         scales: { y: { beginAtZero: true } },
                         plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } } } }
                     }
@@ -302,54 +301,44 @@
             useEffect(() => {
                 if (!ref.current) return;
                 ref.current.innerHTML = '';
-                
-                // 컨테이너 div 생성 (높이 100% 강제)
                 const container = document.createElement('div');
                 container.className = 'tradingview-widget-container';
                 container.style.width = '100%';
                 container.style.height = '100%';
-                
-                // 위젯 div 생성
                 const widget = document.createElement('div');
                 widget.className = 'tradingview-widget-container__widget';
                 widget.style.width = '100%';
                 widget.style.height = '100%';
                 container.appendChild(widget);
-
                 const script = document.createElement('script');
                 script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js';
                 script.async = true;
                 script.innerHTML = JSON.stringify({
                     "dataSource": "SPX500", "grouping": "sector", "blockSize": "market_cap_basic", "blockColor": "change", "locale": "kr", "colorTheme": theme, "hasTopBar": false, "isTransparent": true, "width": "100%", "height": "100%"
                 });
-                
                 container.appendChild(script);
                 ref.current.appendChild(container);
             }, [theme]);
             return <div ref={ref} className="h-full w-full"></div>;
         });
-        // --- NEW: Google News RSS Widget with Search & Tabs (Mobile Optimized) ---
+
+        // --- UPDATED: Google News RSS Widget with Search, Tabs, Retry & Refresh ---
         const GoogleNewsWidget = memo(({ isDark }) => {
             const [news, setNews] = useState([]);
             const [loading, setLoading] = useState(false);
-            const [errorMsg, setErrorMsg] = useState(null); // 에러 메시지 상태 추가
-            
-            // 초기 키워드 설정 (요청하신 종목 기본 포함)
+            const [errorMsg, setErrorMsg] = useState(null);
+            const [lastUpdated, setLastUpdated] = useState(null); // 마지막 업데이트 시간
+
             const [keywords, setKeywords] = useState(() => {
-                // '은' 키워드 추가
                 const defaultKeywords = ['주요뉴스', '큐리옥스바이오시스템즈', '에스티팜', '은', '경제', '비트코인'];
                 try {
                     const saved = localStorage.getItem('invNav_newsKeywords');
                     if (saved) {
                         const parsed = JSON.parse(saved);
-                        // 기존 사용자의 목록에 필수 종목이 없으면 추가 (중복 방지)
-                        // '은'도 필수 목록에 포함시켜 기존 사용자에게도 노출되도록 함
                         const newDefaults = ['큐리옥스바이오시스템즈', '에스티팜', '은'];
                         const added = newDefaults.filter(k => !parsed.includes(k));
                         if (added.length > 0) {
-                            // 주요뉴스 뒤에 새 종목 삽입, 나머지는 뒤로
                             const result = [...parsed];
-                            // '주요뉴스'가 있다면 그 뒤에, 아니면 맨 앞에 추가
                             const mainIdx = result.indexOf('주요뉴스');
                             if (mainIdx >= 0) {
                                 result.splice(mainIdx + 1, 0, ...added);
@@ -377,18 +366,16 @@
             const fetchNews = useCallback(async (query) => {
                 setLoading(true);
                 setErrorMsg(null);
+                
                 try {
-                    let rssUrl = '';
-                    let searchQuery = query; // 검색어 변수 분리
+                    let searchQuery = query;
 
                     // [Smart Search Query Mapping]
-                    // '은' 탭 선택 시, 조사(은/는)가 아닌 귀금속 관련 키워드로 구체화하여 검색
-                    // 수정: 요청하신 'silver' 키워드 추가 완료
-                    if (query === '은') {
-                        searchQuery = '은 시세 OR 은 선물 OR 국제 은값 OR 실버바 OR silver';
-                    }
+                    if (query === '은') searchQuery = '은 시세 OR 은 선물 OR 국제 은값 OR 실버바 OR silver';
+                    else if (query === '금') searchQuery = '금 시세 OR 국제 금값 OR 골드바';
+                    else if (query === '비트코인') searchQuery = '비트코인 OR 암호화폐 OR BTC';
 
-                    // 검색어에 따른 RSS URL 생성 (searchQuery 사용)
+                    let rssUrl = '';
                     if (searchQuery === '주요뉴스') {
                         rssUrl = 'https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko';
                     } else {
@@ -397,25 +384,26 @@
                     
                     let xmlText = null;
 
-                    // [Robust Fetch Strategy]
+                    // [Robust Fetch Strategy - Connection Improvement]
                     // 1차 시도: AllOrigins (JSON 방식)
                     try {
-                        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`;
+                        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}&timestamp=${new Date().getTime()}`;
                         const response = await fetch(proxyUrl);
-                        if (!response.ok) throw new Error('Proxy 1 failed');
+                        if (!response.ok) throw new Error('Primary proxy failed');
                         const data = await response.json();
-                        xmlText = data.contents;
+                        if (data.contents) xmlText = data.contents;
+                        else throw new Error('No content from primary');
                     } catch (e1) {
                         console.warn("Primary proxy failed, trying backup...", e1);
-                        // 2차 시도: CodeTabs (Raw Text 방식)
+                        // 2차 시도: CodeTabs (Raw Text 방식) - 백업 연결
                         try {
-                            const proxyUrl = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(rssUrl)}`;
-                            const response = await fetch(proxyUrl);
-                            if (!response.ok) throw new Error('Proxy 2 failed');
-                            xmlText = await response.text();
+                            const proxyUrl2 = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(rssUrl)}`;
+                            const response2 = await fetch(proxyUrl2);
+                            if (!response2.ok) throw new Error('Backup proxy failed');
+                            xmlText = await response2.text();
                         } catch (e2) {
                             console.error("All proxies failed", e2);
-                            throw new Error("뉴스 데이터를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.");
+                            throw new Error("뉴스 연결에 실패했습니다. 잠시 후 새로고침 해주세요.");
                         }
                     }
                     
@@ -447,20 +435,19 @@
                                 link: item.querySelector("link")?.textContent || "",
                                 source: source,
                                 timeAgo: timeAgo,
-                                pubDate: dateObj, // 정렬을 위한 날짜 객체
+                                pubDate: dateObj,
                                 guid: item.querySelector("guid")?.textContent || Math.random().toString()
                             };
                         });
 
-                        // [SORT] 최신순 정렬 (날짜 내림차순)
                         items.sort((a, b) => b.pubDate - a.pubDate);
-
-                        setNews(items.slice(0, 20)); // 상위 20개만 표시
+                        setNews(items.slice(0, 20));
+                        setLastUpdated(new Date());
                     }
                 } catch (error) {
                     console.error("News fetch error:", error);
                     setNews([]);
-                    setErrorMsg("뉴스를 불러오는데 실패했습니다.");
+                    setErrorMsg(error.message || "뉴스를 불러오는데 실패했습니다.");
                 } finally {
                     setLoading(false);
                 }
@@ -489,8 +476,57 @@
 
             return (
                 <div className="flex flex-col h-full bg-white dark:bg-[#1C1C1E] relative">
-                    {/* Keyword Tabs (Chips) - Mobile Optimized Scrolling */}
+                    {/* NEW: Quick External Links (Top Bar) - Click Area & Style Improved */}
+                    <div className="flex items-center gap-2 px-4 pt-4 pb-2 overflow-x-auto scrollbar-hide flex-shrink-0">
+                        {/* 1. Npay 속보 */}
+                        <a href="https://finance.naver.com/news/news_list.naver?mode=LSS2D&section_id=101&section_id2=258" target="_blank" rel="noopener noreferrer" 
+                           className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-[#2C2C2E] rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-[#3A3A3C] transition border border-slate-200 dark:border-white/10 whitespace-nowrap group shadow-sm active:scale-95"
+                        >
+                            <i className="fa-solid fa-bolt text-red-500 group-hover:animate-pulse text-sm"></i> Npay 속보
+                        </a>
+
+                        {/* 2. NEW: Npay 해외증시 */}
+                        <a href="https://m.stock.naver.com/worldstock/home" target="_blank" rel="noopener noreferrer" 
+                           className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-[#2C2C2E] rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-[#3A3A3C] transition border border-slate-200 dark:border-white/10 whitespace-nowrap group shadow-sm active:scale-95"
+                        >
+                            <i className="fa-solid fa-earth-americas text-blue-500 group-hover:rotate-12 transition-transform text-sm"></i> Npay 해외증시
+                        </a>
+
+                        {/* 3. 네이버 뉴스 */}
+                        <a href="https://finance.naver.com/news/" target="_blank" rel="noopener noreferrer" 
+                           className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-[#2C2C2E] rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-[#3A3A3C] transition border border-slate-200 dark:border-white/10 whitespace-nowrap group shadow-sm active:scale-95"
+                        >
+                            <i className="fa-solid fa-newspaper text-green-500 text-sm"></i> 네이버 뉴스
+                        </a>
+
+                        {/* 4. 리서치 */}
+                        <a href="https://finance.naver.com/research/" target="_blank" rel="noopener noreferrer" 
+                           className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-[#2C2C2E] rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-[#3A3A3C] transition border border-slate-200 dark:border-white/10 whitespace-nowrap group shadow-sm active:scale-95"
+                        >
+                            <i className="fa-solid fa-chart-pie text-indigo-500 text-sm"></i> 리서치
+                        </a>
+
+                        {/* 5. 야후 뉴스 */}
+                        <a href="https://finance.yahoo.com/" target="_blank" rel="noopener noreferrer" 
+                           className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-[#2C2C2E] rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-[#3A3A3C] transition border border-slate-200 dark:border-white/10 whitespace-nowrap group shadow-sm active:scale-95"
+                        >
+                            <i className="fa-brands fa-yahoo text-purple-500 text-sm"></i> 야후 뉴스
+                        </a>
+                    </div>
+
+                    {/* Keyword Tabs (Chips) */}
                     <div className="flex items-center gap-2 p-3 border-b border-gray-100 dark:border-white/5 overflow-x-auto scrollbar-hide flex-shrink-0 touch-pan-x">
+                        {/* 1. News Refresh Button Added */}
+                         <button 
+                            onClick={() => fetchNews(activeKeyword)} 
+                            disabled={loading}
+                            className={`flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 dark:bg-[#2C2C2E] text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center justify-center transition-all ${loading ? 'animate-spin text-indigo-500' : ''}`}
+                            title="뉴스 새로고침"
+                        >
+                            <i className="fa-solid fa-arrows-rotate text-xs"></i>
+                        </button>
+                        <div className="w-[1px] h-4 bg-gray-300 dark:bg-gray-700 mx-1"></div>
+                        
                         {keywords.map(k => (
                             <button
                                 key={k}
@@ -545,16 +581,26 @@
 
                     {/* News List Area */}
                     <div className="flex-1 overflow-y-auto p-0 scrollbar-hide relative overscroll-contain">
-                        {loading ? (
+                        {loading && news.length === 0 ? (
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 gap-2">
                                 <i className="fa-solid fa-circle-notch fa-spin text-2xl text-[#0071E3]"></i>
                                 <span className="text-xs font-bold">뉴스 불러오는 중...</span>
                             </div>
                         ) : errorMsg ? (
-                             <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 gap-2">
-                                <i className="fa-solid fa-triangle-exclamation text-2xl text-red-400"></i>
-                                <span className="text-xs font-bold">{errorMsg}</span>
-                                <button onClick={() => fetchNews(activeKeyword)} className="mt-2 px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-full text-[10px] font-bold hover:bg-slate-200">다시 시도</button>
+                             <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 gap-3 p-6 text-center">
+                                <div className="w-10 h-10 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
+                                    <i className="fa-solid fa-triangle-exclamation text-xl text-red-400"></i>
+                                </div>
+                                <div>
+                                    <p className="text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">{errorMsg}</p>
+                                    <p className="text-[10px] text-gray-400">네트워크 상태를 확인해주세요.</p>
+                                </div>
+                                <button 
+                                    onClick={() => fetchNews(activeKeyword)} 
+                                    className="px-4 py-2 bg-slate-800 dark:bg-slate-700 text-white rounded-lg text-xs font-bold hover:bg-slate-700 transition flex items-center gap-2"
+                                >
+                                    <i className="fa-solid fa-rotate-right"></i> 다시 시도
+                                </button>
                             </div>
                         ) : news.length > 0 ? (
                             <div className="divide-y divide-gray-100 dark:divide-white/5">
@@ -1322,7 +1368,8 @@
         function App() {
             const [activeTab, setActiveTab] = useState('dashboard');
             const [isDark, setIsDark] = useState(false);
-            // ... existing state ...
+            
+            // Link Mode State
             const [linkMode, setLinkMode] = useState('investment');
             // State for Analysis Mode (Silver / Bitcoin)
             const [analysisMode, setAnalysisMode] = useState('silver'); 
@@ -1390,7 +1437,6 @@
                     return saved ? JSON.parse(saved) : DEFAULT_FAVORITES;
                 } catch (e) { return DEFAULT_FAVORITES; }
             });
-            // ... existing routine state ...
             const [routineLinks, setRoutineLinks] = useState(() => {
                 try {
                     // 키 이름을 _v2로 변경하여 강제로 새 기본값을 불러오도록 함 (1번 방법)
@@ -1409,6 +1455,7 @@
             // 저장할 때도 변경된 _v2 키를 사용
             useEffect(() => { localStorage.setItem('invNav_routineLinks_v2', JSON.stringify(routineLinks)); }, [routineLinks]);
             useEffect(() => { localStorage.setItem('invNav_blogLinks_v2', JSON.stringify(blogInsightLinks)); }, [blogInsightLinks]);
+            
             // ... existing tools/sim inputs ...
             const [targetInputs, setTargetInputs] = useState({ mode: 'cap', price: '', shares: '', currentCap: '', targetCap: '', targetRate: '' });
             const [ipoCalcInputs, setIpoCalcInputs] = useState({ price: '', qty: '', fee: '', rate: 50 });
@@ -1503,9 +1550,9 @@
                     if (data.result === 'success') {
                         const rates = data.rates;
                         const newRates = {
-                            'KRW': { krw: 1 },                              'USD': { krw: 1 / (rates.USD || 0.00072) },                              'JPY': { krw: 1 / (rates.JPY || 0.11) },
-                            'EUR': { krw: 1 / (rates.EUR || 0.00067) },                              'CNY': { krw: 1 / (rates.CNY || 0.0052) },
-                            'ARS': { krw: 1 / (rates.ARS || 0.65) },                              'INR': { krw: 1 / (rates.INR || 0.06) }
+                            'KRW': { krw: 1 }, 'USD': { krw: 1 / (rates.USD || 0.00072) }, 'JPY': { krw: 1 / (rates.JPY || 0.11) },
+                            'EUR': { krw: 1 / (rates.EUR || 0.00067) }, 'CNY': { krw: 1 / (rates.CNY || 0.0052) },
+                            'ARS': { krw: 1 / (rates.ARS || 0.65) }, 'INR': { krw: 1 / (rates.INR || 0.06) }
                         };
                         setExchangeRates(newRates);
                         setSilverAnalysisInputs(prev => ({
@@ -2015,7 +2062,7 @@
                             <div className="flex flex-col h-full">
                                 {/* Search Input */}
                                 <div className="relative mb-4">
-                                    <input                                  type="text"                                  className="w-full bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-xl pl-10 pr-4 py-3 text-sm font-bold text-slate-900 force-dark-white outline-none focus:ring-2 focus:ring-[#0071E3]/20"
+                                    <input type="text" className="w-full bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-xl pl-10 pr-4 py-3 text-sm font-bold text-slate-900 force-dark-white outline-none focus:ring-2 focus:ring-[#0071E3]/20"
                                             placeholder="종목명 또는 코드 검색 (Enter)"
                                             value={searchQuery}
                                             onChange={e => setSearchQuery(e.target.value)}
@@ -2044,7 +2091,7 @@
                                                 </div>
                                             </div>
                                             {isFavEditMode ? (
-                                                <button                                              onClick={(e) => { e.stopPropagation(); removeFavorite(fav.code); }}
+                                                <button onClick={(e) => { e.stopPropagation(); removeFavorite(fav.code); }}
                                                       className="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow-sm hover:scale-110 transition"
                                                 >
                                                     <i className="fa-solid fa-minus text-[10px]"></i>
@@ -2061,7 +2108,7 @@
                                             <div className="flex gap-2">
                                                 <input className="w-20 bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-lg px-2 py-2 text-xs font-bold text-center outline-none force-dark-white" placeholder="코드" value={newFav.code} onChange={e=>setNewFav({...newFav, code:e.target.value})} />
                                                 <input className="flex-1 bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-lg px-2 py-2 text-xs font-bold outline-none force-dark-white" placeholder="종목명" value={newFav.name} onChange={e=>setNewFav({...newFav, name:e.target.value})} />
-                                                <button                                              onClick={() => {
+                                                <button onClick={() => {
                                                         if(newFav.code && newFav.name) {
                                                             setFavorites([...favorites, newFav]);
                                                             setNewFav({code:'', name:''});
@@ -2078,8 +2125,8 @@
                         </AppleCard>
                         
                         {/* 4. Heatmap & News (Tabbed Interface) */}
-                        {/* Height Adjustment: min-h increased for better mobile experience */}
-                        <AppleCard className="lg:col-span-8 h-[500px] sm:h-96 min-h-[450px] sm:min-h-[400px] !p-0 overflow-hidden">
+                        {/* Height Adjustment: Increased height to h-[650px] to show more news items */}
+                        <AppleCard className="lg:col-span-8 h-[650px] min-h-[600px] !p-0 overflow-hidden">
                             {/* NEW WRAPPER: Flex Column & Full Height to ensure layout fill */}
                             <div className="flex flex-col h-full w-full">
                                 {/* Header & Controls Area - Responsive Padding */}
@@ -2136,18 +2183,15 @@
                         <div className="flex items-center gap-3">
                              {/* Segmented Control for Mode */}
                             <div className="bg-[#E5E5EA] dark:bg-[#2C2C2E] p-1 rounded-full flex">
-                                <button                                      onClick={() => setLinkMode('investment')}                                      className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${linkMode === 'investment' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-500 dark:text-gray-300'}`}
-                                >
+                                <button onClick={() => setLinkMode('investment')} className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${linkMode === 'investment' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-500 dark:text-gray-300'}`}>
                                     투자 & 일상
                                 </button>
-                                <button                                      onClick={() => setLinkMode('blogs')}                                      className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${linkMode === 'blogs' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-500 dark:text-gray-300'}`}
-                                >
+                                <button onClick={() => setLinkMode('blogs')} className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${linkMode === 'blogs' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-500 dark:text-gray-300'}`}>
                                     인사이트
                                 </button>
                             </div>
                             {/* Edit Toggle */}
-                            <button                               onClick={() => setIsRoutineEditMode(!isRoutineEditMode)}                               className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${isRoutineEditMode ? 'bg-[#0071E3] text-white' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-[#0071E3]'}`}
-                            >
+                            <button onClick={() => setIsRoutineEditMode(!isRoutineEditMode)} className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${isRoutineEditMode ? 'bg-[#0071E3] text-white' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-[#0071E3]'}`}>
                                 {isRoutineEditMode ? '완료' : '편집'}
                             </button>
                         </div>
@@ -2161,8 +2205,7 @@
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
                                 <div className="sm:col-span-3">
-                                    <select                                      className="apple-input w-full"                                      value={newRoutine.category}                                      onChange={e=>setNewRoutine({...newRoutine, category:e.target.value})}
-                                    >
+                                    <select className="apple-input w-full" value={newRoutine.category} onChange={e=>setNewRoutine({...newRoutine, category:e.target.value})}>
                                             <option value="">카테고리 선택</option>
                                             {Object.keys(linkMode === 'blogs' ? blogInsightLinks : routineLinks).map(cat => <option key={cat} value={cat}>{cat}</option>)}
                                     </select>
@@ -2174,7 +2217,7 @@
                                     <input type="text" placeholder="URL (https://...)" className="apple-input" value={newRoutine.url} onChange={e=>setNewRoutine({...newRoutine, url:e.target.value})} />
                                 </div>
                                 <div className="sm:col-span-2">
-                                    <button                                      onClick={() => {
+                                    <button onClick={() => {
                                             if(linkMode === 'blogs') {
                                                 if (!newRoutine.category || !newRoutine.name || !newRoutine.url) return;
                                                 const updated = { ...blogInsightLinks };
@@ -2182,7 +2225,7 @@
                                                 setBlogInsightLinks(updated);
                                                 setNewRoutine({ category: '', name: '', url: '' });
                                             } else { addRoutineLink(); }
-                                        }}                                      className="w-full h-full bg-[#0071E3] hover:bg-blue-600 text-white rounded-xl font-bold text-xs transition py-3 sm:py-0"
+                                        }} className="w-full h-full bg-[#0071E3] hover:bg-blue-600 text-white rounded-xl font-bold text-xs transition py-3 sm:py-0"
                                     >
                                         추가하기
                                     </button>
@@ -2197,8 +2240,7 @@
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     {links.map((l, i) => (
                                         <div key={i} className="relative group">
-                                            <a                                               href={l.url}                                               target="_blank"                                               className="flex items-center gap-3 p-3 rounded-xl bg-[#F2F2F7] dark:bg-[#2C2C2E] hover:bg-gray-200 dark:hover:bg-gray-700 transition-all group-hover:scale-[1.02]"
-                                            >
+                                            <a href={l.url} target="_blank" className="flex items-center gap-3 p-3 rounded-xl bg-[#F2F2F7] dark:bg-[#2C2C2E] hover:bg-gray-200 dark:hover:bg-gray-700 transition-all group-hover:scale-[1.02]">
                                                 <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${l.color ? l.color.replace('text-', 'text-opacity-80 text-') : 'bg-white dark:bg-white/10 text-gray-500'}`}>
                                                     <i className={`fa-solid ${l.icon || 'fa-link'} text-sm`}></i>
                                                 </div>
@@ -2207,11 +2249,11 @@
                                                 </span>
                                             </a>
                                             {isRoutineEditMode && (
-                                                <button                                                   onClick={(e) => {
+                                                <button onClick={(e) => {
                                                         e.preventDefault();
                                                         if(linkMode === 'blogs') { const updated = { ...blogInsightLinks }; updated[cat] = updated[cat].filter((_, index) => index !== i); setBlogInsightLinks(updated); }
                                                         else { removeRoutineLink(cat, i); }
-                                                    }}                                                   className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-[#FF3B30] text-white rounded-full flex items-center justify-center shadow-md hover:scale-110 transition z-10 border-2 border-white dark:border-[#1C1C1E]"
+                                                    }} className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-[#FF3B30] text-white rounded-full flex items-center justify-center shadow-md hover:scale-110 transition z-10 border-2 border-white dark:border-[#1C1C1E]"
                                                 >
                                                     <i className="fa-solid fa-minus text-[10px]"></i>
                                                 </button>
@@ -2787,10 +2829,7 @@
                                                     <i className="fa-solid fa-hospital-user"></i>
                                                     지역 건보료 ({simInputs.regionalInsStartAge || 60}세~)
                                                 </label>
-                                                <button 
-                                                    onClick={calculateAutoRegionalIns}
-                                                    className="text-[10px] bg-orange-100 dark:bg-orange-800 text-orange-700 dark:text-orange-100 px-2 py-0.5 rounded-md hover:bg-orange-200 transition font-bold"
-                                                >
+                                                <button onClick={calculateAutoRegionalIns} className="text-[10px] bg-orange-100 dark:bg-orange-800 text-orange-700 dark:text-orange-100 px-2 py-0.5 rounded-md hover:bg-orange-200 transition font-bold">
                                                     <i className="fa-solid fa-calculator mr-1"></i>자동 계산
                                                 </button>
                                             </div>
@@ -2961,7 +3000,7 @@
                                 </thead>
                                 <tbody className="bg-white dark:bg-slate-800">
                                     {simResult.history.map((h, idx) => {
-                                        const totalExpense = h.living + h.tax;                                          const cashFlowIndex = totalExpense > 0 ? (h.annualProfit / totalExpense) * 100 : 0;                                          const rowBgClass = h.isHighCost ? 'bg-amber-50 dark:bg-amber-900/30' : h.isWarn ? 'bg-rose-50/70 dark:bg-rose-900/60' : '';
+                                        const totalExpense = h.living + h.tax; const cashFlowIndex = totalExpense > 0 ? (h.annualProfit / totalExpense) * 100 : 0; const rowBgClass = h.isHighCost ? 'bg-amber-50 dark:bg-amber-900/30' : h.isWarn ? 'bg-rose-50/70 dark:bg-rose-900/60' : '';
                                         return (
                                             <tr key={idx} className={`hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors border-b dark:border-slate-700 ${rowBgClass}`}>
                                                 <td className="px-2 py-2.5 font-black text-slate-900 dark:text-white text-center sticky left-0 bg-inherit z-10 border-r dark:border-slate-700">{h.age}</td>
