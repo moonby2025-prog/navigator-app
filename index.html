@@ -302,16 +302,312 @@
             useEffect(() => {
                 if (!ref.current) return;
                 ref.current.innerHTML = '';
+                
+                // 컨테이너 div 생성 (높이 100% 강제)
+                const container = document.createElement('div');
+                container.className = 'tradingview-widget-container';
+                container.style.width = '100%';
+                container.style.height = '100%';
+                
+                // 위젯 div 생성
+                const widget = document.createElement('div');
+                widget.className = 'tradingview-widget-container__widget';
+                widget.style.width = '100%';
+                widget.style.height = '100%';
+                container.appendChild(widget);
+
                 const script = document.createElement('script');
                 script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js';
                 script.async = true;
                 script.innerHTML = JSON.stringify({
                     "dataSource": "SPX500", "grouping": "sector", "blockSize": "market_cap_basic", "blockColor": "change", "locale": "kr", "colorTheme": theme, "hasTopBar": false, "isTransparent": true, "width": "100%", "height": "100%"
                 });
-                ref.current.appendChild(script);
+                
+                container.appendChild(script);
+                ref.current.appendChild(container);
             }, [theme]);
-            return <div ref={ref} className="h-full"></div>;
+            return <div ref={ref} className="h-full w-full"></div>;
         });
+        // --- NEW: Google News RSS Widget with Search & Tabs (Mobile Optimized) ---
+        const GoogleNewsWidget = memo(({ isDark }) => {
+            const [news, setNews] = useState([]);
+            const [loading, setLoading] = useState(false);
+            const [errorMsg, setErrorMsg] = useState(null); // 에러 메시지 상태 추가
+            
+            // 초기 키워드 설정 (요청하신 종목 기본 포함)
+            const [keywords, setKeywords] = useState(() => {
+                // '은' 키워드 추가
+                const defaultKeywords = ['주요뉴스', '큐리옥스바이오시스템즈', '에스티팜', '은', '경제', '비트코인'];
+                try {
+                    const saved = localStorage.getItem('invNav_newsKeywords');
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        // 기존 사용자의 목록에 필수 종목이 없으면 추가 (중복 방지)
+                        // '은'도 필수 목록에 포함시켜 기존 사용자에게도 노출되도록 함
+                        const newDefaults = ['큐리옥스바이오시스템즈', '에스티팜', '은'];
+                        const added = newDefaults.filter(k => !parsed.includes(k));
+                        if (added.length > 0) {
+                            // 주요뉴스 뒤에 새 종목 삽입, 나머지는 뒤로
+                            const result = [...parsed];
+                            // '주요뉴스'가 있다면 그 뒤에, 아니면 맨 앞에 추가
+                            const mainIdx = result.indexOf('주요뉴스');
+                            if (mainIdx >= 0) {
+                                result.splice(mainIdx + 1, 0, ...added);
+                            } else {
+                                result.unshift(...added);
+                            }
+                            return result;
+                        }
+                        return parsed;
+                    }
+                    return defaultKeywords;
+                } catch {
+                    return defaultKeywords;
+                }
+            });
+            
+            const [activeKeyword, setActiveKeyword] = useState('주요뉴스');
+            const [isAdding, setIsAdding] = useState(false);
+            const [newKeywordInput, setNewKeywordInput] = useState('');
+
+            useEffect(() => {
+                localStorage.setItem('invNav_newsKeywords', JSON.stringify(keywords));
+            }, [keywords]);
+
+            const fetchNews = useCallback(async (query) => {
+                setLoading(true);
+                setErrorMsg(null);
+                try {
+                    let rssUrl = '';
+                    let searchQuery = query; // 검색어 변수 분리
+
+                    // [Smart Search Query Mapping]
+                    // '은' 탭 선택 시, 조사(은/는)가 아닌 귀금속 관련 키워드로 구체화하여 검색
+                    // 수정: 요청하신 'silver' 키워드 추가 완료
+                    if (query === '은') {
+                        searchQuery = '은 시세 OR 은 선물 OR 국제 은값 OR 실버바 OR silver';
+                    }
+
+                    // 검색어에 따른 RSS URL 생성 (searchQuery 사용)
+                    if (searchQuery === '주요뉴스') {
+                        rssUrl = 'https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko';
+                    } else {
+                        rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(searchQuery)}&hl=ko&gl=KR&ceid=KR:ko`;
+                    }
+                    
+                    let xmlText = null;
+
+                    // [Robust Fetch Strategy]
+                    // 1차 시도: AllOrigins (JSON 방식)
+                    try {
+                        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`;
+                        const response = await fetch(proxyUrl);
+                        if (!response.ok) throw new Error('Proxy 1 failed');
+                        const data = await response.json();
+                        xmlText = data.contents;
+                    } catch (e1) {
+                        console.warn("Primary proxy failed, trying backup...", e1);
+                        // 2차 시도: CodeTabs (Raw Text 방식)
+                        try {
+                            const proxyUrl = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(rssUrl)}`;
+                            const response = await fetch(proxyUrl);
+                            if (!response.ok) throw new Error('Proxy 2 failed');
+                            xmlText = await response.text();
+                        } catch (e2) {
+                            console.error("All proxies failed", e2);
+                            throw new Error("뉴스 데이터를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.");
+                        }
+                    }
+                    
+                    if (xmlText) {
+                        const parser = new DOMParser();
+                        const xml = parser.parseFromString(xmlText, "text/xml");
+                        const items = Array.from(xml.querySelectorAll("item")).map(item => {
+                            const title = item.querySelector("title")?.textContent || "";
+                            const cleanTitle = title.split(" - ")[0];
+                            const source = item.querySelector("source")?.textContent || title.split(" - ").pop() || "Google News";
+                            const pubDateStr = item.querySelector("pubDate")?.textContent || "";
+                            const dateObj = new Date(pubDateStr);
+                            
+                            let timeAgo = "";
+                            try {
+                                const now = new Date();
+                                const diffMs = now - dateObj;
+                                const diffMins = Math.floor(diffMs / 60000);
+                                const diffHrs = Math.floor(diffMins / 60);
+                                
+                                if (diffMins < 1) timeAgo = "방금 전";
+                                else if (diffMins < 60) timeAgo = `${diffMins}분 전`;
+                                else if (diffHrs < 24) timeAgo = `${diffHrs}시간 전`;
+                                else timeAgo = `${dateObj.getMonth()+1}/${dateObj.getDate()}`;
+                            } catch { timeAgo = "최신"; }
+
+                            return {
+                                title: cleanTitle,
+                                link: item.querySelector("link")?.textContent || "",
+                                source: source,
+                                timeAgo: timeAgo,
+                                pubDate: dateObj, // 정렬을 위한 날짜 객체
+                                guid: item.querySelector("guid")?.textContent || Math.random().toString()
+                            };
+                        });
+
+                        // [SORT] 최신순 정렬 (날짜 내림차순)
+                        items.sort((a, b) => b.pubDate - a.pubDate);
+
+                        setNews(items.slice(0, 20)); // 상위 20개만 표시
+                    }
+                } catch (error) {
+                    console.error("News fetch error:", error);
+                    setNews([]);
+                    setErrorMsg("뉴스를 불러오는데 실패했습니다.");
+                } finally {
+                    setLoading(false);
+                }
+            }, []);
+
+            useEffect(() => {
+                fetchNews(activeKeyword);
+            }, [activeKeyword, fetchNews]);
+
+            const handleAddKeyword = () => {
+                if (newKeywordInput.trim() && !keywords.includes(newKeywordInput.trim())) {
+                    const next = [...keywords, newKeywordInput.trim()];
+                    setKeywords(next);
+                    setActiveKeyword(newKeywordInput.trim());
+                    setNewKeywordInput('');
+                    setIsAdding(false);
+                }
+            };
+            
+            const handleRemoveKeyword = (e, k) => {
+                e.stopPropagation(); 
+                const next = keywords.filter(w => w !== k);
+                setKeywords(next);
+                if (activeKeyword === k && next.length > 0) setActiveKeyword(next[0]);
+            };
+
+            return (
+                <div className="flex flex-col h-full bg-white dark:bg-[#1C1C1E] relative">
+                    {/* Keyword Tabs (Chips) - Mobile Optimized Scrolling */}
+                    <div className="flex items-center gap-2 p-3 border-b border-gray-100 dark:border-white/5 overflow-x-auto scrollbar-hide flex-shrink-0 touch-pan-x">
+                        {keywords.map(k => (
+                            <button
+                                key={k}
+                                onClick={() => setActiveKeyword(k)}
+                                className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 select-none ${
+                                    activeKeyword === k 
+                                    ? 'bg-slate-800 text-white dark:bg-white dark:text-black shadow-md' 
+                                    : 'bg-slate-100 text-slate-500 dark:bg-[#2C2C2E] dark:text-gray-400 hover:bg-slate-200 dark:hover:bg-[#3A3A3C]'
+                                }`}
+                            >
+                                <span className="whitespace-nowrap">{k}</span>
+                                {k !== '주요뉴스' && activeKeyword === k && (
+                                    <span 
+                                        onClick={(e) => handleRemoveKeyword(e, k)} 
+                                        className="w-4 h-4 flex items-center justify-center hover:bg-white/20 rounded-full transition-colors ml-0.5"
+                                    >
+                                        <i className="fa-solid fa-xmark text-[10px]"></i>
+                                    </span>
+                                )}
+                            </button>
+                        ))}
+                        
+                        {/* Add Button */}
+                        {isAdding ? (
+                            <div className="flex items-center gap-1 bg-indigo-50 dark:bg-indigo-900/30 rounded-full pl-2 pr-1 py-0.5 border border-indigo-200 dark:border-indigo-700 animate-fade-in flex-shrink-0">
+                                <input 
+                                    type="text" 
+                                    className="w-20 bg-transparent text-xs font-bold text-indigo-700 dark:text-indigo-300 outline-none placeholder-indigo-300"
+                                    placeholder="키워드"
+                                    value={newKeywordInput}
+                                    onChange={(e) => setNewKeywordInput(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleAddKeyword()}
+                                    autoFocus
+                                />
+                                <button onClick={handleAddKeyword} className="w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center active:scale-95 transition-transform">
+                                    <i className="fa-solid fa-check text-[10px]"></i>
+                                </button>
+                                <button onClick={() => setIsAdding(false)} className="w-6 h-6 rounded-full bg-gray-300 dark:bg-gray-600 text-white flex items-center justify-center active:scale-95 transition-transform">
+                                    <i className="fa-solid fa-xmark text-[10px]"></i>
+                                </button>
+                            </div>
+                        ) : (
+                            <button 
+                                onClick={() => setIsAdding(true)} 
+                                className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-100 dark:bg-[#2C2C2E] text-slate-400 dark:text-gray-500 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-[#3A3A3C] transition active:scale-95"
+                            >
+                                <i className="fa-solid fa-plus text-xs"></i>
+                            </button>
+                        )}
+                        <div className="w-1 flex-shrink-0"></div>
+                    </div>
+
+                    {/* News List Area */}
+                    <div className="flex-1 overflow-y-auto p-0 scrollbar-hide relative overscroll-contain">
+                        {loading ? (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 gap-2">
+                                <i className="fa-solid fa-circle-notch fa-spin text-2xl text-[#0071E3]"></i>
+                                <span className="text-xs font-bold">뉴스 불러오는 중...</span>
+                            </div>
+                        ) : errorMsg ? (
+                             <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 gap-2">
+                                <i className="fa-solid fa-triangle-exclamation text-2xl text-red-400"></i>
+                                <span className="text-xs font-bold">{errorMsg}</span>
+                                <button onClick={() => fetchNews(activeKeyword)} className="mt-2 px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-full text-[10px] font-bold hover:bg-slate-200">다시 시도</button>
+                            </div>
+                        ) : news.length > 0 ? (
+                            <div className="divide-y divide-gray-100 dark:divide-white/5">
+                                {news.map((item, idx) => (
+                                    <a 
+                                        key={item.guid + idx} 
+                                        href={item.link} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="block p-3 sm:p-4 hover:bg-gray-50 dark:hover:bg-white/5 transition group active:bg-gray-100 dark:active:bg-white/10"
+                                    >
+                                        <div className="flex justify-between items-start gap-3">
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-snug group-hover:text-[#0071E3] transition-colors mb-1.5 break-words line-clamp-2">
+                                                    {item.title}
+                                                </h4>
+                                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-medium text-gray-400 dark:text-gray-500">
+                                                    <span className="text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-[#2C2C2E] px-1.5 py-0.5 rounded max-w-[120px] truncate">{item.source}</span>
+                                                    <span className="text-gray-300">•</span>
+                                                    <span className="whitespace-nowrap text-orange-500 dark:text-orange-400">{item.timeAgo}</span>
+                                                </div>
+                                            </div>
+                                            {/* 최신 뉴스 표시 (1시간 이내 등) */}
+                                            {idx < 3 && (
+                                                <span className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-red-50 text-[9px] font-bold text-red-500 dark:bg-red-500/20 dark:text-red-400 mt-0.5">
+                                                    N
+                                                </span>
+                                            )}
+                                        </div>
+                                    </a>
+                                ))}
+                                <div className="p-4 text-center pb-8 sm:pb-4">
+                                    <a 
+                                        href={`https://news.google.com/search?q=${encodeURIComponent(activeKeyword)}&hl=ko&gl=KR&ceid=KR:ko`} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer" 
+                                        className="inline-flex items-center justify-center px-4 py-2 rounded-full bg-gray-100 dark:bg-[#2C2C2E] text-xs font-bold text-gray-500 hover:text-[#0071E3] transition active:scale-95"
+                                    >
+                                        Google 뉴스에서 더보기 <i className="fa-solid fa-arrow-right ml-2"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 gap-2">
+                                <i className="fa-regular fa-newspaper text-3xl opacity-20"></i>
+                                <span className="text-xs font-bold">관련 뉴스가 없습니다.</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        });
+
         const SilverMiniChart = memo(({ theme }) => {
             const ref = useRef(null);
             useEffect(() => {
@@ -1034,6 +1330,9 @@
             
             // Dashboard Chart Tab State
             const [dashChartTab, setDashChartTab] = useState('price'); // 'price', 'shanghai', 'ratio', 'btc'
+            
+            // NEW: Market Info Tab State (Heatmap vs News)
+            const [marketInfoTab, setMarketInfoTab] = useState('heatmap'); // 'heatmap', 'news'
 
             const [exchangeRates, setExchangeRates] = useState(DEFAULT_EXCHANGE_RATES);
             const [lastUpdated, setLastUpdated] = useState('연결 중...');
@@ -1318,10 +1617,10 @@
                 
                 const theoreticalShanghaiCNY = usd * usdToCny * TROY_OZ_TO_KG;
                 const sPremiumPercent = theoreticalShanghaiCNY > 0 ? ((shanghaiCNY - theoreticalShanghaiCNY) / theoreticalShanghaiCNY) * 100 : 0;
-                
-                // 상하이 시세 USD 환산 (CNY/kg -> USD/oz)
-                // 환산식: (상하이CNY / 위안달러환율) / TROY_OZ_TO_KG
-                const shanghaiUsdEquivalent = (usdToCny > 0 && TROY_OZ_TO_KG > 0) ? (shanghaiCNY / usdToCny / TROY_OZ_TO_KG) : 0;
+
+                // NEW: 상하이 시세 USD 환산 (CNY/kg -> USD/oz)
+                // (CNY/kg / (CNY/USD)) / 32.15... = USD/oz
+                const shanghaiUsdOz = usdToCny > 0 ? (shanghaiCNY / usdToCny) / TROY_OZ_TO_KG : 0;
 
                 const priceContrib = (usd - BASE_USD_PRICE) * BASE_EXCH_RATE * TROY_OZ_TO_KG;
                 const exchContrib = (exch - BASE_EXCH_RATE) * BASE_USD_PRICE * TROY_OZ_TO_KG;
@@ -1337,12 +1636,13 @@
                 return {                      
                     actualRate, theoreticalKrwPrice, actualPrice: domesticPrice,
                     kPremium, kPremiumPercent, 
-                    sPremiumPercent, theoreticalShanghaiCNY, shanghaiUsdEquivalent, // 환산 가격 추가 반환
+                    sPremiumPercent, theoreticalShanghaiCNY, 
                     priceContrib, exchContrib, residualContrib, totalProfit,
                     exchPerc: (exchContrib / absProfit) * 100,
                     pricePerc: (priceContrib / absProfit) * 100,
                     residPerc: (residualContrib / absProfit) * 100,
-                    priceChangeRate, exchChangeRate // 추가된 값 반환
+                    priceChangeRate, exchChangeRate,
+                    shanghaiUsdOz // 추가된 환산 값 반환
                 };
             }, [silverAnalysisInputs, exchangeRates]);
 
@@ -1559,10 +1859,9 @@
                                                 />
                                             ) : (
                                                 <AppleStatBox
-                                                      label="국제 이론가"
-                                                      value={`${(bitcoinProfitData.theoreticalKrwPrice/10000).toFixed(0)}만`}
-                                                      subValue="원"
-                                                      valueClassName="text-slate-900 dark:text-white"
+                                                      label="수익률"
+                                                      value={`${bitcoinProfitData.profitRate >= 0 ? '+' : ''}${bitcoinProfitData.profitRate.toFixed(1)}%`}
+                                                      valueClassName={bitcoinProfitData.profitRate >= 0 ? 'text-stat-up' : 'text-stat-down'}
                                                 />
                                             )}
                                         </div>
@@ -1596,7 +1895,7 @@
                                                 </>
                                             )}
                                         </div>
-                                        <div className="bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-2xl p-3 relative overflow-hidden">
+                                        <div className="bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-2xl p-3 relative overflow-hidden flex flex-col justify-between">
                                             {analysisMode === 'silver' ? (
                                                 <>
                                                     <AppleStatBox
@@ -1604,9 +1903,8 @@
                                                           value={`${silverProfitData.sPremiumPercent >= 0 ? '+' : ''}${silverProfitData.sPremiumPercent.toFixed(1)}%`}
                                                           valueClassName="text-red-600 dark:text-red-400"
                                                     />
-                                                    {/* 상하이 시세 환산 표시 수정: 소수 첫째 자리, 단위 생략 */}
-                                                    <div className="text-[10px] text-red-500/80 dark:text-red-400/80 font-bold mt-1 tracking-tight">
-                                                        환산: ${silverProfitData.shanghaiUsdEquivalent.toFixed(1)}
+                                                    <div className="text-[10px] text-red-500/70 dark:text-red-400/70 font-bold mt-1 tracking-tight">
+                                                        환산: ${silverProfitData.shanghaiUsdOz.toFixed(1)}
                                                     </div>
                                                 </>
                                             ) : (
@@ -1778,8 +2076,48 @@
                                 )}
                             </div>
                         </AppleCard>
-                        {/* 4. Heatmap (Adjusted Width) */}
-                        <AppleCard className="lg:col-span-8 h-96 min-h-[400px] !p-0 overflow-hidden"><TradingViewHeatmap theme={isDark ? 'dark' : 'light'} /></AppleCard>
+                        
+                        {/* 4. Heatmap & News (Tabbed Interface) */}
+                        {/* Height Adjustment: min-h increased for better mobile experience */}
+                        <AppleCard className="lg:col-span-8 h-[500px] sm:h-96 min-h-[450px] sm:min-h-[400px] !p-0 overflow-hidden">
+                            {/* NEW WRAPPER: Flex Column & Full Height to ensure layout fill */}
+                            <div className="flex flex-col h-full w-full">
+                                {/* Header & Controls Area - Responsive Padding */}
+                                <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 dark:border-white/5 bg-white dark:bg-[#1C1C1E] flex-shrink-0">
+                                    <div>
+                                        <h3 className="text-lg font-bold text-slate-900 force-dark-white tracking-tight leading-none">시장 동향 & 뉴스</h3>
+                                        <span className="text-xs font-semibold text-gray-400 dark:text-gray-400 mt-1 block">글로벌 마켓 히트맵 및 구글 뉴스</span>
+                                    </div>
+                                    {/* Tab Switcher */}
+                                    <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] p-1 rounded-lg flex gap-1 self-start sm:self-auto w-full sm:w-auto">
+                                        <button 
+                                            onClick={() => setMarketInfoTab('heatmap')} 
+                                            className={`flex-1 sm:flex-none justify-center px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 ${marketInfoTab === 'heatmap' ? 'bg-white dark:bg-[#636366] text-black force-dark-white shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
+                                        >
+                                            <i className="fa-solid fa-table-cells"></i>
+                                            <span>시장 맵</span>
+                                        </button>
+                                        <button 
+                                            onClick={() => setMarketInfoTab('news')} 
+                                            className={`flex-1 sm:flex-none justify-center px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 ${marketInfoTab === 'news' ? 'bg-white dark:bg-[#636366] text-black force-dark-white shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
+                                        >
+                                            <i className="fa-brands fa-google"></i>
+                                            <span>구글 뉴스</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                {/* Content Area - flex-1 expands to fill remaining height */}
+                                <div className="flex-1 w-full relative bg-white dark:bg-[#1C1C1E] min-h-0">
+                                    {marketInfoTab === 'heatmap' ? (
+                                        <TradingViewHeatmap theme={isDark ? 'dark' : 'light'} />
+                                    ) : (
+                                        // UPDATED: Use GoogleNewsWidget instead of Timeline
+                                        <GoogleNewsWidget isDark={isDark} />
+                                    )}
+                                </div>
+                            </div>
+                        </AppleCard>
                     </div>
                 </div>
             );
