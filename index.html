@@ -136,7 +136,7 @@
             "🌅 아침 필수 체크 (Morning Routine)": [
                 { name: "미국 시장 점검", url: "https://kr.investing.com/portfolio/?portfolioID=OT4%2BZDRrZTFjM2thYTthYg%3D%3D", icon: "fa-list-check", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" },
                 { name: "Finviz (미국 맵)", url: "https://finviz.com/map.ashx", icon: "fa-map", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" },
-                { name: "글로벌마켓캡", url: "https://companiesmarketcap.com/", icon: "fa-chart-pie", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300" },
+                { name: "글로벌마켓캡", url: "https://companiesmarketcap.com/assets-by-market-cap", icon: "fa-chart-pie", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300" },
                 { name: "필라델피아 반도체", url: "https://kr.investing.com/indices/phlx-semiconductor", icon: "fa-microchip", color: "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300" },
                 { name: "공포 탐욕 지수 (CNN)", url: "https://edition.cnn.com/markets/fear-and-greed", icon: "fa-gauge-high", color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300" },
                 { name: "크립토 지표 (MVRV)", url: "https://www.bitcoinmagazinepro.com/charts/mvrv-zscore/", icon: "fa-chart-area", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300" },
@@ -1378,8 +1378,8 @@
             // Dashboard Chart Tab State
             const [dashChartTab, setDashChartTab] = useState('price'); // 'price', 'shanghai', 'ratio', 'btc'
             
-            // NEW: Market Info Tab State (Heatmap vs News)
-            const [marketInfoTab, setMarketInfoTab] = useState('heatmap'); // 'heatmap', 'news'
+            // NEW: Market Info Tab State (Heatmap vs News) - DEFAULT CHANGED TO 'news'
+            const [marketInfoTab, setMarketInfoTab] = useState('news'); // 'news', 'heatmap'
 
             const [exchangeRates, setExchangeRates] = useState(DEFAULT_EXCHANGE_RATES);
             const [lastUpdated, setLastUpdated] = useState('연결 중...');
@@ -2135,21 +2135,21 @@
                                         <h3 className="text-lg font-bold text-slate-900 force-dark-white tracking-tight leading-none">시장 동향 & 뉴스</h3>
                                         <span className="text-xs font-semibold text-gray-400 dark:text-gray-400 mt-1 block">글로벌 마켓 히트맵 및 구글 뉴스</span>
                                     </div>
-                                    {/* Tab Switcher */}
+                                    {/* Tab Switcher - Reordered: Google News / Market Map */}
                                     <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] p-1 rounded-lg flex gap-1 self-start sm:self-auto w-full sm:w-auto">
-                                        <button 
-                                            onClick={() => setMarketInfoTab('heatmap')} 
-                                            className={`flex-1 sm:flex-none justify-center px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 ${marketInfoTab === 'heatmap' ? 'bg-white dark:bg-[#636366] text-black force-dark-white shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
-                                        >
-                                            <i className="fa-solid fa-table-cells"></i>
-                                            <span>시장 맵</span>
-                                        </button>
                                         <button 
                                             onClick={() => setMarketInfoTab('news')} 
                                             className={`flex-1 sm:flex-none justify-center px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 ${marketInfoTab === 'news' ? 'bg-white dark:bg-[#636366] text-black force-dark-white shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
                                         >
                                             <i className="fa-brands fa-google"></i>
                                             <span>구글 뉴스</span>
+                                        </button>
+                                        <button 
+                                            onClick={() => setMarketInfoTab('heatmap')} 
+                                            className={`flex-1 sm:flex-none justify-center px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 ${marketInfoTab === 'heatmap' ? 'bg-white dark:bg-[#636366] text-black force-dark-white shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
+                                        >
+                                            <i className="fa-solid fa-table-cells"></i>
+                                            <span>시장 맵</span>
                                         </button>
                                     </div>
                                 </div>
