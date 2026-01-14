@@ -26,9 +26,12 @@
         
         /* --- Base & Reset --- */
         body { font-family: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; letter-spacing: -0.01em; overflow-x: hidden; }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-thumb { background: #C1C1C5; border-radius: 4px; }
-        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        
+        /* [수정됨] 스크롤바 가시성 개선 */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-thumb { background: #A1A1AA; border-radius: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        .dark ::-webkit-scrollbar-thumb { background: #4B5563; }
         
         /* --- Animations --- */
         .animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -142,7 +145,8 @@
         const BASE_EXCH_RATE = 1080.0;
         const DEFAULT_EXCHANGE_RATES = { 'KRW': { krw: 1 }, 'USD': { krw: 1380 }, 'JPY': { krw: 8.90 }, 'EUR': { krw: 1480 }, 'CNY': { krw: 190 }, 'ARS': { krw: 1.35 }, 'INR': { krw: 16.5 } };
         const DEFAULT_FAVORITES = [
-            { code: "005930", name: "삼성전자" }, { code: "005380", name: "현대차" }, { code: "237690", name: "에스티팜" }, { code: "445680", name: "큐리옥스" }
+            { code: "005930", name: "삼성전자" }, { code: "005380", name: "현대차" }, { code: "237690", name: "에스티팜" }, { code: "445680", name: "큐리옥스" },
+            { code: "160580", name: "TIGER 구리실물" }, { code: "300720", name: "한일시멘트" }, { code: "MRNA", name: "모더나" }, { code: "PFE", name: "화이자" }
         ];
         const DEFAULT_ROUTINE_LINKS = {
             "🌅 아침 필수 체크 (Morning Routine)": [
@@ -314,14 +318,15 @@
         // --- Google News RSS Widget with Search, Tabs, Retry & Refresh ---
         const GoogleNewsWidget = memo(({ isDark }) => {
             const [news, setNews] = useState([]);
+            const [visibleCount, setVisibleCount] = useState(20); // 화면에 보여줄 뉴스 개수 관리
             const [loading, setLoading] = useState(false);
             const [errorMsg, setErrorMsg] = useState(null);
             const [lastUpdated, setLastUpdated] = useState(null);
             const [keywords, setKeywords] = useState(() => {
-                const defaultKeywords = ['주요뉴스', '큐리옥스바이오시스템즈', '에스티팜', '은', '경제', '비트코인'];
+                const defaultKeywords = ['경제', '주요뉴스', '큐리옥스바이오시스템즈', '에스티팜', '은', '비트코인'];
                 try { const saved = localStorage.getItem('invNav_newsKeywords'); return saved ? JSON.parse(saved) : defaultKeywords; } catch { return defaultKeywords; }
             });
-            const [activeKeyword, setActiveKeyword] = useState('주요뉴스');
+            const [activeKeyword, setActiveKeyword] = useState('경제');
             const [isAdding, setIsAdding] = useState(false);
             const [newKeywordInput, setNewKeywordInput] = useState('');
             
@@ -334,7 +339,12 @@
                     if (query === '은') searchQuery = '은 시세 OR 은 선물 OR 국제 은값 OR 실버바 OR silver';
                     else if (query === '금') searchQuery = '금 시세 OR 국제 금값 OR 골드바';
                     else if (query === '비트코인') searchQuery = '비트코인 OR 암호화폐 OR BTC';
-                    let rssUrl = searchQuery === '주요뉴스' ? 'https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko' : `https://news.google.com/rss/search?q=${encodeURIComponent(searchQuery)}&hl=ko&gl=KR&ceid=KR:ko`;
+                    
+                    let rssUrl;
+                    if (searchQuery === '주요뉴스') rssUrl = 'https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko';
+                    else if (searchQuery === '경제') rssUrl = 'https://news.google.com/rss/topics/CAAqIggKIhxDQkFTRHdvSkwyMHZNR2RtY0hNekVnSmxiaWdBUAE?hl=ko&gl=KR&ceid=KR%3Ako';
+                    else rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(searchQuery)}&hl=ko&gl=KR&ceid=KR:ko`;
+                    
                     let xmlText = null;
                     try { const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}&timestamp=${new Date().getTime()}`; const response = await fetch(proxyUrl); if (!response.ok) throw new Error('Primary proxy failed'); const data = await response.json(); if (data.contents) xmlText = data.contents; else throw new Error('No content from primary');
                     } catch (e1) { try { const proxyUrl2 = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(rssUrl)}`; const response2 = await fetch(proxyUrl2); if (!response2.ok) throw new Error('Backup proxy failed'); xmlText = await response2.text(); } catch (e2) { throw new Error("뉴스 연결에 실패했습니다. 잠시 후 새로고침 해주세요."); } }
@@ -344,7 +354,10 @@
                             const title = item.querySelector("title")?.textContent || ""; const cleanTitle = title.split(" - ")[0]; const source = item.querySelector("source")?.textContent || title.split(" - ").pop() || "Google News"; const pubDateStr = item.querySelector("pubDate")?.textContent || ""; const dateObj = new Date(pubDateStr);
                             let timeAgo = ""; try { const now = new Date(); const diffMs = now - dateObj; const diffMins = Math.floor(diffMs / 60000); const diffHrs = Math.floor(diffMins / 60); if (diffMins < 1) timeAgo = "방금 전"; else if (diffMins < 60) timeAgo = `${diffMins}분 전`; else if (diffHrs < 24) timeAgo = `${diffHrs}시간 전`; else timeAgo = `${dateObj.getMonth()+1}/${dateObj.getDate()}`; } catch { timeAgo = "최신"; }
                             return { title: cleanTitle, link: item.querySelector("link")?.textContent || "", source: source, timeAgo: timeAgo, pubDate: dateObj, guid: item.querySelector("guid")?.textContent || Math.random().toString() };
-                        }); items.sort((a, b) => b.pubDate - a.pubDate); setNews(items.slice(0, 20)); setLastUpdated(new Date());
+                        }); items.sort((a, b) => b.pubDate - a.pubDate); 
+                        setNews(items); 
+                        setVisibleCount(20);
+                        setLastUpdated(new Date());
                     }
                 } catch (error) { setNews([]); setErrorMsg(error.message || "뉴스를 불러오는데 실패했습니다."); } finally { setLoading(false); }
             }, []);
@@ -354,7 +367,15 @@
             const handleAddKeyword = () => { if (newKeywordInput.trim() && !keywords.includes(newKeywordInput.trim())) { const next = [...keywords, newKeywordInput.trim()]; setKeywords(next); setActiveKeyword(newKeywordInput.trim()); setNewKeywordInput(''); setIsAdding(false); } };
             const handleRemoveKeyword = (e, k) => { e.stopPropagation(); const next = keywords.filter(w => w !== k); setKeywords(next); if (activeKeyword === k && next.length > 0) setActiveKeyword(next[0]); };
             
-            // Re-designed Quick Links Data
+            const handleScroll = (e) => {
+                const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+                if (scrollHeight - scrollTop <= clientHeight + 100) { // 감도 조정
+                    if (visibleCount < news.length) {
+                        setVisibleCount(prev => Math.min(prev + 20, news.length));
+                    }
+                }
+            };
+
             const quickLinks = [
                 {t:'Npay 속보', u:'https://stock.naver.com/news/flashnews', i:'fa-bolt', c:'text-yellow-600 dark:text-yellow-400', bg:'bg-yellow-100 dark:bg-yellow-900/30'},
                 {t:'Npay 국내', u:'https://stock.naver.com/market/stock/kr', i:'fa-arrow-trend-up', c:'text-red-600 dark:text-red-400', bg:'bg-red-100 dark:bg-red-900/30'},
@@ -365,8 +386,10 @@
             ];
 
             return (
-                <div className="flex flex-col h-full bg-white dark:bg-[#1C1C1E] relative">
-                    {/* Redesigned Link Bar - Responsive Auto-layout */}
+                // [수정] h-full -> absolute inset-0 으로 변경하여 스크롤 영역 강제 확보 및 스크롤바 가시성 확보
+                <div className="absolute inset-0 overflow-y-auto overscroll-contain bg-white dark:bg-[#1C1C1E]" onScroll={handleScroll}>
+                    
+                    {/* 1. Link Bar (이제 스크롤 시 위로 올라감) */}
                     <div className="px-4 pt-4 pb-2">
                         <div className="flex flex-wrap gap-2 w-full">
                             {quickLinks.map((l, i) => ( 
@@ -381,16 +404,52 @@
                         </div>
                     </div>
 
-                    {/* Keywords - Wrap layout to avoid scrolling */}
-                    <div className="flex flex-wrap items-center gap-2 p-3 border-b border-gray-100 dark:border-white/5 bg-white dark:bg-[#1C1C1E] sticky top-0 z-10">
+                    {/* 2. Keywords Bar (Sticky Top 적용 - 스크롤해도 상단에 고정됨) */}
+                    <div className="sticky top-0 z-30 bg-white/95 dark:bg-[#1C1C1E]/95 backdrop-blur-md flex flex-wrap items-center gap-2 p-3 border-y border-gray-100 dark:border-white/5 shadow-sm">
                          <button onClick={() => fetchNews(activeKeyword)} disabled={loading} className={`w-8 h-8 rounded-full bg-gray-100 dark:bg-[#2C2C2E] text-gray-500 hover:text-indigo-600 flex items-center justify-center transition-all flex-shrink-0 ${loading ? 'animate-spin text-indigo-500' : ''}`}><i className="fa-solid fa-arrows-rotate text-xs"></i></button>
                         <div className="w-[1px] h-4 bg-gray-300 dark:bg-gray-700 mx-1 hidden sm:block"></div>
-                        {keywords.map(k => ( <button key={k} onClick={() => setActiveKeyword(k)} className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 select-none ${activeKeyword === k ? 'bg-slate-800 text-white dark:bg-white dark:text-black shadow-md ring-2 ring-offset-1 ring-slate-800 dark:ring-white dark:ring-offset-black' : 'bg-slate-100 text-slate-500 dark:bg-[#2C2C2E] dark:text-gray-400 hover:bg-slate-200 dark:hover:bg-[#3A3A3C]'}`}> <span className="whitespace-nowrap">{k}</span> {k !== '주요뉴스' && activeKeyword === k && ( <span onClick={(e) => handleRemoveKeyword(e, k)} className="w-4 h-4 flex items-center justify-center hover:bg-white/20 rounded-full transition-colors ml-0.5"><i className="fa-solid fa-xmark text-[10px]"></i></span> )} </button> ))}
+                        {keywords.map(k => ( <button key={k} onClick={() => setActiveKeyword(k)} className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 select-none ${activeKeyword === k ? 'bg-slate-800 text-white dark:bg-white dark:text-black shadow-md ring-2 ring-offset-1 ring-slate-800 dark:ring-white dark:ring-offset-black' : 'bg-slate-100 text-slate-500 dark:bg-[#2C2C2E] dark:text-gray-400 hover:bg-slate-200 dark:hover:bg-[#3A3A3C]'}`}> <span className="whitespace-nowrap">{k}</span> {k !== '경제' && k !== '주요뉴스' && activeKeyword === k && ( <span onClick={(e) => handleRemoveKeyword(e, k)} className="w-4 h-4 flex items-center justify-center hover:bg-white/20 rounded-full transition-colors ml-0.5"><i className="fa-solid fa-xmark text-[10px]"></i></span> )} </button> ))}
                         {isAdding ? ( <div className="flex items-center gap-1 bg-indigo-50 dark:bg-indigo-900/30 rounded-full pl-2 pr-1 py-0.5 border border-indigo-200 dark:border-indigo-700 animate-fade-in flex-shrink-0"> <input type="text" className="w-20 bg-transparent text-xs font-bold text-indigo-700 dark:text-indigo-300 outline-none placeholder-indigo-300" placeholder="키워드" value={newKeywordInput} onChange={(e) => setNewKeywordInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddKeyword()} autoFocus /> <button onClick={handleAddKeyword} className="w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center active:scale-95 transition-transform"><i className="fa-solid fa-check text-[10px]"></i></button> <button onClick={() => setIsAdding(false)} className="w-6 h-6 rounded-full bg-gray-300 dark:bg-gray-600 text-white flex items-center justify-center active:scale-95 transition-transform"><i className="fa-solid fa-xmark text-[10px]"></i></button> </div> ) : ( <button onClick={() => setIsAdding(true)} className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-100 dark:bg-[#2C2C2E] text-slate-400 dark:text-gray-500 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-[#3A3A3C] transition active:scale-95"><i className="fa-solid fa-plus text-xs"></i></button> )}
                     </div>
                     
-                    <div className="flex-1 overflow-y-auto p-0 scrollbar-hide relative overscroll-contain">
-                        {loading && news.length === 0 ? ( <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 gap-2"><i className="fa-solid fa-circle-notch fa-spin text-2xl text-[#0071E3]"></i><span className="text-xs font-bold">뉴스 불러오는 중...</span></div> ) : errorMsg ? ( <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 gap-3 p-6 text-center"> <div className="w-10 h-10 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center"><i className="fa-solid fa-triangle-exclamation text-xl text-red-400"></i></div> <div><p className="text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">{errorMsg}</p><p className="text-[10px] text-gray-400">네트워크 상태를 확인해주세요.</p></div> <button onClick={() => fetchNews(activeKeyword)} className="px-4 py-2 bg-slate-800 dark:bg-slate-700 text-white rounded-lg text-xs font-bold hover:bg-slate-700 transition flex items-center gap-2"><i className="fa-solid fa-rotate-right"></i> 다시 시도</button> </div> ) : news.length > 0 ? ( <div className="divide-y divide-gray-100 dark:divide-white/5"> {news.map((item, idx) => ( <a key={item.guid + idx} href={item.link} target="_blank" rel="noopener noreferrer" className="block p-3 sm:p-4 hover:bg-gray-50 dark:hover:bg-white/5 transition group active:bg-gray-100 dark:active:bg-white/10"> <div className="flex justify-between items-start gap-3"> <div className="flex-1 min-w-0"> <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-snug group-hover:text-[#0071E3] transition-colors mb-1.5 break-words line-clamp-2">{item.title}</h4> <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-medium text-gray-400 dark:text-gray-500"> <span className="text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-[#2C2C2E] px-1.5 py-0.5 rounded max-w-[120px] truncate">{item.source}</span> <span className="text-gray-300">•</span> <span className="whitespace-nowrap text-orange-500 dark:text-orange-400">{item.timeAgo}</span> </div> </div> {idx < 3 && ( <span className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-red-50 text-[9px] font-bold text-red-500 dark:bg-red-500/20 dark:text-red-400 mt-0.5">N</span> )} </div> </a> ))} <div className="p-4 text-center pb-8 sm:pb-4"> <a href={`https://news.google.com/search?q=${encodeURIComponent(activeKeyword)}&hl=ko&gl=KR&ceid=KR:ko`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center px-4 py-2 rounded-full bg-gray-100 dark:bg-[#2C2C2E] text-xs font-bold text-gray-500 hover:text-[#0071E3] transition active:scale-95">Google 뉴스에서 더보기 <i className="fa-solid fa-arrow-right ml-2"></i></a> </div> </div> ) : ( <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 gap-2"><i className="fa-regular fa-newspaper text-3xl opacity-20"></i><span className="text-xs font-bold">관련 뉴스가 없습니다.</span></div> )}
+                    {/* 3. News Content Area */}
+                    <div className="min-h-[200px]">
+                        {loading && news.length === 0 ? ( 
+                            <div className="py-20 flex flex-col items-center justify-center text-gray-400 gap-2">
+                                <i className="fa-solid fa-circle-notch fa-spin text-2xl text-[#0071E3]"></i><span className="text-xs font-bold">뉴스 불러오는 중...</span>
+                            </div> 
+                        ) : errorMsg ? ( 
+                            <div className="py-20 flex flex-col items-center justify-center text-gray-400 gap-3 p-6 text-center"> 
+                                <div className="w-10 h-10 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center"><i className="fa-solid fa-triangle-exclamation text-xl text-red-400"></i></div> 
+                                <div><p className="text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">{errorMsg}</p><p className="text-[10px] text-gray-400">네트워크 상태를 확인해주세요.</p></div> 
+                                <button onClick={() => fetchNews(activeKeyword)} className="px-4 py-2 bg-slate-800 dark:bg-slate-700 text-white rounded-lg text-xs font-bold hover:bg-slate-700 transition flex items-center gap-2"><i className="fa-solid fa-rotate-right"></i> 다시 시도</button> 
+                            </div> 
+                        ) : news.length > 0 ? ( 
+                            <div className="divide-y divide-gray-100 dark:divide-white/5 pb-10"> 
+                                {news.slice(0, visibleCount).map((item, idx) => ( 
+                                    <a key={item.guid + idx} href={item.link} target="_blank" rel="noopener noreferrer" className="block p-3 sm:p-4 hover:bg-gray-50 dark:hover:bg-white/5 transition group active:bg-gray-100 dark:active:bg-white/10"> 
+                                        <div className="flex justify-between items-start gap-3"> 
+                                            <div className="flex-1 min-w-0"> 
+                                                <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-snug group-hover:text-[#0071E3] transition-colors mb-1.5 break-words line-clamp-2">{item.title}</h4> 
+                                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-medium text-gray-400 dark:text-gray-500"> 
+                                                    <span className="text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-[#2C2C2E] px-1.5 py-0.5 rounded max-w-[120px] truncate">{item.source}</span> 
+                                                    <span className="text-gray-300">•</span> 
+                                                    <span className="whitespace-nowrap text-orange-500 dark:text-orange-400">{item.timeAgo}</span> 
+                                                </div> 
+                                            </div> 
+                                            {idx < 3 && ( <span className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-red-50 text-[9px] font-bold text-red-500 dark:bg-red-500/20 dark:text-red-400 mt-0.5">N</span> )} 
+                                        </div> 
+                                    </a> 
+                                ))} 
+                                <div className="p-4 text-center"> 
+                                    <a href={`https://news.google.com/search?q=${encodeURIComponent(activeKeyword)}&hl=ko&gl=KR&ceid=KR:ko`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center px-4 py-2 rounded-full bg-gray-100 dark:bg-[#2C2C2E] text-xs font-bold text-gray-500 hover:text-[#0071E3] transition active:scale-95">Google 뉴스에서 더보기 <i className="fa-solid fa-arrow-right ml-2"></i></a> 
+                                </div> 
+                            </div> 
+                        ) : ( 
+                            <div className="py-20 flex flex-col items-center justify-center text-gray-400 gap-2">
+                                <i className="fa-regular fa-newspaper text-3xl opacity-20"></i><span className="text-xs font-bold">관련 뉴스가 없습니다.</span>
+                            </div> 
+                        )}
                     </div>
                 </div>
             );
@@ -674,7 +733,7 @@
                     return { currentBtcUsd: '90,000', currentDomesticPrice: '13,500', holdingQty: '', avgPrice: '13,000', avgExch: '1,331' }; 
                 }
             });
-            const [favorites, setFavorites] = useState(() => { try { return JSON.parse(localStorage.getItem('invNav_favorites')) || DEFAULT_FAVORITES; } catch { return DEFAULT_FAVORITES; } });
+            const [favorites, setFavorites] = useState(() => { try { return JSON.parse(localStorage.getItem('invNav_favorites_v2')) || DEFAULT_FAVORITES; } catch { return DEFAULT_FAVORITES; } });
             const [routineLinks, setRoutineLinks] = useState(() => { try { return JSON.parse(localStorage.getItem('invNav_routineLinks_v2')) || DEFAULT_ROUTINE_LINKS; } catch { return DEFAULT_ROUTINE_LINKS; } });
             const [blogInsightLinks, setBlogInsightLinks] = useState(() => { try { return JSON.parse(localStorage.getItem('invNav_blogLinks_v2')) || DEFAULT_BLOG_LINKS; } catch { return DEFAULT_BLOG_LINKS; } });
             
@@ -690,7 +749,7 @@
                 localStorage.setItem('invNav_btcInputs_v6', JSON.stringify(toSave)); 
             }, [bitcoinAnalysisInputs]);
 
-            useEffect(() => { localStorage.setItem('invNav_favorites', JSON.stringify(favorites)); }, [favorites]);
+            useEffect(() => { localStorage.setItem('invNav_favorites_v2', JSON.stringify(favorites)); }, [favorites]);
             useEffect(() => { localStorage.setItem('invNav_routineLinks_v2', JSON.stringify(routineLinks)); }, [routineLinks]);
             useEffect(() => { localStorage.setItem('invNav_blogLinks_v2', JSON.stringify(blogInsightLinks)); }, [blogInsightLinks]);
             
@@ -880,15 +939,18 @@
                                         </div>
                                     </div>
                                     <div className="flex-1 flex flex-col min-h-0">
-                                        <div className="flex gap-2 mb-3 overflow-x-auto pb-1 scrollbar-hide">
-                                            {analysisMode === 'silver' ? ['price:은 시세(Silver)', 'shanghai:상하이/국내 시세', 'gold:금 시세(Gold)', 'ratio:금은비(Ratio)'].map(t=>{const [k,l]=t.split(':'); return <button key={k} onClick={()=>setDashChartTab(k)} className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab===k?'bg-[#0071E3] text-white shadow-md':'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}>{l}</button>}) 
-                                            : ['btc:비트코인(BTC)', 'btc_link:주요 거래소 시세'].map(t=>{const [k,l]=t.split(':'); return <button key={k} onClick={()=>setDashChartTab(k)} className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab===k?'bg-[#0071E3] text-white shadow-md':'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}>{l}</button>})}
+                                        {/* 탭 버튼들을 flex-1로 설정하여 너비를 균등하게 채움 */}
+                                        <div className="flex gap-2 mb-3 w-full overflow-x-auto scrollbar-hide">
+                                            {analysisMode === 'silver' ? ['price:은 시세(Silver)', 'shanghai:상하이/국내 시세', 'gold:금 시세(Gold)', 'ratio:금은비(Ratio)'].map(t=>{const [k,l]=t.split(':'); return <button key={k} onClick={()=>setDashChartTab(k)} className={`flex-1 min-w-fit px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab===k?'bg-[#0071E3] text-white shadow-md':'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}>{l}</button>}) 
+                                            : ['btc:바이낸스($)', 'btc_upbit:업비트(₩)', 'btc_link:거래소 바로가기'].map(t=>{const [k,l]=t.split(':'); return <button key={k} onClick={()=>setDashChartTab(k)} className={`flex-1 min-w-fit px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab===k?'bg-[#0071E3] text-white shadow-md':'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}>{l}</button>})}
                                         </div>
                                         <div className="h-[400px] rounded-2xl overflow-hidden border border-slate-100 dark:border-white/5 relative bg-white dark:bg-[#1C1C1E]">
                                             {analysisMode === 'silver' ? (
                                                 dashChartTab === 'price' ? <MiniChart symbol="FX_IDC:XAGUSD" theme={isDark?'dark':'light'}/> : dashChartTab === 'gold' ? <MiniChart symbol="TVC:GOLD" theme={isDark?'dark':'light'}/> : dashChartTab === 'shanghai' ? <LinkPanel title="주요 시세 확인처" subTitle={`상하이 은시세 (SMM)\n국내 매도시세 (순수한금)`} icon="fa-magnifying-glass-chart" colorClass="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400" links={[{name:"🇨🇳 상하이 은시세 (SMM)", url:"https://www.metal.com/en/prices/201102250392"}, {name:"🇰🇷 국내 매도시세 (순수한금)", url:"https://blog.naver.com/wolfkickbox"}]} /> : <MiniChart symbol="TVC:GOLDSILVER" theme={isDark?'dark':'light'}/>
                                             ) : (
-                                                dashChartTab === 'btc' ? <MiniChart symbol="BINANCE:BTCUSDT" theme={isDark?'dark':'light'}/> : <LinkPanel title="가상화폐 시세 확인" subTitle={`국내외 거래소 시세 및\n김치 프리미엄 분석`} icon="fa-bitcoin" colorClass="bg-orange-100 dark:bg-orange-900/30 text-orange-500" links={[{name:"🇰🇷 업비트 (Upbit)", url:"https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC"}, {name:"🌍 바이낸스 (Binance)", url:"https://www.binance.com/en/trade/BTC_USDT?type=spot"}, {name:"📊 김프가 (Kimpga)", url:"https://kimpga.com/"}]} />
+                                                dashChartTab === 'btc' ? <MiniChart symbol="BINANCE:BTCUSDT" theme={isDark?'dark':'light'}/> : 
+                                                dashChartTab === 'btc_upbit' ? <MiniChart symbol="UPBIT:BTCKRW" theme={isDark?'dark':'light'}/> :
+                                                <LinkPanel title="가상화폐 시세 확인" subTitle={`국내외 거래소 시세 및\n김치 프리미엄 분석`} icon="fa-bitcoin" colorClass="bg-orange-100 dark:bg-orange-900/30 text-orange-500" links={[{name:"🇰🇷 업비트 (Upbit)", url:"https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC"}, {name:"🌍 바이낸스 (Binance)", url:"https://www.binance.com/en/trade/BTC_USDT?type=spot"}, {name:"📊 김프가 (Kimpga)", url:"https://kimpga.com/"}]} />
                                             )}
                                         </div>
                                     </div>
