@@ -146,7 +146,8 @@
         const DEFAULT_EXCHANGE_RATES = { 'KRW': { krw: 1 }, 'USD': { krw: 1380 }, 'JPY': { krw: 8.90 }, 'EUR': { krw: 1480 }, 'CNY': { krw: 190 }, 'ARS': { krw: 1.35 }, 'INR': { krw: 16.5 } };
         const DEFAULT_FAVORITES = [
             { code: "005930", name: "삼성전자" }, { code: "005380", name: "현대차" }, { code: "237690", name: "에스티팜" }, { code: "445680", name: "큐리옥스" },
-            { code: "160580", name: "TIGER 구리실물" }, { code: "300720", name: "한일시멘트" }, { code: "MRNA", name: "모더나" }, { code: "PFE", name: "화이자" }
+            { code: "160580", name: "TIGER 구리실물" }, { code: "300720", name: "한일시멘트" }, { code: "MRNA", name: "모더나" }, { code: "PFE", name: "화이자" },
+            { code: "IONS", name: "아이오니스" }, { code: "TSLA", name: "테슬라" }
         ];
         const DEFAULT_ROUTINE_LINKS = {
             "🌅 아침 필수 체크 (Morning Routine)": [
@@ -323,9 +324,11 @@
             const [errorMsg, setErrorMsg] = useState(null);
             const [lastUpdated, setLastUpdated] = useState(null);
             const [keywords, setKeywords] = useState(() => {
+                // [원상복구] 기본 키워드 순서: '경제'를 맨 앞으로 이동
                 const defaultKeywords = ['경제', '주요뉴스', '큐리옥스바이오시스템즈', '에스티팜', '은', '비트코인'];
                 try { const saved = localStorage.getItem('invNav_newsKeywords'); return saved ? JSON.parse(saved) : defaultKeywords; } catch { return defaultKeywords; }
             });
+            // [원상복구] 초기 활성 키워드를 '경제'로 변경
             const [activeKeyword, setActiveKeyword] = useState('경제');
             const [isAdding, setIsAdding] = useState(false);
             const [newKeywordInput, setNewKeywordInput] = useState('');
@@ -467,6 +470,108 @@
                 containerDiv.appendChild(script); ref.current.appendChild(containerDiv);
             }, [theme, symbol]);
             return <div ref={ref} className="h-full w-full"></div>;
+        });
+
+        // --- IPO Calendar Widget ---
+        const IpoCalendarWidget = memo(({ isDark }) => {
+            const [viewMode, setViewMode] = useState('calendar'); // 'calendar' (월간) | 'list' (주간/목록) - 초기값을 달력으로 변경
+            const [calType, setCalType] = useState('all'); // 'all' (전체) | 'subscription' | 'listing'
+            
+            // Google Calendar Embed URL Generator
+            const getUrl = () => {
+                const baseUrl = "https://calendar.google.com/calendar/embed";
+                const subCal = "gjbox0301@gmail.com"; // 청약
+                const listCal = "6ece61bb8be35674d49e32ddd31247808effcc2c6001235f154b8e9e28fab902@group.calendar.google.com"; // 상장
+                
+                let params = `ctz=Asia%2FSeoul&showTitle=0&showPrint=0&showCalendars=0&showTz=0`;
+                
+                if (viewMode === 'list') {
+                    // 리스트 모드: 청약 + 상장 통합, Agenda 뷰 사용
+                    return `${baseUrl}?${params}&mode=AGENDA&src=${encodeURIComponent(subCal)}&color=%233F51B5&src=${encodeURIComponent(listCal)}&color=%238E24AA`;
+                } else {
+                    // 캘린더 모드: 전체(통합) 또는 개별 선택, Month 뷰 사용
+                    let url = `${baseUrl}?${params}&mode=MONTH`;
+                    
+                    if (calType === 'all') {
+                        // [수정됨] 전체 보기: 두 캘린더 소스를 모두 추가
+                        url += `&src=${encodeURIComponent(subCal)}&color=%233F51B5&src=${encodeURIComponent(listCal)}&color=%238E24AA`;
+                    } else {
+                        // 개별 보기
+                        const src = calType === 'subscription' ? subCal : listCal;
+                        const color = calType === 'subscription' ? '%233F51B5' : '%238E24AA';
+                        url += `&src=${encodeURIComponent(src)}&color=${color}`;
+                    }
+                    return url;
+                }
+            };
+
+            return (
+                <div className="flex flex-col h-full w-full bg-white dark:bg-[#1C1C1E] relative group">
+                    {/* 상단 컨트롤 바 */}
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-2 py-2 px-4 border-b border-gray-100 dark:border-white/5 bg-white dark:bg-[#1C1C1E] flex-shrink-0">
+                        
+                        {/* 1. 뷰 모드 전환 (월간 vs 리스트) */}
+                        <div className="flex gap-1 p-1 bg-gray-100 dark:bg-[#2C2C2E] rounded-lg">
+                            <button 
+                                onClick={() => setViewMode('calendar')} 
+                                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${viewMode==='calendar' ? 'bg-white dark:bg-[#636366] text-black dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
+                            >
+                                <i className="fa-regular fa-calendar"></i><span className="hidden sm:inline">월간 달력</span>
+                            </button>
+                            <button 
+                                onClick={() => setViewMode('list')} 
+                                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${viewMode==='list' ? 'bg-white dark:bg-[#636366] text-black dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
+                            >
+                                <i className="fa-solid fa-list-ul"></i><span className="hidden sm:inline">통합 리스트</span>
+                            </button>
+                        </div>
+
+                        {/* 2. 상세 컨트롤 (모드에 따라 변경) */}
+                        {viewMode === 'calendar' ? (
+                            <div className="flex gap-1 p-1 bg-gray-100 dark:bg-[#2C2C2E] rounded-lg animate-fade-in">
+                                {/* [추가됨] 전체 보기 버튼 */}
+                                <button 
+                                    onClick={() => setCalType('all')} 
+                                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${calType==='all' ? 'bg-white dark:bg-[#636366] text-slate-800 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
+                                >
+                                    전체
+                                </button>
+                                <button 
+                                    onClick={() => setCalType('subscription')} 
+                                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${calType==='subscription' ? 'bg-white dark:bg-[#636366] text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
+                                >
+                                    청약
+                                </button>
+                                <button 
+                                    onClick={() => setCalType('listing')} 
+                                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${calType==='listing' ? 'bg-white dark:bg-[#636366] text-purple-600 dark:text-purple-300 shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
+                                >
+                                    상장
+                                </button>
+                            </div>
+                        ) : (
+                            // 리스트 모드일 때는 범례 표시
+                            <div className="flex items-center gap-3 text-[10px] font-bold text-gray-500 dark:text-gray-400 animate-fade-in px-2">
+                                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#3F51B5]"></span>청약</span>
+                                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#8E24AA]"></span>상장</span>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Google Calendar Iframe */}
+                    <div className={`flex-1 w-full relative ${isDark ? 'filter brightness-[0.85] contrast-[1.1]' : ''}`}>
+                        <div className="absolute inset-0 -z-10 flex items-center justify-center bg-gray-50 dark:bg-[#2C2C2E]">
+                            <i className="fa-solid fa-spinner fa-spin text-gray-300 text-2xl"></i>
+                        </div>
+                        <iframe 
+                            src={getUrl()} 
+                            className="w-full h-full border-0 bg-transparent"
+                            frameBorder="0" 
+                            scrolling="no">
+                        </iframe>
+                    </div>
+                </div>
+            );
         });
 
         // --- Shanghai & Bitcoin Link Panels ---
@@ -704,7 +809,8 @@
             const [linkMode, setLinkMode] = useState('investment');
             const [analysisMode, setAnalysisMode] = useState('silver'); 
             const [dashChartTab, setDashChartTab] = useState('price');
-            const [marketInfoTab, setMarketInfoTab] = useState('news');
+            // [수정] 초기 탭을 'news'에서 'calendar'로 변경하여 공모주 일정이 먼저 보이게 설정
+            const [marketInfoTab, setMarketInfoTab] = useState('calendar');
             const [exchangeRates, setExchangeRates] = useState(DEFAULT_EXCHANGE_RATES);
             const [lastUpdated, setLastUpdated] = useState('연결 중...');
             const [isFetching, setIsFetching] = useState(false);
@@ -733,7 +839,8 @@
                     return { currentBtcUsd: '90,000', currentDomesticPrice: '13,500', holdingQty: '', avgPrice: '13,000', avgExch: '1,331' }; 
                 }
             });
-            const [favorites, setFavorites] = useState(() => { try { return JSON.parse(localStorage.getItem('invNav_favorites_v2')) || DEFAULT_FAVORITES; } catch { return DEFAULT_FAVORITES; } });
+            // [수정] 관심종목 추가 반영을 위해 v3 -> v4로 키 업데이트
+            const [favorites, setFavorites] = useState(() => { try { return JSON.parse(localStorage.getItem('invNav_favorites_v4')) || DEFAULT_FAVORITES; } catch { return DEFAULT_FAVORITES; } });
             const [routineLinks, setRoutineLinks] = useState(() => { try { return JSON.parse(localStorage.getItem('invNav_routineLinks_v2')) || DEFAULT_ROUTINE_LINKS; } catch { return DEFAULT_ROUTINE_LINKS; } });
             const [blogInsightLinks, setBlogInsightLinks] = useState(() => { try { return JSON.parse(localStorage.getItem('invNav_blogLinks_v2')) || DEFAULT_BLOG_LINKS; } catch { return DEFAULT_BLOG_LINKS; } });
             
@@ -749,7 +856,7 @@
                 localStorage.setItem('invNav_btcInputs_v6', JSON.stringify(toSave)); 
             }, [bitcoinAnalysisInputs]);
 
-            useEffect(() => { localStorage.setItem('invNav_favorites_v2', JSON.stringify(favorites)); }, [favorites]);
+            useEffect(() => { localStorage.setItem('invNav_favorites_v4', JSON.stringify(favorites)); }, [favorites]);
             useEffect(() => { localStorage.setItem('invNav_routineLinks_v2', JSON.stringify(routineLinks)); }, [routineLinks]);
             useEffect(() => { localStorage.setItem('invNav_blogLinks_v2', JSON.stringify(blogInsightLinks)); }, [blogInsightLinks]);
             
@@ -791,7 +898,16 @@
             useEffect(() => { fetchRealTimeRates(); }, [fetchRealTimeRates]);
             useEffect(() => { if (isDark) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); }, [isDark]);
 
-            const searchSymbol = (query) => { if(!query || query.trim() === "") { window.open('https://stock.naver.com/', '_blank'); return; } const trimmed = query.trim(); if (/[a-zA-Z]/.test(trimmed)) { window.open(`https://finance.naver.com/world/sise.naver?symbol=${trimmed.toUpperCase()}`, '_blank'); } else if (/^\d+$/.test(trimmed)) { window.open(`https://finance.naver.com/item/main.naver?code=${trimmed}`, '_blank'); } else { window.open(`https://finance.naver.com/search/search.naver?query=${encodeURIComponent(trimmed)}`, '_blank'); } };
+            const searchSymbol = (query) => { 
+                if(!query || query.trim() === "") { window.open('https://stock.naver.com/', '_blank'); return; } 
+                const trimmed = query.trim(); 
+                // [수정] 미국/해외 주식 직접 연결 시 오류가 잦아, 숫자(국내코드) 외에는 모두 통합검색으로 연결
+                if (/^\d+$/.test(trimmed)) { 
+                    window.open(`https://finance.naver.com/item/main.naver?code=${trimmed}`, '_blank'); 
+                } else { 
+                    window.open(`https://finance.naver.com/search/search.naver?query=${encodeURIComponent(trimmed)}`, '_blank'); 
+                } 
+            };
             const calculateAutoRegionalIns = () => { const annualPension = (parseFormattedNumber(simInputs.pensionSelf) + parseFormattedNumber(simInputs.pensionSpouse)) * 12 * 0.5; const annualOthers = parseFormattedNumber(simInputs.ipoProfit) + parseFormattedNumber(simInputs.otherIncome) + parseFormattedNumber(simInputs.stockLending) + parseFormattedNumber(simInputs.rentalIncome) + parseFormattedNumber(simInputs.tradingProfit); const annualScoreIncome = annualPension + annualOthers; const incomePremium = (annualScoreIncome * 0.0709) / 12; const housePrice = parseFloat(simInputs.housingMarketPrice) * ONE_HUNDRED_MILLION; const propertyTaxBase = (housePrice * 0.45) - 50000000; let propertyPremium = 0; if (propertyTaxBase > 0) { propertyPremium = propertyTaxBase * 0.00045; } const totalPremium = (incomePremium + propertyPremium) * 1.1295; const finalPremium = Math.floor(totalPremium / 1000) * 1000; setSimInputs(prev => ({ ...prev, monthlyRegionalIns: finalPremium.toLocaleString('ko-KR') })); };
             const runSimulation = useCallback(() => {
                 const s = simInputs; const ageDiff = s.currentAge - s.spouseCurrentAge;
@@ -941,8 +1057,11 @@
                                     <div className="flex-1 flex flex-col min-h-0">
                                         {/* 탭 버튼들을 flex-1로 설정하여 너비를 균등하게 채움 */}
                                         <div className="flex gap-2 mb-3 w-full overflow-x-auto scrollbar-hide">
-                                            {analysisMode === 'silver' ? ['price:은 시세(Silver)', 'shanghai:상하이/국내 시세', 'gold:금 시세(Gold)', 'ratio:금은비(Ratio)'].map(t=>{const [k,l]=t.split(':'); return <button key={k} onClick={()=>setDashChartTab(k)} className={`flex-1 min-w-fit px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab===k?'bg-[#0071E3] text-white shadow-md':'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}>{l}</button>}) 
-                                            : ['btc:바이낸스($)', 'btc_upbit:업비트(₩)', 'btc_link:거래소 바로가기'].map(t=>{const [k,l]=t.split(':'); return <button key={k} onClick={()=>setDashChartTab(k)} className={`flex-1 min-w-fit px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab===k?'bg-[#0071E3] text-white shadow-md':'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}>{l}</button>})}
+                                            {/* [수정됨] 모바일 최적화를 위해 명칭 단순화 및 flex-1, min-w-0 적용 */}
+                                            {analysisMode === 'silver' 
+                                                ? ['price:은($)', 'shanghai:국내/상하이', 'gold:금($)', 'ratio:금은비'].map(t=>{const [k,l]=t.split(':'); return <button key={k} onClick={()=>setDashChartTab(k)} className={`flex-1 min-w-0 px-1 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap ${dashChartTab===k?'bg-[#0071E3] text-white shadow-md':'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}>{l}</button>}) 
+                                                : ['btc:바이낸스($)', 'btc_upbit:업비트(₩)', 'btc_link:거래소'].map(t=>{const [k,l]=t.split(':'); return <button key={k} onClick={()=>setDashChartTab(k)} className={`flex-1 min-w-fit px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab===k?'bg-[#0071E3] text-white shadow-md':'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}>{l}</button>})
+                                            }
                                         </div>
                                         <div className="h-[400px] rounded-2xl overflow-hidden border border-slate-100 dark:border-white/5 relative bg-white dark:bg-[#1C1C1E]">
                                             {analysisMode === 'silver' ? (
@@ -1094,13 +1213,23 @@
                                 {isFavEditMode && (<div className="mt-auto pt-4 border-t border-gray-100 dark:border-white/5 animate-fade-in"><div className="flex gap-2"><input className="w-20 bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-lg px-2 py-2 text-xs font-bold text-center outline-none force-dark-white" placeholder="코드" value={newFav.code} onChange={e=>setNewFav({...newFav, code:e.target.value})} /><input className="flex-1 bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-lg px-2 py-2 text-xs font-bold outline-none force-dark-white" placeholder="종목명" value={newFav.name} onChange={e=>setNewFav({...newFav, name:e.target.value})} /><button onClick={() => { if(newFav.code && newFav.name) { setFavorites([...favorites, newFav]); setNewFav({code:'', name:''}); } }} className="w-8 bg-[#0071E3] text-white rounded-lg flex items-center justify-center hover:bg-blue-600"><i className="fa-solid fa-plus text-xs"></i></button></div></div>)}
                             </div>
                         </AppleCard>
-                        <AppleCard className="lg:col-span-8 h-[650px] min-h-[600px] !p-0 overflow-hidden">
+                        {/* [수정됨] 뉴스 섹션 높이 확장: h-[650px] -> h-[850px] */}
+                        <AppleCard className="lg:col-span-8 h-[850px] min-h-[600px] !p-0 overflow-hidden">
                             <div className="flex flex-col h-full w-full">
                                 <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 dark:border-white/5 bg-white dark:bg-[#1C1C1E] flex-shrink-0">
                                     <div><h3 className="text-lg font-bold text-slate-900 force-dark-white tracking-tight leading-none">시장 동향 & 뉴스</h3><span className="text-xs font-semibold text-gray-400 dark:text-gray-400 mt-1 block">글로벌 마켓 히트맵 및 구글 뉴스</span></div>
-                                    <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] p-1 rounded-lg flex gap-1 self-start sm:self-auto w-full sm:w-auto"><button onClick={() => setMarketInfoTab('news')} className={`flex-1 sm:flex-none justify-center px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 ${marketInfoTab === 'news' ? 'bg-white dark:bg-[#636366] text-black force-dark-white shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}><i className="fa-brands fa-google"></i><span>구글 뉴스</span></button><button onClick={() => setMarketInfoTab('heatmap')} className={`flex-1 sm:flex-none justify-center px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 ${marketInfoTab === 'heatmap' ? 'bg-white dark:bg-[#636366] text-black force-dark-white shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}><i className="fa-solid fa-table-cells"></i><span>시장 맵</span></button></div>
+                                    <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] p-1 rounded-lg flex gap-1 self-start sm:self-auto w-full sm:w-auto overflow-x-auto scrollbar-hide">
+                                        {/* [수정됨] 탭 버튼 순서 변경: 공모주 일정 -> 구글 뉴스 -> 시장 맵 */}
+                                        <button onClick={() => setMarketInfoTab('calendar')} className={`flex-1 sm:flex-none justify-center px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${marketInfoTab === 'calendar' ? 'bg-white dark:bg-[#636366] text-black force-dark-white shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}><i className="fa-solid fa-calendar-days"></i><span>공모주 일정</span></button>
+                                        <button onClick={() => setMarketInfoTab('news')} className={`flex-1 sm:flex-none justify-center px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${marketInfoTab === 'news' ? 'bg-white dark:bg-[#636366] text-black force-dark-white shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}><i className="fa-brands fa-google"></i><span>구글 뉴스</span></button>
+                                        <button onClick={() => setMarketInfoTab('heatmap')} className={`flex-1 sm:flex-none justify-center px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${marketInfoTab === 'heatmap' ? 'bg-white dark:bg-[#636366] text-black force-dark-white shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}><i className="fa-solid fa-table-cells"></i><span>시장 맵</span></button>
+                                    </div>
                                 </div>
-                                <div className="flex-1 w-full relative bg-white dark:bg-[#1C1C1E] min-h-0">{marketInfoTab === 'heatmap' ? (<TradingViewHeatmap theme={isDark ? 'dark' : 'light'} />) : (<GoogleNewsWidget isDark={isDark} />)}</div>
+                                <div className="flex-1 w-full relative bg-white dark:bg-[#1C1C1E] min-h-0">
+                                    {marketInfoTab === 'heatmap' ? (<TradingViewHeatmap theme={isDark ? 'dark' : 'light'} />) : 
+                                     marketInfoTab === 'calendar' ? (<IpoCalendarWidget isDark={isDark} />) : 
+                                     (<GoogleNewsWidget isDark={isDark} />)}
+                                </div>
                             </div>
                         </AppleCard>
                     </div>
@@ -1191,77 +1320,87 @@
                 <div className="animate-fade-in pb-10 space-y-4">
                     <div className="flex justify-between items-end px-1"><div><h2 className="text-2xl font-bold tracking-tight text-slate-900 force-dark-white">노후 자금 시뮬레이션</h2><p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">생애 주기 자산 흐름 분석</p></div></div>
                     
-                    {/* 입력 섹션: 3단 컬럼 */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                    {/* 입력 섹션: 2단 컬럼 (좌: 1+2 / 우: 3) */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                         
-                        {/* 1. 프로필 & 전략 */}
-                        <AppleCard title="1. 프로필 & 전략" className="h-full !p-4">
-                            <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div><label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">본인 나이</label><input type="number" className="apple-input !py-1.5 !text-center !text-sm" value={simInputs.currentAge} onChange={e=>setSimInputs({...simInputs, currentAge:parseInt(e.target.value)})}/></div>
-                                    <div><label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">배우자 나이</label><input type="number" className="apple-input !py-1.5 !text-center !text-sm" value={simInputs.spouseCurrentAge} onChange={e=>setSimInputs({...simInputs, spouseCurrentAge:parseInt(e.target.value)})}/></div>
-                                </div>
-                                
-                                {/* 설정 바 */}
-                                <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] p-3 rounded-xl grid grid-cols-3 gap-2 text-center">
-                                    <div><label className="text-[11px] font-bold text-indigo-500 block mb-1">시뮬 시작</label><div className="flex items-center justify-center"><input type="number" className="apple-input !py-1 !px-0 !text-center !text-xs !bg-white dark:!bg-white/10 w-full max-w-[50px]" value={simInputs.simulationStartAge} onChange={e=>setSimInputs({...simInputs, simulationStartAge:parseInt(e.target.value)})}/><span className="text-[10px] text-gray-400 ml-1">세</span></div></div>
-                                    <div><label className="text-[11px] font-bold text-orange-500 block mb-1">지역 건보</label><div className="flex items-center justify-center"><input type="number" className="apple-input !py-1 !px-0 !text-center !text-xs !bg-white dark:!bg-white/10 w-full max-w-[50px]" value={simInputs.regionalInsStartAge || 60} onChange={e=>setSimInputs({...simInputs, regionalInsStartAge:parseInt(e.target.value)})}/><span className="text-[10px] text-gray-400 ml-1">세</span></div></div>
-                                    <div><label className="text-[11px] font-bold text-rose-500 block mb-1">간병 전환</label><div className="flex items-center justify-center"><input type="number" className="apple-input !py-1 !px-0 !text-center !text-xs !bg-white dark:!bg-white/10 w-full max-w-[50px]" value={simInputs.highCostStartAge || 80} onChange={e=>setSimInputs({...simInputs, highCostStartAge:parseInt(e.target.value)})}/><span className="text-[10px] text-gray-400 ml-1">세</span></div></div>
-                                </div>
-
-                                {/* 연금 전략 */}
-                                <div className="space-y-3">
-                                    <div>
-                                        <label className="text-xs font-bold text-blue-500 mb-1 block">본인 연금 수령</label>
-                                        <select className="apple-input !py-1.5 !text-xs cursor-pointer" value={simInputs.pensionStrategyUser} onChange={e=>setSimInputs({...simInputs, pensionStrategyUser: e.target.value})}>
-                                            <option value="early5">5년 조기 (60세, -30%)</option><option value="early4">4년 조기 (61세, -24%)</option><option value="early3">3년 조기 (62세, -18%)</option><option value="early2">2년 조기 (63세, -12%)</option><option value="early1">1년 조기 (64세, -6%)</option><option value="normal">정상 수령 (65세, 100%)</option><option value="defer1">1년 연기 (66세, +7.2%)</option><option value="defer2">2년 연기 (67세, +14.4%)</option><option value="defer3">3년 연기 (68세, +21.6%)</option><option value="defer4">4년 연기 (69세, +28.8%)</option><option value="defer5">5년 연기 (70세, +36.0%)</option>
-                                        </select>
+                        {/* 왼쪽 컬럼: 1. 프로필 & 전략 + 2. 자산 & 수익률 */}
+                        <div className="flex flex-col gap-3">
+                            <AppleCard title="1. 프로필 & 전략" className="!p-4">
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div><label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">본인 나이</label><input type="number" className="apple-input !py-1.5 !text-center !text-sm" value={simInputs.currentAge} onChange={e=>setSimInputs({...simInputs, currentAge:parseInt(e.target.value)})}/></div>
+                                        <div><label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">배우자 나이</label><input type="number" className="apple-input !py-1.5 !text-center !text-sm" value={simInputs.spouseCurrentAge} onChange={e=>setSimInputs({...simInputs, spouseCurrentAge:parseInt(e.target.value)})}/></div>
                                     </div>
-                                    <div>
-                                        <label className="text-xs font-bold text-blue-500 mb-1 block">배우자 연금 수령</label>
-                                        <select className="apple-input !py-1.5 !text-xs cursor-pointer" value={simInputs.pensionStrategySpouse} onChange={e=>setSimInputs({...simInputs, pensionStrategySpouse: e.target.value})}>
-                                            <option value="early5">5년 조기 (60세, -30%)</option><option value="early4">4년 조기 (61세, -24%)</option><option value="early3">3년 조기 (62세, -18%)</option><option value="early2">2년 조기 (63세, -12%)</option><option value="early1">1년 조기 (64세, -6%)</option><option value="normal">정상 수령 (65세, 100%)</option><option value="defer1">1년 연기 (66세, +7.2%)</option><option value="defer2">2년 연기 (67세, +14.4%)</option><option value="defer3">3년 연기 (68세, +21.6%)</option><option value="defer4">4년 연기 (69세, +28.8%)</option><option value="defer5">5년 연기 (70세, +36.0%)</option>
-                                        </select>
+                                    
+                                    {/* 설정 바 */}
+                                    <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] p-3 rounded-xl grid grid-cols-3 gap-2 text-center">
+                                        <div><label className="text-[11px] font-bold text-indigo-500 block mb-1">시뮬 시작</label><div className="flex items-center justify-center"><input type="number" className="apple-input !py-1 !px-0 !text-center !text-xs !bg-white dark:!bg-white/10 w-full max-w-[50px]" value={simInputs.simulationStartAge} onChange={e=>setSimInputs({...simInputs, simulationStartAge:parseInt(e.target.value)})}/><span className="text-[10px] text-gray-400 ml-1">세</span></div></div>
+                                        <div><label className="text-[11px] font-bold text-orange-500 block mb-1">지역 건보</label><div className="flex items-center justify-center"><input type="number" className="apple-input !py-1 !px-0 !text-center !text-xs !bg-white dark:!bg-white/10 w-full max-w-[50px]" value={simInputs.regionalInsStartAge || 60} onChange={e=>setSimInputs({...simInputs, regionalInsStartAge:parseInt(e.target.value)})}/><span className="text-[10px] text-gray-400 ml-1">세</span></div></div>
+                                        <div><label className="text-[11px] font-bold text-rose-500 block mb-1">간병 전환</label><div className="flex items-center justify-center"><input type="number" className="apple-input !py-1 !px-0 !text-center !text-xs !bg-white dark:!bg-white/10 w-full max-w-[50px]" value={simInputs.highCostStartAge || 80} onChange={e=>setSimInputs({...simInputs, highCostStartAge:parseInt(e.target.value)})}/><span className="text-[10px] text-gray-400 ml-1">세</span></div></div>
                                     </div>
-                                </div>
-                            </div>
-                        </AppleCard>
 
-                        {/* 2. 자산 & 수익률 */}
-                        <AppleCard title="2. 자산 & 수익률" className="h-full !p-4">
-                            <div className="space-y-3 h-full flex flex-col">
-                                {(() => {
-                                    const renderRowCompact = (label, cKey, rKey, color, rKey2 = null) => (
-                                        <div className="flex items-center gap-1.5">
-                                            <div className={`w-12 text-xs font-bold ${color} flex-shrink-0 truncate`}>{label}</div>
-                                            <div className="flex-1 min-w-0"><input type="number" step="0.1" className="apple-input !bg-white dark:!bg-white/10 !text-right !px-2 !py-1.5 !text-sm" placeholder="0" value={simInputs[cKey]} onChange={e=>setSimInputs({...simInputs, [cKey]:parseFloat(e.target.value)})} /></div>
-                                            <div className="w-11 flex-shrink-0"><input type="number" step="0.1" className="apple-input !bg-white dark:!bg-white/10 !text-center !px-0 !py-1.5 !text-sm !text-blue-500" placeholder="%" value={simInputs[rKey]} onChange={e=>setSimInputs({...simInputs, [rKey]:parseFloat(e.target.value)})} /></div>
-                                            {rKey2 && <div className="w-11 flex-shrink-0"><input type="number" step="0.1" className="apple-input !bg-white dark:!bg-white/10 !text-center !px-0 !py-1.5 !text-sm !text-slate-500" placeholder="C" value={simInputs[rKey2]} onChange={e=>setSimInputs({...simInputs, [rKey2]:parseFloat(e.target.value)})} /></div>}
+                                    {/* 연금 전략 */}
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="text-xs font-bold text-blue-500 mb-1 block">본인 연금 수령</label>
+                                            <select className="apple-input !py-1.5 !text-xs cursor-pointer" value={simInputs.pensionStrategyUser} onChange={e=>setSimInputs({...simInputs, pensionStrategyUser: e.target.value})}>
+                                                <option value="early5">5년 조기 (60세, -30%)</option><option value="early4">4년 조기 (61세, -24%)</option><option value="early3">3년 조기 (62세, -18%)</option><option value="early2">2년 조기 (63세, -12%)</option><option value="early1">1년 조기 (64세, -6%)</option><option value="normal">정상 수령 (65세, 100%)</option><option value="defer1">1년 연기 (66세, +7.2%)</option><option value="defer2">2년 연기 (67세, +14.4%)</option><option value="defer3">3년 연기 (68세, +21.6%)</option><option value="defer4">4년 연기 (69세, +28.8%)</option><option value="defer5">5년 연기 (70세, +36.0%)</option>
+                                            </select>
                                         </div>
-                                    );
-                                    return (
-                                        <>
-                                            <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] p-3 rounded-xl space-y-2">
-                                                <div className="flex justify-between px-1 mb-1"><span className="text-[11px] font-bold text-gray-400">일반 (억 / %)</span></div>
-                                                {renderRowCompact('본인', 'capUserNonISA', 'returnUserNonISA', 'text-gray-900 dark:text-white')}
-                                                {renderRowCompact('배우자', 'capSpouseNonISA', 'returnSpouseNonISA', 'text-gray-900 dark:text-white')}
-                                            </div>
-                                            <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] p-3 rounded-xl space-y-2">
-                                                <div className="flex justify-between px-1 mb-1"><span className="text-[11px] font-bold text-emerald-500">ISA (억 / %)</span></div>
-                                                {renderRowCompact('본인', 'capUserISA', 'returnUserISA', 'text-emerald-600 dark:text-emerald-400')}
-                                                {renderRowCompact('배우자', 'capSpouseISA', 'returnSpouseISA', 'text-emerald-600 dark:text-emerald-400')}
-                                            </div>
-                                            <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] p-3 rounded-xl space-y-2">
-                                                <div className="flex justify-between px-1 mb-1"><span className="text-[11px] font-bold text-purple-500">기타 (억 / % / CMA)</span></div>
-                                                {renderRowCompact('공모/C', 'capIPO', 'returnIPO', 'text-purple-600 dark:text-purple-400', 'returnCMA')}
-                                            </div>
-                                        </>
-                                    );
-                                })()}
-                            </div>
-                        </AppleCard>
+                                        <div>
+                                            <label className="text-xs font-bold text-blue-500 mb-1 block">배우자 연금 수령</label>
+                                            <select className="apple-input !py-1.5 !text-xs cursor-pointer" value={simInputs.pensionStrategySpouse} onChange={e=>setSimInputs({...simInputs, pensionStrategySpouse: e.target.value})}>
+                                                <option value="early5">5년 조기 (60세, -30%)</option><option value="early4">4년 조기 (61세, -24%)</option><option value="early3">3년 조기 (62세, -18%)</option><option value="early2">2년 조기 (63세, -12%)</option><option value="early1">1년 조기 (64세, -6%)</option><option value="normal">정상 수령 (65세, 100%)</option><option value="defer1">1년 연기 (66세, +7.2%)</option><option value="defer2">2년 연기 (67세, +14.4%)</option><option value="defer3">3년 연기 (68세, +21.6%)</option><option value="defer4">4년 연기 (69세, +28.8%)</option><option value="defer5">5년 연기 (70세, +36.0%)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </AppleCard>
 
-                        {/* 3. 경제 & 현금흐름 */}
+                            <AppleCard title="2. 자산 & 수익률" className="!p-4 flex-1">
+                                <div className="space-y-2 h-full flex flex-col">
+                                    {(() => {
+                                        const renderRowTiny = (label, cKey, rKey, color) => (
+                                            <div className="flex items-center gap-1">
+                                                <div className={`w-8 text-[10px] font-bold ${color} flex-shrink-0 truncate`}>{label}</div>
+                                                <div className="flex-1 min-w-0"><input type="number" step="0.1" className="apple-input !bg-white dark:!bg-white/10 !text-right !px-1 !py-1 !text-xs" placeholder="0" value={simInputs[cKey]} onChange={e=>setSimInputs({...simInputs, [cKey]:parseFloat(e.target.value)})} /></div>
+                                                <div className="w-8 flex-shrink-0"><input type="number" step="0.1" className="apple-input !bg-white dark:!bg-white/10 !text-center !px-0 !py-1 !text-xs !text-blue-500" placeholder="%" value={simInputs[rKey]} onChange={e=>setSimInputs({...simInputs, [rKey]:parseFloat(e.target.value)})} /></div>
+                                            </div>
+                                        );
+                                        const renderRowNormal = (label, cKey, rKey, color, rKey2 = null) => (
+                                            <div className="flex items-center gap-1.5">
+                                                <div className={`w-12 text-xs font-bold ${color} flex-shrink-0 truncate`}>{label}</div>
+                                                <div className="flex-1 min-w-0"><input type="number" step="0.1" className="apple-input !bg-white dark:!bg-white/10 !text-right !px-2 !py-1.5 !text-sm" placeholder="0" value={simInputs[cKey]} onChange={e=>setSimInputs({...simInputs, [cKey]:parseFloat(e.target.value)})} /></div>
+                                                <div className="w-11 flex-shrink-0"><input type="number" step="0.1" className="apple-input !bg-white dark:!bg-white/10 !text-center !px-0 !py-1.5 !text-sm !text-blue-500" placeholder="%" value={simInputs[rKey]} onChange={e=>setSimInputs({...simInputs, [rKey]:parseFloat(e.target.value)})} /></div>
+                                                {rKey2 && <div className="w-11 flex-shrink-0"><input type="number" step="0.1" className="apple-input !bg-white dark:!bg-white/10 !text-center !px-0 !py-1.5 !text-sm !text-slate-500" placeholder="C" value={simInputs[rKey2]} onChange={e=>setSimInputs({...simInputs, [rKey2]:parseFloat(e.target.value)})} /></div>}
+                                            </div>
+                                        );
+                                        return (
+                                            <>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] p-2 rounded-xl space-y-1.5">
+                                                        <div className="flex justify-between px-1 mb-0.5"><span className="text-[10px] font-bold text-gray-400">일반(억/%)</span></div>
+                                                        {renderRowTiny('본인', 'capUserNonISA', 'returnUserNonISA', 'text-gray-900 dark:text-white')}
+                                                        {renderRowTiny('배우자', 'capSpouseNonISA', 'returnSpouseNonISA', 'text-gray-900 dark:text-white')}
+                                                    </div>
+                                                    <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] p-2 rounded-xl space-y-1.5">
+                                                        <div className="flex justify-between px-1 mb-0.5"><span className="text-[10px] font-bold text-emerald-500">ISA(억/%)</span></div>
+                                                        {renderRowTiny('본인', 'capUserISA', 'returnUserISA', 'text-emerald-600 dark:text-emerald-400')}
+                                                        {renderRowTiny('배우자', 'capSpouseISA', 'returnSpouseISA', 'text-emerald-600 dark:text-emerald-400')}
+                                                    </div>
+                                                </div>
+                                                <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] p-3 rounded-xl space-y-2">
+                                                    <div className="flex justify-between px-1 mb-1"><span className="text-[11px] font-bold text-purple-500">기타 (억 / % / CMA)</span></div>
+                                                    {renderRowNormal('공모/C', 'capIPO', 'returnIPO', 'text-purple-600 dark:text-purple-400', 'returnCMA')}
+                                                </div>
+                                            </>
+                                        );
+                                    })()}
+                                </div>
+                            </AppleCard>
+                        </div>
+
+                        {/* 오른쪽 컬럼: 3. 경제 & 현금흐름 */}
                         <AppleCard title="3. 경제 & 현금흐름" className="h-full !p-4">
                             <div className="space-y-3 h-full flex flex-col">
                                 <div className="grid grid-cols-2 gap-3">
@@ -1289,7 +1428,6 @@
                                     {[{l:'공모주', k:'ipoProfit'}, {l:'배당', k:'otherIncome'}, {l:'대여', k:'stockLending'}, {l:'임대', k:'rentalIncome'}, {l:'매매', k:'tradingProfit'}].map(item => (
                                         <div key={item.k} className="flex justify-between items-center">
                                             <label className="text-xs font-bold text-gray-500">{item.l}</label>
-                                            {/* [수정] 입력창 너비를 w-16 -> w-24로 확대하여 가독성 확보 */}
                                             <input className="apple-input !w-24 !py-0 !h-6 !text-xs !bg-white dark:!bg-white/10 text-right" value={simInputs[item.k]} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, [item.k]: v}))}/>
                                         </div>
                                     ))}
