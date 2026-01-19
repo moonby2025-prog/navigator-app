@@ -158,8 +158,6 @@
                 { name: "필라델피아 반도체", url: "https://kr.investing.com/indices/phlx-semiconductor", icon: "fa-microchip", color: "text-teal-500" },
                 { name: "공포 탐욕 지수 (CNN)", url: "https://edition.cnn.com/markets/fear-and-greed", icon: "fa-gauge-high", color: "text-orange-500" },
                 { name: "크립토 지표 (MVRV)", url: "https://www.bitcoinmagazinepro.com/charts/mvrv-zscore/", icon: "fa-chart-area", color: "text-amber-500" },
-                { name: "SILVER (은 실시간)", url: "https://kr.investing.com/currencies/xag-usd", icon: "fa-coins", color: "text-slate-500" },
-                { name: "은시세(순수한금)", url: "https://blog.naver.com/wolfkickbox", icon: "fa-blog", color: "text-yellow-600" },
                 { name: "실버팩토리 (카페)", url: "https://cafe.naver.com/7silverfactory7", icon: "fa-comments", color: "text-slate-600" },
                 { name: "달러와 금 경제소식들", url: "https://cafe.daum.net/DollarnGold", icon: "fa-comments", color: "text-blue-600" }
             ],
@@ -886,15 +884,8 @@
             
             // [NEW] Routine Efficiency Features State (1, 2, 5)
             const [routineMemo, setRoutineMemo] = useState(() => localStorage.getItem('invNav_routineMemo') || '');
-            const [checkedLinks, setCheckedLinks] = useState(() => {
-                try {
-                    const saved = JSON.parse(localStorage.getItem('invNav_checkedLinks'));
-                    const today = new Date().toDateString();
-                    // 날짜가 다르면 체크 초기화 (일일 루틴 리셋)
-                    if (saved && saved.date === today) return saved.links || {};
-                    return {};
-                } catch { return {}; }
-            });
+            // [삭제됨] 체크박스 상태(checkedLinks) 및 관련 useEffect 제거
+            
             // [추가됨] 미리보기 토글 상태 관리
             const [previewStates, setPreviewStates] = useState({});
 
@@ -940,10 +931,7 @@
             
             // [NEW] Routine Persistence
             useEffect(() => localStorage.setItem('invNav_routineMemo', routineMemo), [routineMemo]);
-            useEffect(() => {
-                const today = new Date().toDateString();
-                localStorage.setItem('invNav_checkedLinks', JSON.stringify({ date: today, links: checkedLinks }));
-            }, [checkedLinks]);
+            // [삭제됨] invNav_checkedLinks 저장 useEffect 제거
 
             const [targetInputs, setTargetInputs] = useState({ mode: 'cap', price: '', shares: '', currentCap: '', targetCap: '', targetRate: '' });
             const [ipoCalcInputs, setIpoCalcInputs] = useState({ price: '', qty: '', fee: '', rate: 50 });
@@ -1177,26 +1165,6 @@
             // [NEW] Routine Render Logic with 1 (Check), 2 (Memo), 5 (Progress)
             const renderRoutine = () => {
                 const currentLinks = linkMode === 'blogs' ? blogInsightLinks : routineLinks;
-                let totalLinks = 0;
-                let checkedCount = 0;
-                
-                // 진행률 계산
-                Object.values(currentLinks).forEach(arr => {
-                    arr.forEach(l => {
-                        totalLinks++;
-                        if(checkedLinks[l.url]) checkedCount++;
-                    });
-                });
-                const progress = totalLinks === 0 ? 0 : Math.round((checkedCount / totalLinks) * 100);
-
-                const toggleCheck = (url) => {
-                    setCheckedLinks(prev => {
-                        const next = { ...prev };
-                        if (next[url]) delete next[url]; // 토글 (체크 해제 가능)
-                        else next[url] = true;
-                        return next;
-                    });
-                };
                 
                 // [추가됨] 개별 미리보기 토글 핸들러
                 const togglePreview = (key) => {
@@ -1220,7 +1188,6 @@
                 // [수정됨] 모두 열기 핸들러 - 팝업 차단 감지 및 부분 성공 처리
                 const handleOpenAll = (links) => {
                     let opened = 0;
-                    const newChecks = { ...checkedLinks };
                     let blocked = false;
 
                     links.forEach(l => {
@@ -1229,7 +1196,6 @@
                             const w = window.open(l.url, '_blank');
                             if (w) {
                                 opened++;
-                                newChecks[l.url] = true; // 실제로 열린 경우에만 체크 처리
                             } else {
                                 blocked = true;
                             }
@@ -1237,8 +1203,6 @@
                             blocked = true;
                         }
                     });
-                    
-                    setCheckedLinks(newChecks);
                     
                     if (opened === 0) {
                         alert("모든 팝업이 차단되었습니다.\n\n브라우저 주소창 우측의 '팝업 차단됨' 아이콘을 눌러\n[이 사이트의 팝업 및 리디렉션 항상 허용]을 선택해주세요.");
@@ -1255,19 +1219,7 @@
                                 <div className="flex items-center gap-3"><div className="bg-[#E5E5EA] dark:bg-[#2C2C2E] p-1 rounded-full flex"><button onClick={() => setLinkMode('investment')} className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${linkMode === 'investment' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-500 dark:text-gray-300'}`}>투자 & 일상</button><button onClick={() => setLinkMode('blogs')} className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${linkMode === 'blogs' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-500 dark:text-gray-300'}`}>인사이트</button></div><button onClick={() => setIsRoutineEditMode(!isRoutineEditMode)} className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${isRoutineEditMode ? 'bg-[#0071E3] text-white' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-[#0071E3]'}`}>{isRoutineEditMode ? '완료' : '편집'}</button></div>
                             </div>
                             
-                            {/* Feature 5: Progress Bar */}
-                            <div className="bg-white dark:bg-[#1C1C1E] p-4 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm">
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400">일일 달성률</span>
-                                    <div className="flex gap-3 text-xs font-bold">
-                                        <span className="text-[#0071E3]">{progress}% 완료 ({checkedCount}/{totalLinks})</span>
-                                        <button onClick={() => setCheckedLinks({})} className="text-gray-400 hover:text-red-500 transition"><i className="fa-solid fa-rotate-right mr-1"></i>리셋</button>
-                                    </div>
-                                </div>
-                                <div className="w-full bg-gray-100 dark:bg-[#2C2C2E] rounded-full h-2.5 overflow-hidden">
-                                    <div className="bg-gradient-to-r from-[#0071E3] to-[#409CFF] h-2.5 rounded-full transition-all duration-500 ease-out" style={{ width: `${progress}%` }}></div>
-                                </div>
-                            </div>
+                            {/* [삭제됨] 일일 달성률(Progress Bar) 제거 */}
                         </div>
 
                         {/* Feature 2: Routine Memo */}
@@ -1282,7 +1234,7 @@
 
                         {isRoutineEditMode && (<AppleCard className="bg-indigo-50/50 dark:bg-indigo-900/10 border-indigo-100 dark:border-indigo-800"><div className="flex items-center gap-2 mb-4 text-[#0071E3]"><i className="fa-solid fa-circle-plus"></i><span className="text-sm font-bold">새로운 링크 추가</span></div><div className="grid grid-cols-1 sm:grid-cols-12 gap-3"><div className="sm:col-span-3"><select className="apple-input w-full" value={newRoutine.category} onChange={e=>setNewRoutine({...newRoutine, category:e.target.value})}><option value="">카테고리 선택</option>{Object.keys(linkMode === 'blogs' ? blogInsightLinks : routineLinks).map(cat => <option key={cat} value={cat}>{cat}</option>)}</select></div><div className="sm:col-span-3"><input type="text" placeholder="사이트명" className="apple-input" value={newRoutine.name} onChange={e=>setNewRoutine({...newRoutine, name:e.target.value})} /></div><div className="sm:col-span-4"><input type="text" placeholder="URL (https://...)" className="apple-input" value={newRoutine.url} onChange={e=>setNewRoutine({...newRoutine, url:e.target.value})} /></div><div className="sm:col-span-2"><button onClick={() => { if(linkMode === 'blogs') { if (!newRoutine.category || !newRoutine.name || !newRoutine.url) return; const updated = { ...blogInsightLinks }; updated[newRoutine.category] = [...updated[newRoutine.category], { name: newRoutine.name, url: newRoutine.url, icon: "fa-link", color: "text-slate-700" }]; setBlogInsightLinks(updated); setNewRoutine({ category: '', name: '', url: '' }); } else { if (!newRoutine.category || !newRoutine.name || !newRoutine.url) return; const updated = { ...routineLinks }; updated[newRoutine.category] = [...updated[newRoutine.category], { name: newRoutine.name, url: newRoutine.url, icon: "fa-link", color: "text-slate-700" }]; setRoutineLinks(updated); setNewRoutine({ category: '', name: '', url: '' }); } }} className="w-full h-full bg-[#0071E3] hover:bg-blue-600 text-white rounded-xl font-bold text-xs transition py-3 sm:py-0">추가하기</button></div></div></AppleCard>)}
                         
-                        {/* Feature 1: Checklist Links + Feature 5: News Preview */}
+                        {/* Feature 1: Links (Checklist removed) + Feature 5: News Preview */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {Object.entries(currentLinks).map(([cat, links]) => {
                                 // 현재 카테고리의 모든 미리보기가 열려있는지 확인 (버튼 상태 변경용)
@@ -1317,7 +1269,6 @@
                                     >
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                             {links.map((l, i) => {
-                                                const isChecked = checkedLinks[l.url];
                                                 const checkKey = `${cat}_${l.url}`;
                                                 const isPreviewOpen = previewStates[checkKey];
 
@@ -1325,29 +1276,20 @@
                                                     <div key={i} className="relative group flex flex-col bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-xl transition-all border border-transparent hover:border-gray-200 dark:hover:border-white/10 overflow-hidden">
                                                         {/* Link Row */}
                                                         <div className="flex items-center p-3 gap-3">
-                                                            {/* 1. Checkbox */}
-                                                            <button 
-                                                                onClick={() => toggleCheck(l.url)}
-                                                                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${isChecked ? 'bg-[#34C759] border-[#34C759] text-white' : 'border-gray-300 dark:border-gray-500 text-transparent hover:border-[#34C759]'}`}
-                                                            >
-                                                                <i className="fa-solid fa-check text-[10px]"></i>
-                                                            </button>
+                                                            {/* [삭제됨] Checkbox 버튼 제거 */}
 
-                                                            {/* 2. Link Info */}
+                                                            {/* Link Info (No Strikethrough) */}
                                                             <a 
                                                                 href={l.url} 
                                                                 target="_blank" 
                                                                 rel="noopener noreferrer"
-                                                                onClick={() => !isChecked && toggleCheck(l.url)}
                                                                 className="flex items-center gap-3 flex-1 min-w-0"
                                                             >
                                                                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-white dark:bg-white/10 ${l.color || 'text-slate-500'}`}>
                                                                     <i className={`fa-solid ${l.icon || 'fa-link'} text-xs`}></i>
                                                                 </div>
-                                                                <span className={`text-sm font-bold truncate transition-all ${isChecked ? 'text-gray-400 line-through decoration-2' : 'text-slate-900 dark:text-white'}`}>{l.name}</span>
+                                                                <span className="text-sm font-bold truncate text-slate-900 dark:text-white">{l.name}</span>
                                                             </a>
-
-                                                            {/* [삭제됨] 개별 미리보기 버튼 제거 */}
                                                         </div>
 
                                                         {/* News Preview Panel */}
@@ -1576,6 +1518,13 @@
                                             <input className="apple-input !w-24 !py-0 !h-6 !text-xs !bg-white dark:!bg-white/10 text-right" value={simInputs[item.k]} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, [item.k]: v}))}/>
                                         </div>
                                     ))}
+                                    {/* [수정됨] 6번째 빈 공간에 합계 표시 */}
+                                    <div className="flex justify-between items-center py-0.5">
+                                        <label className="text-xs font-black text-indigo-500">합계</label>
+                                        <div className="w-24 text-right text-xs font-black text-indigo-600 dark:text-indigo-400">
+                                            {formatNumber(['ipoProfit', 'otherIncome', 'stockLending', 'rentalIncome', 'tradingProfit'].reduce((acc, k) => acc + parseFormattedNumber(simInputs[k]), 0))}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </AppleCard>
