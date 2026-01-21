@@ -4,19 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Investment Navigator (투자 비서 - 통합형)</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Tailwind Config for Dark Mode (Fix) -->
     <script>
         tailwind.config = {
             darkMode: 'class',
         }
     </script>
-    <!-- Font Awesome (Icons) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
-    <!-- React, ReactDOM, Babel -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -27,13 +22,11 @@
         /* --- Base & Reset --- */
         body { font-family: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; letter-spacing: -0.01em; overflow-x: hidden; }
         
-        /* 스크롤바 가시성 개선 */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-thumb { background: #A1A1AA; border-radius: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         .dark ::-webkit-scrollbar-thumb { background: #4B5563; }
         
-        /* --- Animations --- */
         .animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
@@ -41,7 +34,6 @@
         @keyframes tickerScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
 
         /* --- Apple UI System Styles --- */
-        /* Card */
         .apple-card { 
             background-color: #ffffff; 
             border-radius: 20px; 
@@ -56,7 +48,6 @@
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25); 
         }
         
-        /* Inputs */
         .apple-input { 
             width: 100%; 
             background-color: #F2F2F7; 
@@ -82,7 +73,6 @@
             background-color: #3A3A3C; 
         }
 
-        /* Stats & Labels */
         .apple-stat-label { 
             font-size: 13px; 
             font-weight: 600; 
@@ -97,11 +87,7 @@
             letter-spacing: -0.5px; 
         }
         
-        /* Navigation Tabs (Segmented Control Style) */
-        .nav-tab {
-            font-weight: 600;
-            color: #86868B;
-        }
+        .nav-tab { font-weight: 600; color: #86868B; }
         .dark .nav-tab { color: #98989D; }
         
         .nav-tab.active { 
@@ -116,13 +102,11 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
 
-        /* Utilities */
         .nav-container { overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
         .nav-container::-webkit-scrollbar { display: none; }
         .ticker-fallback { display: flex; white-space: nowrap; overflow: hidden; align-items: center; height: 100%; width: 100%; }
         .num-font { font-variant-numeric: tabular-nums; }
         
-        /* Dark Mode Color Overrides */
         html.dark .force-dark-white { color: #FFFFFF !important; }
         .text-stat-up { color: #FF3B30; }
         html.dark .text-stat-up { color: #FF453A !important; }
@@ -144,7 +128,7 @@
         const BASE_USD_PRICE = 40.0;
         const BASE_EXCH_RATE = 1080.0;
         const DEFAULT_EXCHANGE_RATES = { 'KRW': { krw: 1 }, 'USD': { krw: 1380 }, 'JPY': { krw: 8.90 }, 'EUR': { krw: 1480 }, 'CNY': { krw: 190 }, 'ARS': { krw: 1.35 }, 'INR': { krw: 16.5 } };
-        // [수정됨] 구리실물, 한일시멘트 삭제
+        
         const DEFAULT_FAVORITES = [
             { code: "005930", name: "삼성전자" }, { code: "005380", name: "현대차" }, { code: "237690", name: "에스티팜" }, { code: "445680", name: "큐리옥스" },
             { code: "MRNA", name: "모더나" }, { code: "PFE", name: "화이자" },
@@ -217,28 +201,6 @@
             return parseFloat(value.replace(/,/g, '')) || 0;
         };
         
-        // --- Tax Calculation Helper ---
-        const calculateGlobalTax = (finIncome, otherIncome) => {
-            if (finIncome <= 20000000) {
-                return { type: 'separation', finTax: finIncome * 0.154, globalTax: 0, total: finIncome * 0.154, msg: "분리과세 종결 (2,000만원 이하)" };
-            } else {
-                const excessFinIncome = finIncome - 20000000;
-                const taxBase = excessFinIncome + otherIncome;
-                let baseTax = 0;
-                if (taxBase <= 14000000) baseTax = taxBase * 0.06;
-                else if (taxBase <= 50000000) baseTax = 840000 + (taxBase - 14000000) * 0.15;
-                else if (taxBase <= 88000000) baseTax = 6240000 + (taxBase - 50000000) * 0.24;
-                else if (taxBase <= 150000000) baseTax = 15360000 + (taxBase - 88000000) * 0.35;
-                else if (taxBase <= 300000000) baseTax = 37060000 + (taxBase - 150000000) * 0.38;
-                else if (taxBase <= 500000000) baseTax = 94060000 + (taxBase - 300000000) * 0.40;
-                else if (taxBase <= 1000000000) baseTax = 174060000 + (taxBase - 500000000) * 0.42;
-                else baseTax = 384060000 + (taxBase - 1000000000) * 0.45;
-                const calcTax = (20000000 * 0.14) + baseTax;
-                const localTax = calcTax * 0.1;
-                return { type: 'global', finTax: 0, globalTax: calcTax + localTax, total: calcTax + localTax, msg: "종합과세 대상 (2,000만원 초과)" };
-            }
-        };
-
         const calculateProgressiveIncomeTax = (income, rates) => {
             if (income <= 0) return 0;
             const threshold1 = 40000000;
@@ -315,7 +277,6 @@
             return <div ref={ref} className="h-full w-full"></div>;
         });
 
-        // --- [NEW] Mini News Preview for Routine (Feature 5) ---
         const MiniNewsPreview = memo(({ query, isDark }) => {
             const [news, setNews] = useState([]);
             const [loading, setLoading] = useState(true);
@@ -326,7 +287,6 @@
                 const fetchMiniNews = async () => {
                     setLoading(true); setError(false);
                     try {
-                        // 검색어 최적화: 사이트명이나 관련 키워드로 검색 (RSS Proxy 활용)
                         const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=ko&gl=KR&ceid=KR:ko`;
                         const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}&timestamp=${new Date().getTime()}`; 
                         
@@ -376,19 +336,16 @@
             );
         });
 
-        // --- Google News RSS Widget with Search, Tabs, Retry & Refresh ---
         const GoogleNewsWidget = memo(({ isDark }) => {
             const [news, setNews] = useState([]);
-            const [visibleCount, setVisibleCount] = useState(20); // 화면에 보여줄 뉴스 개수 관리
+            const [visibleCount, setVisibleCount] = useState(20);
             const [loading, setLoading] = useState(false);
             const [errorMsg, setErrorMsg] = useState(null);
             const [lastUpdated, setLastUpdated] = useState(null);
             const [keywords, setKeywords] = useState(() => {
-                // [원상복구] 기본 키워드 순서: '경제'를 맨 앞으로 이동
                 const defaultKeywords = ['경제', '주요뉴스', '큐리옥스바이오시스템즈', '에스티팜', '은', '비트코인'];
                 try { const saved = localStorage.getItem('invNav_newsKeywords'); return saved ? JSON.parse(saved) : defaultKeywords; } catch { return defaultKeywords; }
             });
-            // [원상복구] 초기 활성 키워드를 '경제'로 변경
             const [activeKeyword, setActiveKeyword] = useState('경제');
             const [isAdding, setIsAdding] = useState(false);
             const [newKeywordInput, setNewKeywordInput] = useState('');
@@ -432,7 +389,7 @@
             
             const handleScroll = (e) => {
                 const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-                if (scrollHeight - scrollTop <= clientHeight + 100) { // 감도 조정
+                if (scrollHeight - scrollTop <= clientHeight + 100) {
                     if (visibleCount < news.length) {
                         setVisibleCount(prev => Math.min(prev + 20, news.length));
                     }
@@ -449,10 +406,7 @@
             ];
 
             return (
-                // [수정] h-full -> absolute inset-0 으로 변경하여 스크롤 영역 강제 확보 및 스크롤바 가시성 확보
                 <div className="absolute inset-0 overflow-y-auto overscroll-contain bg-white dark:bg-[#1C1C1E]" onScroll={handleScroll}>
-                    
-                    {/* 1. Link Bar (이제 스크롤 시 위로 올라감) */}
                     <div className="px-4 pt-4 pb-2">
                         <div className="flex flex-wrap gap-2 w-full">
                             {quickLinks.map((l, i) => ( 
@@ -467,7 +421,6 @@
                         </div>
                     </div>
 
-                    {/* 2. Keywords Bar (Sticky Top 적용 - 스크롤해도 상단에 고정됨) */}
                     <div className="sticky top-0 z-30 bg-white/95 dark:bg-[#1C1C1E]/95 backdrop-blur-md flex flex-wrap items-center gap-2 p-3 border-y border-gray-100 dark:border-white/5 shadow-sm">
                          <button onClick={() => fetchNews(activeKeyword)} disabled={loading} className={`w-8 h-8 rounded-full bg-gray-100 dark:bg-[#2C2C2E] text-gray-500 hover:text-indigo-600 flex items-center justify-center transition-all flex-shrink-0 ${loading ? 'animate-spin text-indigo-500' : ''}`}><i className="fa-solid fa-arrows-rotate text-xs"></i></button>
                         <div className="w-[1px] h-4 bg-gray-300 dark:bg-gray-700 mx-1 hidden sm:block"></div>
@@ -475,7 +428,6 @@
                         {isAdding ? ( <div className="flex items-center gap-1 bg-indigo-50 dark:bg-indigo-900/30 rounded-full pl-2 pr-1 py-0.5 border border-indigo-200 dark:border-indigo-700 animate-fade-in flex-shrink-0"> <input type="text" className="w-20 bg-transparent text-xs font-bold text-indigo-700 dark:text-indigo-300 outline-none placeholder-indigo-300" placeholder="키워드" value={newKeywordInput} onChange={(e) => setNewKeywordInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddKeyword()} autoFocus /> <button onClick={handleAddKeyword} className="w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center active:scale-95 transition-transform"><i className="fa-solid fa-check text-[10px]"></i></button> <button onClick={() => setIsAdding(false)} className="w-6 h-6 rounded-full bg-gray-300 dark:bg-gray-600 text-white flex items-center justify-center active:scale-95 transition-transform"><i className="fa-solid fa-xmark text-[10px]"></i></button> </div> ) : ( <button onClick={() => setIsAdding(true)} className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-100 dark:bg-[#2C2C2E] text-slate-400 dark:text-gray-500 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-[#3A3A3C] transition active:scale-95"><i className="fa-solid fa-plus text-xs"></i></button> )}
                     </div>
                     
-                    {/* 3. News Content Area */}
                     <div className="min-h-[200px]">
                         {loading && news.length === 0 ? ( 
                             <div className="py-20 flex flex-col items-center justify-center text-gray-400 gap-2">
@@ -518,7 +470,6 @@
             );
         });
 
-        // --- Mini Chart Components ---
         const MiniChart = memo(({ symbol, theme }) => {
             const ref = useRef(null);
             useEffect(() => {
@@ -532,31 +483,24 @@
             return <div ref={ref} className="h-full w-full"></div>;
         });
 
-        // --- IPO Calendar Widget ---
         const IpoCalendarWidget = memo(({ isDark }) => {
-            const [viewMode, setViewMode] = useState('calendar'); // 'calendar' (월간) | 'list' (주간/목록) - 초기값을 달력으로 변경
-            const [calType, setCalType] = useState('all'); // 'all' (전체) | 'subscription' | 'listing'
+            const [viewMode, setViewMode] = useState('calendar'); 
+            const [calType, setCalType] = useState('all'); 
             
-            // Google Calendar Embed URL Generator
             const getUrl = () => {
                 const baseUrl = "https://calendar.google.com/calendar/embed";
-                const subCal = "gjbox0301@gmail.com"; // 청약
-                const listCal = "6ece61bb8be35674d49e32ddd31247808effcc2c6001235f154b8e9e28fab902@group.calendar.google.com"; // 상장
+                const subCal = "gjbox0301@gmail.com"; 
+                const listCal = "6ece61bb8be35674d49e32ddd31247808effcc2c6001235f154b8e9e28fab902@group.calendar.google.com"; 
                 
                 let params = `ctz=Asia%2FSeoul&showTitle=0&showPrint=0&showCalendars=0&showTz=0`;
                 
                 if (viewMode === 'list') {
-                    // 리스트 모드: 청약 + 상장 통합, Agenda 뷰 사용
                     return `${baseUrl}?${params}&mode=AGENDA&src=${encodeURIComponent(subCal)}&color=%233F51B5&src=${encodeURIComponent(listCal)}&color=%238E24AA`;
                 } else {
-                    // 캘린더 모드: 전체(통합) 또는 개별 선택, Month 뷰 사용
                     let url = `${baseUrl}?${params}&mode=MONTH`;
-                    
                     if (calType === 'all') {
-                        // [수정됨] 전체 보기: 두 캘린더 소스를 모두 추가
                         url += `&src=${encodeURIComponent(subCal)}&color=%233F51B5&src=${encodeURIComponent(listCal)}&color=%238E24AA`;
                     } else {
-                        // 개별 보기
                         const src = calType === 'subscription' ? subCal : listCal;
                         const color = calType === 'subscription' ? '%233F51B5' : '%238E24AA';
                         url += `&src=${encodeURIComponent(src)}&color=${color}`;
@@ -567,10 +511,7 @@
 
             return (
                 <div className="flex flex-col h-full w-full bg-white dark:bg-[#1C1C1E] relative group">
-                    {/* 상단 컨트롤 바 */}
                     <div className="flex flex-col sm:flex-row justify-between items-center gap-2 py-2 px-4 border-b border-gray-100 dark:border-white/5 bg-white dark:bg-[#1C1C1E] flex-shrink-0">
-                        
-                        {/* 1. 뷰 모드 전환 (월간 vs 리스트) */}
                         <div className="flex gap-1 p-1 bg-gray-100 dark:bg-[#2C2C2E] rounded-lg">
                             <button 
                                 onClick={() => setViewMode('calendar')} 
@@ -585,11 +526,8 @@
                                 <i className="fa-solid fa-list-ul"></i><span className="hidden sm:inline">통합 리스트</span>
                             </button>
                         </div>
-
-                        {/* 2. 상세 컨트롤 (모드에 따라 변경) */}
                         {viewMode === 'calendar' ? (
                             <div className="flex gap-1 p-1 bg-gray-100 dark:bg-[#2C2C2E] rounded-lg animate-fade-in">
-                                {/* [추가됨] 전체 보기 버튼 */}
                                 <button 
                                     onClick={() => setCalType('all')} 
                                     className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${calType==='all' ? 'bg-white dark:bg-[#636366] text-slate-800 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
@@ -610,15 +548,12 @@
                                 </button>
                             </div>
                         ) : (
-                            // 리스트 모드일 때는 범례 표시
                             <div className="flex items-center gap-3 text-[10px] font-bold text-gray-500 dark:text-gray-400 animate-fade-in px-2">
                                 <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#3F51B5]"></span>청약</span>
                                 <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#8E24AA]"></span>상장</span>
                             </div>
                         )}
                     </div>
-
-                    {/* Google Calendar Iframe */}
                     <div className={`flex-1 w-full relative ${isDark ? 'filter brightness-[0.85] contrast-[1.1]' : ''}`}>
                         <div className="absolute inset-0 -z-10 flex items-center justify-center bg-gray-50 dark:bg-[#2C2C2E]">
                             <i className="fa-solid fa-spinner fa-spin text-gray-300 text-2xl"></i>
@@ -634,7 +569,6 @@
             );
         });
 
-        // --- Shanghai & Bitcoin Link Panels ---
         const LinkPanel = memo(({ title, subTitle, links, icon, colorClass }) => (
             <div className="h-full w-full flex flex-col items-center justify-center p-6 bg-[#F9F9F9] dark:bg-[#2C2C2E] rounded-2xl border border-dashed border-gray-300 dark:border-gray-600">
                 <div className="text-center space-y-4">
@@ -647,7 +581,6 @@
             </div>
         ));
 
-        // --- Bridge Charts (Consolidated) ---
         const BridgeChart = memo(({ data, labels, colors, title, summaryData, isDark, growthRate, percentData, secondarySummaryData }) => {
             const canvasRef = useRef(null); const chartInstance = useRef(null);
             useEffect(() => {
@@ -655,7 +588,6 @@
                 const ctx = canvasRef.current.getContext('2d');
                 if (chartInstance.current) chartInstance.current.destroy();
 
-                // 직선 차트용 데이터 (시작점과 끝점만 존재, 중간은 null)
                 const lineData = new Array(data.length).fill(null);
                 lineData[0] = data[0][1];
                 lineData[data.length - 1] = data[data.length - 1][1];
@@ -702,14 +634,11 @@
                                 enabled: true,
                                 callbacks: {
                                     label: function(context) {
-                                        // 툴팁에는 구체적인 금액(만원 단위) 변동분을 표시
                                         const raw = context.raw;
                                         if (Array.isArray(raw)) {
                                             const diff = raw[1] - raw[0];
                                             const sign = diff > 0 ? '+' : '';
-                                            // 첫번째(매입가)와 마지막(현재가)는 전체 금액 표시
                                             if (context.dataIndex === 0 || context.dataIndex === context.dataset.data.length - 1) {
-                                                // [Fix] label이 undefined인 경우 context.label(X축 라벨) 사용
                                                 return `${context.label}: ${raw[1].toLocaleString()}만원`;
                                             }
                                             return `변동: ${sign}${diff.toLocaleString()}만원`;
@@ -718,7 +647,7 @@
                                     }
                                 }
                             },
-                            datalabels: { display: false } // 기본 datalabels 비활성화 (커스텀 afterDraw 사용)
+                            datalabels: { display: false }
                         }, 
                         scales: { 
                             x: { grid: { display: false }, ticks: { font: { size: 11, weight: 'bold' }, color: isDark ? '#aaa' : '#555' } }, 
@@ -728,7 +657,6 @@
                     plugins: [{ id: 'customLabels', afterDraw(chart) { 
                         const { ctx } = chart; 
                         
-                        // 막대 라벨 그리기
                         chart.data.datasets[0].data.forEach((datapoint, index) => { 
                             const meta = chart.getDatasetMeta(0); 
                             const bar = meta.data[index]; 
@@ -740,22 +668,18 @@
                                 ctx.fillStyle = isDark ? '#fff' : '#000'; 
                                 
                                 let label = ""; 
-                                // 첫번째(매입가)와 마지막(현재가)는 금액 표시
                                 if(index === 0 || index === data.length - 1) {
                                     label = datapoint[1].toLocaleString(); 
                                 } else { 
-                                    // 중간 변동 요인은 기여도 % 표시
                                     if (percentData && percentData[index] !== undefined) {
                                         const val = percentData[index];
                                         const xLabel = chart.data.labels[index];
-                                        // 프리미엄 항목은 KP 접두어 사용
                                         if (xLabel.includes('프리미엄')) {
                                             label = `KP ${val.toFixed(1)}%`;
                                         } else {
                                             label = (val > 0 ? '+' : '') + val.toFixed(1) + '%';
                                         }
                                     } else {
-                                        // fallback: 금액 차이
                                         const val = datapoint[1] - datapoint[0]; 
                                         label = (val > 0 ? '+' : '') + val.toLocaleString(); 
                                     }
@@ -767,7 +691,6 @@
                             } 
                         }); 
 
-                        // 수익률 뱃지 라인 중앙에 그리기
                         if (growthRate !== undefined && growthRate !== null) {
                             const metaLine = chart.getDatasetMeta(1);
                             const startPoint = metaLine.data[0];
@@ -786,7 +709,6 @@
                                 const boxWidth = textWidth + paddingX * 2;
                                 const boxHeight = 20;
 
-                                // 배경 박스 (그림자 포함)
                                 ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
                                 ctx.shadowBlur = 4;
                                 ctx.shadowOffsetY = 2;
@@ -797,10 +719,9 @@
                                 ctx.beginPath();
                                 ctx.roundRect(centerX - boxWidth/2, centerY - boxHeight/2, boxWidth, boxHeight, 10);
                                 ctx.fill();
-                                ctx.shadowColor = 'transparent'; // 그림자 끄기
+                                ctx.shadowColor = 'transparent';
                                 ctx.stroke();
 
-                                // 텍스트
                                 ctx.fillStyle = rateColor;
                                 ctx.textAlign = 'center';
                                 ctx.textBaseline = 'middle';
@@ -839,8 +760,6 @@
             );
         });
 
-        // --- APPLE STYLE COMPONENTS ---
-        // [수정됨] rightContent prop 추가하여 헤더 우측에 버튼 배치 가능하도록 개선
         const AppleCard = ({ title, subTitle, children, className = "", rightContent = null }) => (
             <div className={`apple-card flex flex-col ${className}`}>
                 {(title || subTitle || rightContent) && (
@@ -871,7 +790,6 @@
             const [linkMode, setLinkMode] = useState('investment');
             const [analysisMode, setAnalysisMode] = useState('silver'); 
             const [dashChartTab, setDashChartTab] = useState('price');
-            // [수정] 초기 탭을 'news'에서 'calendar'로 변경하여 공모주 일정이 먼저 보이게 설정
             const [marketInfoTab, setMarketInfoTab] = useState('calendar');
             const [exchangeRates, setExchangeRates] = useState(DEFAULT_EXCHANGE_RATES);
             const [lastUpdated, setLastUpdated] = useState('연결 중...');
@@ -882,18 +800,12 @@
             const [searchQuery, setSearchQuery] = useState('');
             const [newFav, setNewFav] = useState({ code: '', name: '' });
             
-            // [NEW] Routine Efficiency Features State (1, 2, 5)
             const [routineMemo, setRoutineMemo] = useState(() => localStorage.getItem('invNav_routineMemo') || '');
-            // [삭제됨] 체크박스 상태(checkedLinks) 및 관련 useEffect 제거
-            
-            // [추가됨] 미리보기 토글 상태 관리
             const [previewStates, setPreviewStates] = useState({});
 
-            // Storage
             const [silverAnalysisInputs, setSilverAnalysisInputs] = useState(() => {
                 try { 
                     const saved = JSON.parse(localStorage.getItem('invNav_silverInputs_v6'));
-                    // 로드 시 holdingQty는 항상 빈 값으로 초기화 (개인정보 보호)
                     return { ...(saved || { currentExch: '1,331', currentUsdPrice: '60.00', currentDomesticPrice: '3,000,000', currentShanghaiPrice: '15,000', avgPrice: '1,530,000' }), holdingQty: '' }; 
                 } catch { 
                     return { currentExch: '1,331', currentUsdPrice: '60.00', currentDomesticPrice: '3,000,000', currentShanghaiPrice: '15,000', holdingQty: '', avgPrice: '1,530,000' }; 
@@ -902,36 +814,45 @@
             const [bitcoinAnalysisInputs, setBitcoinAnalysisInputs] = useState(() => {
                 try { 
                     const saved = JSON.parse(localStorage.getItem('invNav_btcInputs_v6'));
-                    // 로드 시 holdingQty는 항상 빈 값으로 초기화 (개인정보 보호)
                     return { ...(saved || { currentBtcUsd: '90,000', currentDomesticPrice: '13,500', avgPrice: '13,000', avgExch: '1,331' }), holdingQty: '' };
                 } catch { 
                     return { currentBtcUsd: '90,000', currentDomesticPrice: '13,500', holdingQty: '', avgPrice: '13,000', avgExch: '1,331' }; 
                 }
             });
-            // [수정] 관심종목 변경 사항 반영을 위해 v4 -> v5로 키 업데이트
             const [favorites, setFavorites] = useState(() => { try { return JSON.parse(localStorage.getItem('invNav_favorites_v5')) || DEFAULT_FAVORITES; } catch { return DEFAULT_FAVORITES; } });
             const [routineLinks, setRoutineLinks] = useState(() => { try { return JSON.parse(localStorage.getItem('invNav_routineLinks_v2')) || DEFAULT_ROUTINE_LINKS; } catch { return DEFAULT_ROUTINE_LINKS; } });
             const [blogInsightLinks, setBlogInsightLinks] = useState(() => { try { return JSON.parse(localStorage.getItem('invNav_blogLinks_v2')) || DEFAULT_BLOG_LINKS; } catch { return DEFAULT_BLOG_LINKS; } });
             
-            useEffect(() => { 
-                // 저장 시 holdingQty는 빈 값으로 저장 (개인정보 보호)
-                const toSave = { ...silverAnalysisInputs, holdingQty: '' };
-                localStorage.setItem('invNav_silverInputs_v6', JSON.stringify(toSave)); 
-            }, [silverAnalysisInputs]);
-
-            useEffect(() => { 
-                // 저장 시 holdingQty는 빈 값으로 저장 (개인정보 보호)
-                const toSave = { ...bitcoinAnalysisInputs, holdingQty: '' };
-                localStorage.setItem('invNav_btcInputs_v6', JSON.stringify(toSave)); 
-            }, [bitcoinAnalysisInputs]);
-
+            useEffect(() => { localStorage.setItem('invNav_routineMemo', routineMemo), [routineMemo] });
             useEffect(() => { localStorage.setItem('invNav_favorites_v5', JSON.stringify(favorites)); }, [favorites]);
             useEffect(() => { localStorage.setItem('invNav_routineLinks_v2', JSON.stringify(routineLinks)); }, [routineLinks]);
             useEffect(() => { localStorage.setItem('invNav_blogLinks_v2', JSON.stringify(blogInsightLinks)); }, [blogInsightLinks]);
-            
-            // [NEW] Routine Persistence
-            useEffect(() => localStorage.setItem('invNav_routineMemo', routineMemo), [routineMemo]);
-            // [삭제됨] invNav_checkedLinks 저장 useEffect 제거
+
+            // --- 루틴 관리 헬퍼 함수 (코드 정리) ---
+            const handleAddRoutineLink = () => {
+                const { category, name, url } = newRoutine;
+                if (!category || !name || !url) return;
+
+                const isBlogMode = linkMode === 'blogs';
+                const setLinks = isBlogMode ? setBlogInsightLinks : setRoutineLinks;
+
+                setLinks(prev => ({
+                    ...prev,
+                    [category]: [...prev[category], { name, url, icon: "fa-link", color: "text-slate-700" }]
+                }));
+                setNewRoutine({ category: '', name: '', url: '' });
+            };
+
+            const handleDeleteRoutineLink = (category, index) => {
+                const isBlogMode = linkMode === 'blogs';
+                const setLinks = isBlogMode ? setBlogInsightLinks : setRoutineLinks;
+
+                setLinks(prev => ({
+                    ...prev,
+                    [category]: prev[category].filter((_, i) => i !== index)
+                }));
+            };
+            // -------------------------------------
 
             const [targetInputs, setTargetInputs] = useState({ mode: 'cap', price: '', shares: '', currentCap: '', targetCap: '', targetRate: '' });
             const [ipoCalcInputs, setIpoCalcInputs] = useState({ price: '', qty: '', fee: '', rate: 50 });
@@ -980,7 +901,6 @@
             const runSimulation = useCallback(() => {
                 const s = simInputs; const ageDiff = s.currentAge - s.spouseCurrentAge;
                 let cUserNon = s.capUserNonISA * ONE_HUNDRED_MILLION; let cSpouseNon = s.capSpouseNonISA * ONE_HUNDRED_MILLION; let cUserISA = s.capUserISA * ONE_HUNDRED_MILLION; let cSpouseISA = s.capSpouseISA * ONE_HUNDRED_MILLION; let cIPO = (s.capIPO || 0) * ONE_HUNDRED_MILLION;
-                const targetLegacyValue = 0; 
                 const extraReserveValue = parseFormattedNumber(s.extraReserve); const medicalCostMonthly = parseFormattedNumber(s.monthlyMedical); const regionalInsMonthly = parseFormattedNumber(s.monthlyRegionalIns); const initLiving = parseFormattedNumber(s.monthlyLiving) * 12;
                 const getAdjPension = (base, strategy) => { let ageAdj = 0; let mult = 1.0; if (strategy.startsWith('early')) { const y = parseInt(strategy.replace('early', '')); ageAdj = -y; mult = 1 - (y * 0.06); } else if (strategy.startsWith('defer')) { const y = parseInt(strategy.replace('defer', '')); ageAdj = y; mult = 1 + (y * 0.072); } return { start: 65 + ageAdj, amt: base * mult }; };
                 const userPen = getAdjPension(parseFormattedNumber(s.pensionSelf), s.pensionStrategyUser); const spousePen = getAdjPension(parseFormattedNumber(s.pensionSpouse), s.pensionStrategySpouse);
@@ -1013,7 +933,6 @@
                 const totalYears = history.length;
                 const pv = finalAssets / Math.pow(1 + (s.inflationRate / 100), totalYears);
                 
-                // [수정됨] maxAge 계산 및 bufferText 로직 복구
                 let bufferText = "";
                 let calculatedMaxAge = 0;
                 
@@ -1038,7 +957,6 @@
             }, [simInputs]);
             useEffect(() => { runSimulation(); }, [runSimulation]);
 
-            // --- Profit Data Logic (Existing) ---
             const silverProfitData = useMemo(() => {
                 const exch = parseFloat(silverAnalysisInputs.currentExch.replace(/[^0-9.]/g, '')) || 0; const usd = parseFloat(silverAnalysisInputs.currentUsdPrice.replace(/[^0-9.]/g, '')) || 0; const domesticPrice = parseFloat(silverAnalysisInputs.currentDomesticPrice.replace(/[^0-9.]/g, '')) || 0; const theoreticalKrwPrice = usd * exch * TROY_OZ_TO_KG; const kPremium = domesticPrice - theoreticalKrwPrice; const kPremiumPercent = theoreticalKrwPrice > 0 ? (kPremium / theoreticalKrwPrice) * 100 : 0; const shanghaiCNY = parseFloat(silverAnalysisInputs.currentShanghaiPrice.replace(/[^0-9.]/g, '')) || 0; const usdKrw = exchangeRates['USD']?.krw || 1380; const cnyKrw = exchangeRates['CNY']?.krw || 190; const usdToCny = cnyKrw > 0 ? usdKrw / cnyKrw : 7.2; const theoreticalShanghaiCNY = usd * usdToCny * TROY_OZ_TO_KG; const sPremiumPercent = theoreticalShanghaiCNY > 0 ? ((shanghaiCNY - theoreticalShanghaiCNY) / theoreticalShanghaiCNY) * 100 : 0; const shanghaiUsdOz = usdToCny > 0 ? (shanghaiCNY / usdToCny) / TROY_OZ_TO_KG : 0; const priceContrib = (usd - BASE_USD_PRICE) * BASE_EXCH_RATE * TROY_OZ_TO_KG; const exchContrib = (exch - BASE_EXCH_RATE) * BASE_USD_PRICE * TROY_OZ_TO_KG; const actualRate = ((domesticPrice / FIXED_BUY_PRICE_KG) - 1) * 100; const qty = parseFloat(silverAnalysisInputs.holdingQty) || 0; const avgPrice = parseFloat(silverAnalysisInputs.avgPrice.replace(/,/g, '')) || 0; const totalValuation = domesticPrice * qty; const totalProfit = (domesticPrice - avgPrice) * qty;
                 return { actualRate, theoreticalKrwPrice, actualPrice: domesticPrice, kPremium, kPremiumPercent, sPremiumPercent, theoreticalShanghaiCNY, priceContrib, exchContrib, shanghaiUsdOz, qty, avgPrice, totalValuation, totalProfit };
@@ -1098,7 +1016,6 @@
                                             }
                                         </div>
                                         <div className="h-[400px] rounded-2xl overflow-hidden border border-slate-100 dark:border-white/5 relative bg-white dark:bg-[#1C1C1E]">
-                                            {/* [수정됨] 상하이 은선물을 가장 위로 배치 */}
                                             {analysisMode === 'silver' ? (dashChartTab === 'price' ? <MiniChart symbol="FX_IDC:XAGUSD" theme={isDark?'dark':'light'}/> : dashChartTab === 'gold' ? <MiniChart symbol="TVC:GOLD" theme={isDark?'dark':'light'}/> : dashChartTab === 'shanghai' ? <LinkPanel title="주요 시세 확인처" subTitle={`상하이 은시세 (SMM)\n국내 매도시세 (순수한금)`} icon="fa-magnifying-glass-chart" colorClass="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400" links={[{name:"🇨🇳 상하이 은선물 (Eastmoney)", url:"https://wap.eastmoney.com/quote/stock/113.agm.html"}, {name:"🇨🇳 상하이 은시세 (SMM)", url:"https://www.metal.com/en/prices/201102250392"}, {name:"🇰🇷 국내 매도시세 (순수한금)", url:"https://blog.naver.com/wolfkickbox"}, {name:"🏭 실버테크", url:"http://www.e-silvertech.com/"}]} /> : <MiniChart symbol="TVC:GOLDSILVER" theme={isDark?'dark':'light'}/>) : (dashChartTab === 'btc' ? <MiniChart symbol="BINANCE:BTCUSDT" theme={isDark?'dark':'light'}/> : dashChartTab === 'btc_upbit' ? <MiniChart symbol="UPBIT:BTCKRW" theme={isDark?'dark':'light'}/> : <LinkPanel title="가상화폐 시세 확인" subTitle={`국내외 거래소 시세 및\n김치 프리미엄 분석`} icon="fa-bitcoin" colorClass="bg-orange-100 dark:bg-orange-900/30 text-orange-500" links={[{name:"🇰🇷 업비트 (Upbit)", url:"https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC"}, {name:"🌍 바이낸스 (Binance)", url:"https://www.binance.com/en/trade/BTC_USDT?type=spot"}, {name:"📊 김프가 (Kimpga)", url:"https://kimpga.com/"}]} />)}
                                         </div>
                                     </div>
@@ -1141,7 +1058,6 @@
                                 {isFavEditMode && (<div className="mt-auto pt-4 border-t border-gray-100 dark:border-white/5 animate-fade-in"><div className="flex gap-2"><input className="w-20 bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-lg px-2 py-2 text-xs font-bold text-center outline-none force-dark-white" placeholder="코드" value={newFav.code} onChange={e=>setNewFav({...newFav, code:e.target.value})} /><input className="flex-1 bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-lg px-2 py-2 text-xs font-bold outline-none force-dark-white" placeholder="종목명" value={newFav.name} onChange={e=>setNewFav({...newFav, name:e.target.value})} /><button onClick={() => { if(newFav.code && newFav.name) { setFavorites([...favorites, newFav]); setNewFav({code:'', name:''}); } }} className="w-8 bg-[#0071E3] text-white rounded-lg flex items-center justify-center hover:bg-blue-600"><i className="fa-solid fa-plus text-xs"></i></button></div></div>)}
                             </div>
                         </AppleCard>
-                        {/* [수정됨] 뉴스 섹션 높이 축소: h-[850px] -> h-[780px] (관심종목 2개 삭제에 맞춰 조정) */}
                         <AppleCard className="lg:col-span-8 h-[780px] min-h-[600px] !p-0 overflow-hidden">
                             <div className="flex flex-col h-full w-full">
                                 <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 dark:border-white/5 bg-white dark:bg-[#1C1C1E] flex-shrink-0">
@@ -1163,48 +1079,29 @@
                 </div>
             );
             
-            // [NEW] Routine Render Logic with 1 (Check), 2 (Memo), 5 (Progress)
             const renderRoutine = () => {
                 const currentLinks = linkMode === 'blogs' ? blogInsightLinks : routineLinks;
                 
-                // [추가됨] 개별 미리보기 토글 핸들러
                 const togglePreview = (key) => {
                     setPreviewStates(prev => ({ ...prev, [key]: !prev[key] }));
                 };
 
-                // [추가됨] 카테고리 전체 미리보기 토글 핸들러
                 const toggleCategoryPreview = (cat, links) => {
-                    // 현재 카테고리의 모든 링크가 열려있는지 확인
                     const allOpen = links.every(l => previewStates[`${cat}_${l.url}`]);
                     const newStates = { ...previewStates };
-                    
-                    links.forEach(l => {
-                        // 모두 열려있으면 -> 닫기 (false)
-                        // 하나라도 닫혀있으면 -> 모두 열기 (true)
-                        newStates[`${cat}_${l.url}`] = !allOpen;
-                    });
+                    links.forEach(l => { newStates[`${cat}_${l.url}`] = !allOpen; });
                     setPreviewStates(newStates);
                 };
 
-                // [수정됨] 모두 열기 핸들러 - 팝업 차단 감지 및 부분 성공 처리
                 const handleOpenAll = (links) => {
                     let opened = 0;
                     let blocked = false;
-
                     links.forEach(l => {
-                        // window.open은 팝업이 차단되면 null을 반환하거나 예외를 발생시킬 수 있음
                         try {
                             const w = window.open(l.url, '_blank');
-                            if (w) {
-                                opened++;
-                            } else {
-                                blocked = true;
-                            }
-                        } catch (e) {
-                            blocked = true;
-                        }
+                            if (w) opened++; else blocked = true;
+                        } catch (e) { blocked = true; }
                     });
-                    
                     if (opened === 0) {
                         alert("모든 팝업이 차단되었습니다.\n\n브라우저 주소창 우측의 '팝업 차단됨' 아이콘을 눌러\n[이 사이트의 팝업 및 리디렉션 항상 허용]을 선택해주세요.");
                     } else if (blocked || opened < links.length) {
@@ -1219,11 +1116,8 @@
                                 <div><h2 className="text-3xl font-bold tracking-tight text-slate-900 force-dark-white">오늘의 루틴</h2><p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">{linkMode === 'investment' ? '매일 체크하는 투자 및 생활 정보' : '깊이 있는 분석과 인사이트 블로그'}</p></div>
                                 <div className="flex items-center gap-3"><div className="bg-[#E5E5EA] dark:bg-[#2C2C2E] p-1 rounded-full flex"><button onClick={() => setLinkMode('investment')} className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${linkMode === 'investment' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-500 dark:text-gray-300'}`}>투자 & 일상</button><button onClick={() => setLinkMode('blogs')} className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${linkMode === 'blogs' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-500 dark:text-gray-300'}`}>인사이트</button></div><button onClick={() => setIsRoutineEditMode(!isRoutineEditMode)} className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${isRoutineEditMode ? 'bg-[#0071E3] text-white' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-[#0071E3]'}`}>{isRoutineEditMode ? '완료' : '편집'}</button></div>
                             </div>
-                            
-                            {/* [삭제됨] 일일 달성률(Progress Bar) 제거 */}
                         </div>
 
-                        {/* Feature 2: Routine Memo */}
                         <AppleCard title="루틴 메모" subTitle="투자 아이디어나 할 일 기록" className="!p-4">
                             <textarea 
                                 className="w-full h-20 bg-transparent resize-none outline-none text-sm text-slate-700 dark:text-slate-200 placeholder-gray-400" 
@@ -1233,80 +1127,55 @@
                             />
                         </AppleCard>
 
-                        {isRoutineEditMode && (<AppleCard className="bg-indigo-50/50 dark:bg-indigo-900/10 border-indigo-100 dark:border-indigo-800"><div className="flex items-center gap-2 mb-4 text-[#0071E3]"><i className="fa-solid fa-circle-plus"></i><span className="text-sm font-bold">새로운 링크 추가</span></div><div className="grid grid-cols-1 sm:grid-cols-12 gap-3"><div className="sm:col-span-3"><select className="apple-input w-full" value={newRoutine.category} onChange={e=>setNewRoutine({...newRoutine, category:e.target.value})}><option value="">카테고리 선택</option>{Object.keys(linkMode === 'blogs' ? blogInsightLinks : routineLinks).map(cat => <option key={cat} value={cat}>{cat}</option>)}</select></div><div className="sm:col-span-3"><input type="text" placeholder="사이트명" className="apple-input" value={newRoutine.name} onChange={e=>setNewRoutine({...newRoutine, name:e.target.value})} /></div><div className="sm:col-span-4"><input type="text" placeholder="URL (https://...)" className="apple-input" value={newRoutine.url} onChange={e=>setNewRoutine({...newRoutine, url:e.target.value})} /></div><div className="sm:col-span-2"><button onClick={() => { if(linkMode === 'blogs') { if (!newRoutine.category || !newRoutine.name || !newRoutine.url) return; const updated = { ...blogInsightLinks }; updated[newRoutine.category] = [...updated[newRoutine.category], { name: newRoutine.name, url: newRoutine.url, icon: "fa-link", color: "text-slate-700" }]; setBlogInsightLinks(updated); setNewRoutine({ category: '', name: '', url: '' }); } else { if (!newRoutine.category || !newRoutine.name || !newRoutine.url) return; const updated = { ...routineLinks }; updated[newRoutine.category] = [...updated[newRoutine.category], { name: newRoutine.name, url: newRoutine.url, icon: "fa-link", color: "text-slate-700" }]; setRoutineLinks(updated); setNewRoutine({ category: '', name: '', url: '' }); } }} className="w-full h-full bg-[#0071E3] hover:bg-blue-600 text-white rounded-xl font-bold text-xs transition py-3 sm:py-0">추가하기</button></div></div></AppleCard>)}
+                        {isRoutineEditMode && (
+                            <AppleCard className="bg-indigo-50/50 dark:bg-indigo-900/10 border-indigo-100 dark:border-indigo-800">
+                                <div className="flex items-center gap-2 mb-4 text-[#0071E3]"><i className="fa-solid fa-circle-plus"></i><span className="text-sm font-bold">새로운 링크 추가</span></div>
+                                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                                    <div className="sm:col-span-3">
+                                        <select className="apple-input w-full" value={newRoutine.category} onChange={e=>setNewRoutine({...newRoutine, category:e.target.value})}>
+                                            <option value="">카테고리 선택</option>
+                                            {Object.keys(currentLinks).map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="sm:col-span-3"><input type="text" placeholder="사이트명" className="apple-input" value={newRoutine.name} onChange={e=>setNewRoutine({...newRoutine, name:e.target.value})} /></div>
+                                    <div className="sm:col-span-4"><input type="text" placeholder="URL (https://...)" className="apple-input" value={newRoutine.url} onChange={e=>setNewRoutine({...newRoutine, url:e.target.value})} /></div>
+                                    <div className="sm:col-span-2"><button onClick={handleAddRoutineLink} className="w-full h-full bg-[#0071E3] hover:bg-blue-600 text-white rounded-xl font-bold text-xs transition py-3 sm:py-0">추가하기</button></div>
+                                </div>
+                            </AppleCard>
+                        )}
                         
-                        {/* Feature 1: Links (Checklist removed) + Feature 5: News Preview */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {Object.entries(currentLinks).map(([cat, links]) => {
-                                // 현재 카테고리의 모든 미리보기가 열려있는지 확인 (버튼 상태 변경용)
                                 const allPreviewsOpen = links.length > 0 && links.every(l => previewStates[`${cat}_${l.url}`]);
-
                                 return (
-                                    <AppleCard 
-                                        key={cat} 
-                                        title={cat} 
-                                        className="h-full"
-                                        // [수정됨] 우측 상단에 '미리보기 전체 토글' 및 '모두 열기' 버튼 배치
-                                        rightContent={
-                                            <div className="flex gap-2">
-                                                {/* 전체 미리보기 버튼 */}
-                                                <button 
-                                                    onClick={() => toggleCategoryPreview(cat, links)}
-                                                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors flex items-center gap-1.5 ${allPreviewsOpen ? 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300' : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50'}`}
-                                                >
-                                                    <i className={`fa-solid ${allPreviewsOpen ? 'fa-chevron-up' : 'fa-newspaper'}`}></i> 
-                                                    <span className="hidden sm:inline">{allPreviewsOpen ? '접기' : '미리보기'}</span>
-                                                </button>
-                                                {/* 모두 열기 버튼 */}
-                                                <button 
-                                                    onClick={() => handleOpenAll(links)}
-                                                    className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-3 py-1.5 rounded-lg text-[11px] font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors flex items-center gap-1.5"
-                                                >
-                                                    <i className="fa-solid fa-arrow-up-right-from-square"></i> 
-                                                    <span className="hidden sm:inline">모두 열기</span>
-                                                </button>
-                                            </div>
-                                        }
-                                    >
+                                    <AppleCard key={cat} title={cat} className="h-full" rightContent={
+                                        <div className="flex gap-2">
+                                            <button onClick={() => toggleCategoryPreview(cat, links)} className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors flex items-center gap-1.5 ${allPreviewsOpen ? 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300' : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50'}`}>
+                                                <i className={`fa-solid ${allPreviewsOpen ? 'fa-chevron-up' : 'fa-newspaper'}`}></i><span className="hidden sm:inline">{allPreviewsOpen ? '접기' : '미리보기'}</span>
+                                            </button>
+                                            <button onClick={() => handleOpenAll(links)} className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-3 py-1.5 rounded-lg text-[11px] font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors flex items-center gap-1.5">
+                                                <i className="fa-solid fa-arrow-up-right-from-square"></i><span className="hidden sm:inline">모두 열기</span>
+                                            </button>
+                                        </div>
+                                    }>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                             {links.map((l, i) => {
                                                 const checkKey = `${cat}_${l.url}`;
                                                 const isPreviewOpen = previewStates[checkKey];
-
                                                 return (
-                                                    <div key={i} className="relative group flex flex-col bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-xl transition-all border border-transparent hover:border-gray-200 dark:hover:border-white/10 overflow-hidden">
-                                                        {/* Link Row */}
+                                                    <div key={`${cat}-${l.url}-${i}`} className="relative group flex flex-col bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-xl transition-all border border-transparent hover:border-gray-200 dark:hover:border-white/10 overflow-hidden">
                                                         <div className="flex items-center p-3 gap-3">
-                                                            {/* [삭제됨] Checkbox 버튼 제거 */}
-
-                                                            {/* Link Info (No Strikethrough) */}
-                                                            <a 
-                                                                href={l.url} 
-                                                                target="_blank" 
-                                                                rel="noopener noreferrer"
-                                                                className="flex items-center gap-3 flex-1 min-w-0"
-                                                            >
-                                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-white dark:bg-white/10 ${l.color || 'text-slate-500'}`}>
-                                                                    <i className={`fa-solid ${l.icon || 'fa-link'} text-xs`}></i>
-                                                                </div>
+                                                            <a href={l.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 flex-1 min-w-0">
+                                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-white dark:bg-white/10 ${l.color || 'text-slate-500'}`}><i className={`fa-solid ${l.icon || 'fa-link'} text-xs`}></i></div>
                                                                 <span className="text-sm font-bold truncate text-slate-900 dark:text-white">{l.name}</span>
                                                             </a>
+                                                            <button onClick={(e) => { e.stopPropagation(); togglePreview(checkKey); }} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-indigo-500 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition">
+                                                                <i className={`fa-solid ${isPreviewOpen ? 'fa-chevron-up' : 'fa-chevron-down'} text-xs`}></i>
+                                                            </button>
                                                         </div>
-
-                                                        {/* News Preview Panel */}
-                                                        {isPreviewOpen && (
-                                                            <MiniNewsPreview query={l.name} isDark={isDark} />
-                                                        )}
-
+                                                        {isPreviewOpen && <MiniNewsPreview query={l.name} isDark={isDark} />}
                                                         {isRoutineEditMode && (
-                                                            <button 
-                                                                onClick={(e) => { 
-                                                                    e.preventDefault(); 
-                                                                    if(linkMode === 'blogs') { const updated = { ...blogInsightLinks }; updated[cat] = updated[cat].filter((_, index) => index !== i); setBlogInsightLinks(updated); } 
-                                                                    else { const updated = { ...routineLinks }; updated[cat] = updated[cat].filter((_, index) => index !== i); setRoutineLinks(updated); } 
-                                                                }} 
-                                                                className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-[#FF3B30] text-white rounded-full flex items-center justify-center shadow-md hover:scale-110 transition z-10 border-2 border-white dark:border-[#1C1C1E]"
-                                                            >
+                                                            <button onClick={(e) => { e.preventDefault(); handleDeleteRoutineLink(cat, i); }} className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-[#FF3B30] text-white rounded-full flex items-center justify-center shadow-md hover:scale-110 transition z-10 border-2 border-white dark:border-[#1C1C1E]">
                                                                 <i className="fa-solid fa-minus text-[10px]"></i>
                                                             </button>
                                                         )}
@@ -1352,7 +1221,6 @@
                                     
                                     const estValue = tPrice * s;
                                     const profit = estValue - (p * s);
-                                    // [추가됨] 목표 도달 수익률 계산
                                     const reachRate = p > 0 ? ((tPrice - p) / p) * 100 : 0;
 
                                     return (
@@ -1360,7 +1228,6 @@
                                             <div className="flex justify-between items-center">
                                                 <span className="text-xs font-bold text-gray-500 dark:text-gray-300">목표 도달 단가</span>
                                                 <div className="text-right">
-                                                    {/* [수정됨] 수익률 퍼센트 표시 소수점 1자리로 변경 */}
                                                     <span className={`text-xs font-bold mr-2 ${reachRate >= 0 ? 'text-[#FF3B30]' : 'text-[#0071E3]'}`}>
                                                         ({reachRate > 0 ? '+' : ''}{reachRate.toFixed(1)}%)
                                                     </span>
@@ -1408,10 +1275,7 @@
                 <div className="animate-fade-in pb-10 space-y-4">
                     <div className="flex justify-between items-end px-1"><div><h2 className="text-2xl font-bold tracking-tight text-slate-900 force-dark-white">노후 자금 시뮬레이션</h2><p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">생애 주기 자산 흐름 분석</p></div></div>
                     
-                    {/* 입력 섹션: 2단 컬럼 (좌: 1+2 / 우: 3) */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                        
-                        {/* 왼쪽 컬럼: 1. 프로필 & 전략 + 2. 자산 & 수익률 */}
                         <div className="flex flex-col gap-3">
                             <AppleCard title="1. 프로필 & 전략" className="!p-4">
                                 <div className="space-y-4">
@@ -1420,14 +1284,12 @@
                                         <div><label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">배우자 나이</label><input type="number" className="apple-input !py-1.5 !text-center !text-sm" value={simInputs.spouseCurrentAge} onChange={e=>setSimInputs({...simInputs, spouseCurrentAge:parseInt(e.target.value)})}/></div>
                                     </div>
                                     
-                                    {/* 설정 바 */}
                                     <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] p-3 rounded-xl grid grid-cols-3 gap-2 text-center">
                                         <div><label className="text-[11px] font-bold text-indigo-500 block mb-1">시뮬 시작</label><div className="flex items-center justify-center"><input type="number" className="apple-input !py-1 !px-0 !text-center !text-xs !bg-white dark:!bg-white/10 w-full max-w-[50px]" value={simInputs.simulationStartAge} onChange={e=>setSimInputs({...simInputs, simulationStartAge:parseInt(e.target.value)})}/><span className="text-[10px] text-gray-400 ml-1">세</span></div></div>
                                         <div><label className="text-[11px] font-bold text-orange-500 block mb-1">지역 건보</label><div className="flex items-center justify-center"><input type="number" className="apple-input !py-1 !px-0 !text-center !text-xs !bg-white dark:!bg-white/10 w-full max-w-[50px]" value={simInputs.regionalInsStartAge || 60} onChange={e=>setSimInputs({...simInputs, regionalInsStartAge:parseInt(e.target.value)})}/><span className="text-[10px] text-gray-400 ml-1">세</span></div></div>
                                         <div><label className="text-[11px] font-bold text-rose-500 block mb-1">간병 전환</label><div className="flex items-center justify-center"><input type="number" className="apple-input !py-1 !px-0 !text-center !text-xs !bg-white dark:!bg-white/10 w-full max-w-[50px]" value={simInputs.highCostStartAge || 80} onChange={e=>setSimInputs({...simInputs, highCostStartAge:parseInt(e.target.value)})}/><span className="text-[10px] text-gray-400 ml-1">세</span></div></div>
                                     </div>
 
-                                    {/* 연금 전략 */}
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
                                             <label className="text-xs font-bold text-blue-500 mb-1 block">본인 연금 수령</label>
@@ -1488,7 +1350,6 @@
                             </AppleCard>
                         </div>
 
-                        {/* 오른쪽 컬럼: 3. 경제 & 현금흐름 */}
                         <AppleCard title="3. 경제 & 현금흐름" className="h-full !p-4">
                             <div className="space-y-3 h-full flex flex-col">
                                 <div className="grid grid-cols-2 gap-3">
@@ -1519,7 +1380,6 @@
                                             <input className="apple-input !w-24 !py-0 !h-6 !text-xs !bg-white dark:!bg-white/10 text-right" value={simInputs[item.k]} onChange={e=>handleCommaChange(e, v=>setSimInputs({...simInputs, [item.k]: v}))}/>
                                         </div>
                                     ))}
-                                    {/* [수정됨] 6번째 빈 공간에 합계 표시 */}
                                     <div className="flex justify-between items-center py-0.5">
                                         <label className="text-xs font-black text-indigo-500">합계</label>
                                         <div className="w-24 text-right text-xs font-black text-indigo-600 dark:text-indigo-400">
@@ -1531,11 +1391,8 @@
                         </AppleCard>
                     </div>
 
-                    {/* 결과 표시 영역 (강조) */}
                     <div className={`relative overflow-hidden p-6 sm:p-8 rounded-3xl text-white shadow-xl transition-all duration-500 ${simResult.summary?.isSuccess ? 'bg-gradient-to-br from-[#34C759] to-[#30B34F]' : 'bg-gradient-to-br from-[#FF3B30] to-[#FF2D55]'}`}>
                         <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                            
-                            {/* Left Column: 핵심 결과 지표 */}
                             <div className="text-center md:text-left relative z-10">
                                 <h3 className="text-sm font-bold text-white/80 uppercase tracking-wide mb-2 flex items-center justify-center md:justify-start gap-2">
                                     <i className="fa-solid fa-flag-checkered"></i> 95세 시점 예상 자산
@@ -1561,13 +1418,9 @@
                                 )}
                             </div>
 
-                            {/* Right Column: 컴팩트형 직관적 디자인 (수정됨: 중앙 정렬로 간격 조정) */}
                             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 shadow-inner flex items-center justify-center gap-6 relative z-10 w-full max-w-sm ml-auto mr-auto md:mr-0">
-                                {/* 텍스트 정보 */}
                                 <div className="flex flex-col justify-center">
                                     <span className="text-[10px] font-bold text-white/60 uppercase tracking-wider mb-1">Asset Lifespan</span>
-                                    
-                                    {/* 나이 표시 (컴팩트 사이즈) */}
                                     <div className="flex items-baseline mb-2">
                                         {simResult.summary?.depletion ? (
                                             <>
@@ -1595,20 +1448,16 @@
                                     </div>
                                 </div>
 
-                                {/* 아이콘 (크기 축소: w-14) */}
                                 <div className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl shadow-lg border border-white/20 ${simResult.summary?.depletion ? 'bg-red-500/20 text-red-200' : 'bg-emerald-500/20 text-emerald-100'}`}>
                                     <i className={`fa-solid ${simResult.summary?.depletion ? 'fa-hourglass-end' : 'fa-shield-halved'}`}></i>
                                 </div>
                             </div>
                         </div>
-                        
-                        {/* Background Deco */}
                         <i className={`fa-solid ${simResult.summary?.isSuccess ? 'fa-sack-dollar' : 'fa-chart-pie'} absolute -bottom-10 -right-10 text-[200px] text-white/10 pointer-events-none transform -rotate-12`}></i>
                     </div>
 
                     <AppleCard title="자산 흐름 그래프" subTitle="연령별 자산 변화 추이"><div className="h-[350px] sm:h-[450px]"><SimulationChart history={simResult.history} /></div></AppleCard>
                     
-                    {/* 연령별 상세 분석 (기능 완전 복구) */}
                     <div className="mt-6 bg-white dark:bg-slate-800 p-3 rounded-xl border dark:border-slate-700 shadow-sm relative">
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                             <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
@@ -1734,7 +1583,6 @@
                 </div>
             );
 
-            // --- Tax Tab (Restored from User Code) ---
             const renderFinancialTax = () => {
                 const totalFinIncome = finList.reduce((a, c) => a + c.amount, 0);
                 const earnedIncomeValue = parseFormattedNumber(earnedIncome);
@@ -1761,7 +1609,7 @@
                     }
                     
                     const separateFinTax = isTarget ? TAX_THRESHOLD * 0.14 : find * 0.14;
-                    const totalDecided = (calculatedTax + separateFinTax) * 1.1; // 지방소득세 포함
+                    const totalDecided = (calculatedTax + separateFinTax) * 1.1; 
                     
                     let remE = earned; let lastLE = 0; let taxEOnly = 0; 
                     for (const b of brackets) { 
@@ -1795,11 +1643,9 @@
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                            {/* Left Column: Inputs */}
                             <div className="lg:col-span-5 space-y-6">
                                 <AppleCard title="소득 데이터 입력" subTitle="근로 및 금융소득 합산 기준">
                                     <div className="space-y-6">
-                                        {/* 근로소득 */}
                                         <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] p-4 rounded-2xl">
                                             <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-2">연간 근로소득 (과세표준)</label>
                                             <div className="flex items-center gap-2">
@@ -1809,7 +1655,6 @@
                                             <p className="text-[10px] text-slate-400 mt-2 flex items-center gap-1"><i className="fa-solid fa-check-circle"></i> 기납부 세액 자동 계산 적용</p>
                                         </div>
 
-                                        {/* 금융소득 */}
                                         <div>
                                             <div className="flex justify-between items-center mb-3 px-1">
                                                 <label className="text-xs font-bold text-slate-500 dark:text-slate-400">금융소득 상세 (이자/배당)</label>
@@ -1847,10 +1692,8 @@
                                 </div>
                             </div>
 
-                            {/* Right Column: Results */}
                             <div className="lg:col-span-7 space-y-6">
                                 <AppleCard title="최종 분석 리포트" subTitle="예상 납부 세액 및 부담금">
-                                    {/* Main Result Hero */}
                                     <div className="bg-[#1C1C1E] dark:bg-black p-6 rounded-3xl text-center shadow-lg relative overflow-hidden mb-6 group">
                                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
                                         <p className="text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider">최종 실질 추가 부담액 (세금 + 건보료)</p>
@@ -1869,7 +1712,6 @@
                                         </div>
                                     </div>
 
-                                    {/* Comparison & Impact */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                                         <div className="p-4 rounded-2xl bg-[#F2F2F7] dark:bg-[#2C2C2E] border border-transparent dark:border-white/5">
                                             <div className="text-[10px] font-bold text-slate-400 mb-1">분리과세 종결 시 (가정)</div>
@@ -1883,7 +1725,6 @@
                                         </div>
                                     </div>
 
-                                    {/* Detailed Table */}
                                     <div>
                                         <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-3 px-1">과세 구간별 산출 내역</h4>
                                         <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
