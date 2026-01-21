@@ -800,6 +800,11 @@
             const [searchQuery, setSearchQuery] = useState('');
             const [newFav, setNewFav] = useState({ code: '', name: '' });
             
+            // --- 추가된 상태: 돈(3.75g) 단위 변환기 ---
+            const [showDonConverter, setShowDonConverter] = useState(false);
+            const [donPrice, setDonPrice] = useState('');
+            // -------------------------------------
+
             const [routineMemo, setRoutineMemo] = useState(() => localStorage.getItem('invNav_routineMemo') || '');
             const [previewStates, setPreviewStates] = useState({});
 
@@ -853,6 +858,19 @@
                 }));
             };
             // -------------------------------------
+            
+            // --- 돈 단위 변환 헬퍼 ---
+            const calculateKgPrice = (don) => {
+                const val = parseFloat(don.replace(/[^0-9.]/g, '')) || 0;
+                return Math.round(val * (1000 / 3.75));
+            };
+            const applyKgPrice = () => {
+                const kgVal = calculateKgPrice(donPrice);
+                if (kgVal > 0) {
+                    setSilverAnalysisInputs(prev => ({...prev, currentDomesticPrice: kgVal.toLocaleString('ko-KR')}));
+                }
+            };
+            // -----------------------
 
             const [targetInputs, setTargetInputs] = useState({ mode: 'cap', price: '', shares: '', currentCap: '', targetCap: '', targetRate: '' });
             const [ipoCalcInputs, setIpoCalcInputs] = useState({ price: '', qty: '', fee: '', rate: 50 });
@@ -988,7 +1006,44 @@
                                         <>
                                             <div><label className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">국제 시세 (USD/oz)</label><div className="relative flex items-center bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-xl overflow-hidden group"><button onClick={() => adjustValue(setSilverAnalysisInputs, 'currentUsdPrice', -0.1)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-minus text-[10px]"></i></button><input className="apple-input flex-1 !rounded-none !bg-transparent text-center !px-0" value={silverAnalysisInputs.currentUsdPrice} onChange={e=>handleCommaChange(e, v=>setSilverAnalysisInputs({...silverAnalysisInputs, currentUsdPrice:v}))} /><button onClick={() => adjustValue(setSilverAnalysisInputs, 'currentUsdPrice', 0.1)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-plus text-[10px]"></i></button></div></div>
                                             <div><label className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">원달러 환율 ($/₩)</label><div className="apple-input flex justify-between items-center text-slate-400 cursor-default bg-slate-50 dark:bg-white/5"><span className="text-xs">실시간</span><span className="text-slate-900 force-dark-white">{silverAnalysisInputs.currentExch}</span></div></div>
-                                            <div><label className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">국내 매도가 (원/kg)</label><div className="relative flex items-center bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-xl overflow-hidden group"><button onClick={() => adjustValue(setSilverAnalysisInputs, 'currentDomesticPrice', -10000)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-minus text-[10px]"></i></button><input className="apple-input flex-1 !rounded-none !bg-transparent text-center !px-0" value={silverAnalysisInputs.currentDomesticPrice} onChange={e=>handleCommaChange(e, v=>setSilverAnalysisInputs({...silverAnalysisInputs, currentDomesticPrice:v}))} /><button onClick={() => adjustValue(setSilverAnalysisInputs, 'currentDomesticPrice', 10000)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-plus text-[10px]"></i></button></div></div>
+                                            
+                                            <div>
+                                                <div className="flex justify-between items-end mb-1">
+                                                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-1 block">국내 매도가 (원/kg)</label>
+                                                    <button onClick={() => setShowDonConverter(!showDonConverter)} className="text-[10px] text-indigo-500 font-bold hover:underline transition-all opacity-80 hover:opacity-100 flex items-center gap-1">
+                                                        <i className="fa-solid fa-calculator"></i> 3.75g(1돈) 환산 {showDonConverter ? '▲' : '▼'}
+                                                    </button>
+                                                </div>
+                                                
+                                                {showDonConverter && (
+                                                    <div className="bg-indigo-50 dark:bg-indigo-900/20 p-2 rounded-xl mb-2 animate-fade-in border border-indigo-100 dark:border-indigo-800/30">
+                                                        <div className="flex items-center gap-2 mb-1.5">
+                                                            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">1돈(3.75g)</span>
+                                                            <input 
+                                                                className="apple-input !py-1 !text-xs flex-1 text-right !bg-white dark:!bg-white/10" 
+                                                                placeholder="예: 4,500"
+                                                                value={donPrice}
+                                                                onChange={(e) => handleCommaChange(e, setDonPrice)}
+                                                            />
+                                                            <span className="text-[10px] text-slate-500 dark:text-slate-400">원</span>
+                                                        </div>
+                                                        <div className="flex justify-between items-center border-t border-indigo-200 dark:border-indigo-800 pt-1.5">
+                                                            <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+                                                                <i className="fa-solid fa-arrow-right"></i> 1kg: {formatNumber(calculateKgPrice(donPrice))}원
+                                                            </span>
+                                                            <button 
+                                                                onClick={applyKgPrice}
+                                                                className="text-[10px] bg-indigo-500 text-white px-2 py-1 rounded hover:bg-indigo-600 transition font-bold shadow-sm active:scale-95"
+                                                            >
+                                                                적용하기
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                <div className="relative flex items-center bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-xl overflow-hidden group"><button onClick={() => adjustValue(setSilverAnalysisInputs, 'currentDomesticPrice', -10000)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-minus text-[10px]"></i></button><input className="apple-input flex-1 !rounded-none !bg-transparent text-center !px-0" value={silverAnalysisInputs.currentDomesticPrice} onChange={e=>handleCommaChange(e, v=>setSilverAnalysisInputs({...silverAnalysisInputs, currentDomesticPrice:v}))} /><button onClick={() => adjustValue(setSilverAnalysisInputs, 'currentDomesticPrice', 10000)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-plus text-[10px]"></i></button></div>
+                                            </div>
+
                                             <div className="pt-2 border-t border-dashed border-gray-200 dark:border-white/10"><label className="text-xs font-bold text-red-500/80 dark:text-red-400/80 pl-1 mb-1 block">상하이 시세 (CNY/kg)</label><div className="relative flex items-center bg-red-50 dark:bg-red-900/10 rounded-xl overflow-hidden group"><button onClick={() => adjustValue(setSilverAnalysisInputs, 'currentShanghaiPrice', -10)} className="w-8 h-10 flex items-center justify-center text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-minus text-[10px]"></i></button><input className="apple-input flex-1 !rounded-none !bg-transparent !text-red-600 dark:!text-red-300 text-center !px-0 focus:!bg-transparent" value={silverAnalysisInputs.currentShanghaiPrice} onChange={e=>handleCommaChange(e, v=>setSilverAnalysisInputs({...silverAnalysisInputs, currentShanghaiPrice:v}))} /><button onClick={() => adjustValue(setSilverAnalysisInputs, 'currentShanghaiPrice', 10)} className="w-8 h-10 flex items-center justify-center text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-plus text-[10px]"></i></button></div></div>
                                             <div className="pt-2 border-t border-dashed border-gray-200 dark:border-white/10 mt-2"><label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 block">내 자산 (보유량/평단가)</label><div className="grid grid-cols-2 gap-2"><div><input className="apple-input !text-sm" placeholder="수량(kg)" value={silverAnalysisInputs.holdingQty} onChange={e=>setSilverAnalysisInputs({...silverAnalysisInputs, holdingQty:e.target.value.replace(/[^0-9.]/g, '')})} /></div><div><input className="apple-input !text-sm" placeholder="평단가" value={silverAnalysisInputs.avgPrice} onChange={e=>handleCommaChange(e, v=>setSilverAnalysisInputs({...silverAnalysisInputs, avgPrice:v}))} /></div></div></div>
                                         </>
