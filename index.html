@@ -1016,7 +1016,53 @@
                                             }
                                         </div>
                                         <div className="h-[400px] rounded-2xl overflow-hidden border border-slate-100 dark:border-white/5 relative bg-white dark:bg-[#1C1C1E]">
-                                            {analysisMode === 'silver' ? (dashChartTab === 'price' ? <MiniChart symbol="FX_IDC:XAGUSD" theme={isDark?'dark':'light'}/> : dashChartTab === 'gold' ? <MiniChart symbol="TVC:GOLD" theme={isDark?'dark':'light'}/> : dashChartTab === 'shanghai' ? <LinkPanel title="주요 시세 확인처" subTitle={`상하이 은시세 (SMM)\n국내 매도시세 (순수한금)`} icon="fa-magnifying-glass-chart" colorClass="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400" links={[{name:"🇨🇳 상하이 은선물 (Eastmoney)", url:"https://wap.eastmoney.com/quote/stock/113.agm.html"}, {name:"🇨🇳 상하이 은시세 (SMM)", url:"https://www.metal.com/en/prices/201102250392"}, {name:"🇰🇷 국내 매도시세 (순수한금)", url:"https://blog.naver.com/wolfkickbox"}, {name:"🏭 실버테크", url:"http://www.e-silvertech.com/"}]} /> : <MiniChart symbol="TVC:GOLDSILVER" theme={isDark?'dark':'light'}/>) : (dashChartTab === 'btc' ? <MiniChart symbol="BINANCE:BTCUSDT" theme={isDark?'dark':'light'}/> : dashChartTab === 'btc_upbit' ? <MiniChart symbol="UPBIT:BTCKRW" theme={isDark?'dark':'light'}/> : <LinkPanel title="가상화폐 시세 확인" subTitle={`국내외 거래소 시세 및\n김치 프리미엄 분석`} icon="fa-bitcoin" colorClass="bg-orange-100 dark:bg-orange-900/30 text-orange-500" links={[{name:"🇰🇷 업비트 (Upbit)", url:"https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC"}, {name:"🌍 바이낸스 (Binance)", url:"https://www.binance.com/en/trade/BTC_USDT?type=spot"}, {name:"📊 김프가 (Kimpga)", url:"https://kimpga.com/"}]} />)}
+                                            {analysisMode === 'silver' ? (dashChartTab === 'price' ? <MiniChart symbol="FX_IDC:XAGUSD" theme={isDark?'dark':'light'}/> : dashChartTab === 'gold' ? <MiniChart symbol="TVC:GOLD" theme={isDark?'dark':'light'}/> : dashChartTab === 'shanghai' ? (
+                                                <div className="h-full w-full flex flex-col items-center justify-center p-4 bg-[#F9F9F9] dark:bg-[#2C2C2E] rounded-2xl border border-dashed border-gray-300 dark:border-gray-600">
+                                                    <div className="text-center w-full max-w-sm space-y-5">
+                                                        <div className="flex flex-col items-center">
+                                                            <div className="w-14 h-14 rounded-full flex items-center justify-center mb-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"><i className="fa-solid fa-magnifying-glass-chart text-2xl"></i></div>
+                                                            <h4 className="text-lg font-bold text-slate-900 dark:text-white">주요 시세 확인처</h4>
+                                                            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">국내 및 상하이 시세 비교</p>
+                                                        </div>
+                                                        <div className="space-y-3 w-full">
+                                                            <div className="flex flex-col gap-1.5">
+                                                                <div className="flex items-center gap-2 px-1">
+                                                                    <span className="w-1 h-3 bg-red-500 rounded-full"></span>
+                                                                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">국내 실물 시세</span>
+                                                                </div>
+                                                                <div className="grid grid-cols-3 gap-2">
+                                                                    {[
+                                                                        {n:'스태커스', u:'https://cafe.naver.com/twostepstock'},
+                                                                        {n:'순수한금', u:'https://blog.naver.com/wolfkickbox'},
+                                                                        {n:'실버테크', u:'http://www.e-silvertech.com/'}
+                                                                    ].map((l,i) => (
+                                                                        <a key={i} href={l.u} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center py-3 px-1 bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition shadow-sm h-full group">
+                                                                            <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 text-center leading-tight group-hover:text-red-500 transition-colors">{l.n}</span>
+                                                                        </a>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex flex-col gap-1.5 mt-2">
+                                                                <div className="flex items-center gap-2 px-1">
+                                                                    <span className="w-1 h-3 bg-red-500 rounded-full"></span>
+                                                                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">중국 상하이 시세</span>
+                                                                </div>
+                                                                <div className="grid grid-cols-2 gap-2">
+                                                                    {[
+                                                                        {n:'은선물 (Eastmoney)', u:'https://wap.eastmoney.com/quote/stock/113.agm.html'},
+                                                                        {n:'은현물 (SMM)', u:'https://www.metal.com/en/prices/201102250392'}
+                                                                    ].map((l,i) => (
+                                                                        <a key={i} href={l.u} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 px-3 py-3 bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition shadow-sm group">
+                                                                            <span className="text-xs font-bold text-slate-700 dark:text-slate-200 group-hover:text-red-500 transition-colors">{l.n}</span>
+                                                                            <i className="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-300 group-hover:text-red-400"></i>
+                                                                        </a>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ) : <MiniChart symbol="TVC:GOLDSILVER" theme={isDark?'dark':'light'}/>) : (dashChartTab === 'btc' ? <MiniChart symbol="BINANCE:BTCUSDT" theme={isDark?'dark':'light'}/> : dashChartTab === 'btc_upbit' ? <MiniChart symbol="UPBIT:BTCKRW" theme={isDark?'dark':'light'}/> : <LinkPanel title="가상화폐 시세 확인" subTitle={`국내외 거래소 시세 및\n김치 프리미엄 분석`} icon="fa-bitcoin" colorClass="bg-orange-100 dark:bg-orange-900/30 text-orange-500" links={[{name:"🇰🇷 업비트 (Upbit)", url:"https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC"}, {name:"🌍 바이낸스 (Binance)", url:"https://www.binance.com/en/trade/BTC_USDT?type=spot"}, {name:"📊 김프가 (Kimpga)", url:"https://kimpga.com/"}]} />)}
                                         </div>
                                     </div>
                                 </div>
