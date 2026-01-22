@@ -187,6 +187,90 @@
                 {name: "Chan", url: "https://blog.naver.com/chany2do", icon: "fa-bolt", color: "text-blue-600"}
             ]
         };
+
+        // --- 주요 종목 데이터베이스 (KOSPI/KOSDAQ & ETF 통합 확장판) ---
+        const STOCK_DB = [
+            // [KOSPI 시총 상위 및 우량주]
+            {code:"005930",name:"삼성전자"},{code:"000660",name:"SK하이닉스"},{code:"373220",name:"LG에너지솔루션"},{code:"207940",name:"삼성바이오로직스"},
+            {code:"005380",name:"현대차"},{code:"000270",name:"기아"},{code:"068270",name:"셀트리온"},{code:"105560",name:"KB금융"},
+            {code:"005490",name:"POSCO홀딩스"},{code:"055550",name:"신한지주"},{code:"035420",name:"NAVER"},{code:"006400",name:"삼성SDI"},
+            {code:"003670",name:"포스코퓨처엠"},{code:"035720",name:"카카오"},{code:"051910",name:"LG화학"},{code:"028260",name:"삼성물산"},
+            {code:"012330",name:"현대모비스"},{code:"086790",name:"하나금융지주"},{code:"032830",name:"삼성생명"},{code:"003550",name:"LG"},
+            {code:"015760",name:"한국전력"},{code:"034020",name:"두산에너빌리티"},{code:"010130",name:"고려아연"},{code:"011200",name:"HMM"},
+            {code:"018260",name:"삼성에스디에스"},{code:"000810",name:"삼성화재"},{code:"017670",name:"SK텔레콤"},{code:"323410",name:"카카오뱅크"},
+            {code:"259960",name:"크래프톤"},{code:"009150",name:"삼성전기"},{code:"316140",name:"우리금융지주"},{code:"010950",name:"S-OIL"},
+            {code:"034730",name:"SK"},{code:"024110",name:"기업은행"},{code:"090430",name:"아모레퍼시픽"},{code:"329180",name:"HD현대중공업"},
+            {code:"009540",name:"HD한국조선해양"},{code:"011070",name:"LG이노텍"},{code:"352820",name:"하이브"},{code:"011170",name:"롯데케미칼"},
+            {code:"086280",name:"현대글로비스"},{code:"003490",name:"대한항공"},{code:"012450",name:"한화에어로스페이스"},{code:"033780",name:"KT&G"},
+            {code:"010140",name:"삼성중공업"},{code:"000100",name:"유한양행"},{code:"066570",name:"LG전자"},{code:"047050",name:"포스코인터내셔널"},
+            {code:"096770",name:"SK이노베이션"},{code:"377300",name:"카카오페이"},{code:"036570",name:"엔씨소프트"},{code:"030200",name:"KT"},
+            {code:"028050",name:"삼성엔지니어링"},{code:"005935",name:"삼성전자우"},{code:"267250",name:"HD현대"},{code:"402340",name:"SK스퀘어"},
+            {code:"011780",name:"금호석유"},{code:"042660",name:"한화오션"},{code:"004020",name:"현대제철"},{code:"071050",name:"한국금융지주"},
+            {code:"010120",name:"LS ELECTRIC"},{code:"034220",name:"LG디스플레이"},{code:"251270",name:"넷마블"},{code:"039490",name:"키움증권"},
+            {code:"005830",name:"DB손해보험"},{code:"078930",name:"GS"},{code:"006360",name:"GS건설"},{code:"000720",name:"현대건설"},
+            {code:"016360",name:"삼성증권"},{code:"035250",name:"강원랜드"},{code:"161390",name:"한국타이어앤테크놀로지"},{code:"138040",name:"메리츠금융지주"},
+            {code:"047810",name:"한국항공우주"},{code:"028670",name:"팬오션"},{code:"128940",name:"한미약품"},{code:"271560",name:"오리온"},
+            {code:"021240",name:"코웨이"},{code:"014680",name:"한솔케미칼"},{code:"000120",name:"CJ대한통운"},{code:"004370",name:"농심"},
+            
+            // [KOSDAQ 시총 상위 및 핵심 유망주]
+            {code:"196170",name:"알테오젠"},{code:"247540",name:"에코프로비엠"},{code:"086520",name:"에코프로"},{code:"028300",name:"HLB"},
+            {code:"403870",name:"HPSP"},{code:"348370",name:"엔켐"},{code:"214150",name:"클래시스"},{code:"145020",name:"휴젤"},
+            {code:"277810",name:"레인보우로보틱스"},{code:"141080",name:"리가켐바이오"},{code:"058470",name:"리노공업"},{code:"068760",name:"셀트리온제약"},
+            {code:"000250",name:"삼천당제약"},{code:"253450",name:"스튜디오드래곤"},{code:"035900",name:"JYP Ent."},{code:"263750",name:"펄어비스"},
+            {code:"293490",name:"카카오게임즈"},{code:"091990",name:"셀트리온헬스케어"},{code:"066970",name:"엘앤에프"},{code:"257720",name:"실리콘투"},
+            {code:"357780",name:"솔브레인"},{code:"005290",name:"동진쎄미켐"},{code:"039030",name:"이오테크닉스"},{code:"240810",name:"원익IPS"},
+            {code:"041510",name:"에스엠"},{code:"095340",name:"ISC"},{code:"365340",name:"성일하이텍"},{code:"445680",name:"큐리옥스바이오시스템즈"},
+            {code:"237690",name:"에스티팜"},{code:"096530",name:"씨젠"},{code:"393890",name:"더블유씨피"},{code:"078600",name:"대주전자재료"},
+            {code:"112040",name:"위메이드"},{code:"213420",name:"덕산네오룩스"},{code:"214450",name:"파마리서치"},{code:"214370",name:"케어젠"},
+            {code:"086900",name:"메디톡스"},{code:"067630",name:"HLB생명과학"},{code:"085660",name:"차바이오텍"},{code:"298380",name:"에이비엘바이오"},
+            {code:"087010",name:"펩트론"},{code:"352480",name:"오스코텍"},{code:"358570",name:"지아이이노베이션"},{code:"206650",name:"유바이오로직스"},
+            {code:"248070",name:"솔루엠"},{code:"067310",name:"하나마이크론"},{code:"036930",name:"주성엔지니어링"},{code:"122870",name:"와이지엔터테인먼트"},
+            {code:"067160",name:"SOOP"},{code:"194480",name:"데브시스터즈"},{code:"042000",name:"카페24"},{code:"278280",name:"천보"},
+            {code:"178320",name:"서진시스템"},{code:"046890",name:"서울반도체"},{code:"032190",name:"다우데이타"},{code:"036830",name:"솔브레인홀딩스"},
+            {code:"051900",name:"LG생활건강"},{code:"018290",name:"브이티"},{code:"278470",name:"APR"},{code:"195940",name:"HK이노엔"},
+            {code:"110790",name:"크리스탈신소재"},{code:"084990",name:"바이오니아"},{code:"287410",name:"제이시스메디칼"},{code:"235980",name:"메드팩토"},
+            {code:"137400",name:"피엔티"},{code:"375500",name:"DL이앤씨"},{code:"298050",name:"효성첨단소재"},{code:"298020",name:"효성티앤씨"},
+            
+            // [ETF - 지수/시장대표]
+            {code:"069500",name:"KODEX 200"},{code:"102110",name:"TIGER 200"},{code:"229200",name:"KODEX 코스닥150"},
+            {code:"122630",name:"KODEX 레버리지"},{code:"252670",name:"KODEX 200선물인버스2X"},{code:"114800",name:"KODEX 인버스"},
+            {code:"233740",name:"KODEX 코스닥150레버리지"},{code:"251340",name:"KODEX 코스닥150선물인버스"},
+            {code:"278530",name:"KODEX 200TR"},{code:"278540",name:"KODEX MSCI Korea TR"},
+
+            // [ETF - 해외지수/미국]
+            {code:"133690",name:"TIGER 미국나스닥100"},{code:"360750",name:"TIGER 미국S&P500"},{code:"379800",name:"KODEX 미국S&P500TR"},
+            {code:"402970",name:"ACE 미국S&P500"},{code:"241180",name:"TIGER 일본니케이225"},{code:"192090",name:"TIGER 차이나CSI300"},
+            {code:"371460",name:"TIGER 차이나전기차SOLACTIVE"},{code:"204480",name:"TIGER 차이나항셍테크"},
+            
+            // [ETF - 테마/섹터 (반도체, 2차전지, AI)]
+            {code:"091160",name:"KODEX 반도체"},{code:"394340",name:"TIGER Fn반도체TOP10"},{code:"423160",name:"KODEX AI반도체핵심장비"},
+            {code:"305720",name:"KODEX 2차전지산업"},{code:"305540",name:"TIGER 2차전지테마"},{code:"462330",name:"KODEX 2차전지핵심소재10 Fn"},
+            {code:"364980",name:"TIGER 2차전지K-뉴딜"},{code:"143860",name:"TIGER 헬스케어"},{code:"091170",name:"KODEX 은행"},
+            
+            // [ETF - 배당/월배당/커버드콜]
+            {code:"458730",name:"TIGER 미국배당다우존스"},{code:"446640",name:"SOL 미국배당다우존스"},{code:"429000",name:"ACE 미국배당다우존스"},
+            {code:"161510",name:"ARIRANG 고배당주"},{code:"279530",name:"KODEX 고배당"},
+
+            // [ETF - 원자재/채권/금리 (파킹통장)]
+            {code:"132030",name:"KODEX 골드선물(H)"},{code:"411060",name:"ACE KRX금현물"},{code:"261220",name:"KODEX 달러선물"},
+            {code:"459580",name:"KODEX CD금리액티브(합성)"},{code:"423920",name:"TIGER CD금리투자KIS(합성)"},{code:"365780",name:"ACE 단기통안채"},
+            {code:"305080",name:"TIGER 미국채10년선물"},{code:"302190",name:"TIGER 미국채30년스트립액티브(합성 H)"},
+
+            // [Active ETF - KoAct / TIMEFOLIO]
+            {code:"462900",name:"KoAct 바이오헬스케어액티브"},{code:"475350",name:"KoAct AI인프라액티브"},
+            {code:"472090",name:"KoAct 배당성장액티브"},{code:"472080",name:"KoAct 글로벌AI&로봇액티브"},
+            {code:"426000",name:"TIMEFOLIO 미국S&P500액티브"},{code:"426010",name:"TIMEFOLIO 미국나스닥100액티브"},
+            {code:"395070",name:"TIMEFOLIO Korea플러스배당액티브"},{code:"354350",name:"TIMEFOLIO Kstock액티브"},
+            {code:"439770",name:"TIMEFOLIO 탄소중립액티브"},{code:"456960",name:"TIMEFOLIO 글로벌AI인공지능액티브"},
+
+            // [ETF - SOL Series (신한자산운용)]
+            {code:"433330",name:"SOL 미국S&P500"},{code:"452360",name:"SOL 미국배당다우존스(H)"},
+            {code:"455850",name:"SOL 반도체소부장Fn"},{code:"455860",name:"SOL 2차전지소부장Fn"},
+            {code:"464610",name:"SOL 의료기기소부장Fn"},{code:"461580",name:"SOL AI반도체소부장"},
+            {code:"473330",name:"SOL 미국30년국채커버드콜(합성)"},{code:"465640",name:"SOL 초단기채권액티브"}
+        ];
+        // ------------------------------------
+
         const formatNumber = (num) => {
             if (num === null || num === undefined || isNaN(num)) return '0';
             return Math.round(num).toLocaleString('ko-KR');
@@ -909,10 +993,20 @@
             const searchSymbol = (query) => { 
                 if(!query || query.trim() === "") { window.open('https://stock.naver.com/', '_blank'); return; } 
                 const trimmed = query.trim(); 
+                
+                // 1. DB에서 정확한 종목명 매칭 확인
+                const dbMatch = STOCK_DB.find(s => s.name === trimmed || s.code === trimmed);
+                if (dbMatch) {
+                    window.open(`https://finance.naver.com/item/main.naver?code=${dbMatch.code}`, '_blank');
+                    return;
+                }
+
+                // 2. 숫자면 코드로 간주
                 if (/^\d+$/.test(trimmed)) { 
                     window.open(`https://finance.naver.com/item/main.naver?code=${trimmed}`, '_blank'); 
                 } else { 
-                    window.open(`https://finance.naver.com/search/search.naver?query=${encodeURIComponent(trimmed)}`, '_blank'); 
+                    // 3. 그 외엔 일반 검색
+                    window.open(`https://finance.naver.com/search/search.naver?query=${encodeURIComponent(trimmed)}&ie=utf8`, '_blank'); 
                 } 
             };
             const calculateAutoRegionalIns = () => { const annualPension = (parseFormattedNumber(simInputs.pensionSelf) + parseFormattedNumber(simInputs.pensionSpouse)) * 12 * 0.5; const annualOthers = parseFormattedNumber(simInputs.ipoProfit) + parseFormattedNumber(simInputs.otherIncome) + parseFormattedNumber(simInputs.stockLending) + parseFormattedNumber(simInputs.rentalIncome) + parseFormattedNumber(simInputs.tradingProfit); const annualScoreIncome = annualPension + annualOthers; const incomePremium = (annualScoreIncome * 0.0709) / 12; const housePrice = parseFloat(simInputs.housingMarketPrice) * ONE_HUNDRED_MILLION; const propertyTaxBase = (housePrice * 0.45) - 50000000; let propertyPremium = 0; if (propertyTaxBase > 0) { propertyPremium = propertyTaxBase * 0.00045; } const totalPremium = (incomePremium + propertyPremium) * 1.1295; const finalPremium = Math.floor(totalPremium / 1000) * 1000; setSimInputs(prev => ({ ...prev, monthlyRegionalIns: finalPremium.toLocaleString('ko-KR') })); };
@@ -1083,7 +1177,7 @@
                                                             <div className="flex flex-col gap-2">
                                                                 <div className="flex items-center gap-2 px-1 mb-1">
                                                                     <span className="w-1 h-3 bg-red-500 rounded-full"></span>
-                                                                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">국내 실물 시세</span>
+                                                                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400">국내 실물 시세</span>
                                                                 </div>
                                                                 <div className="grid grid-cols-2 gap-2.5">
                                                                     {[
@@ -1092,8 +1186,8 @@
                                                                         {n:'실버테크', u:'http://www.e-silvertech.com/'},
                                                                         {n:'은세계(네이버)', u:'https://smartstore.naver.com/silver_a'}
                                                                     ].map((l,i) => (
-                                                                        <a key={i} href={l.u} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center py-2 px-1 bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition shadow-sm h-full group">
-                                                                            <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 text-center leading-tight group-hover:text-red-500 transition-colors">{l.n}</span>
+                                                                        <a key={i} href={l.u} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center py-2.5 px-1 bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition shadow-sm h-full group">
+                                                                            <span className="text-xs font-bold text-slate-700 dark:text-slate-200 text-center leading-tight group-hover:text-red-500 transition-colors">{l.n}</span>
                                                                         </a>
                                                                     ))}
                                                                 </div>
@@ -1101,16 +1195,16 @@
                                                             <div className="flex flex-col gap-2">
                                                                 <div className="flex items-center gap-2 px-1 mb-1">
                                                                     <span className="w-1 h-3 bg-red-500 rounded-full"></span>
-                                                                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">중국 상하이 시세</span>
+                                                                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400">중국 상하이 시세</span>
                                                                 </div>
                                                                 <div className="grid grid-cols-2 gap-2.5">
                                                                     {[
                                                                         {n:'은선물 (Eastmoney)', u:'https://wap.eastmoney.com/quote/stock/113.agm.html'},
                                                                         {n:'은현물 (SMM)', u:'https://www.metal.com/en/prices/201102250392'}
                                                                     ].map((l,i) => (
-                                                                        <a key={i} href={l.u} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 px-2 py-2 bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition shadow-sm group">
-                                                                            <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 group-hover:text-red-500 transition-colors">{l.n}</span>
-                                                                            <i className="fa-solid fa-arrow-up-right-from-square text-[9px] text-gray-300 group-hover:text-red-400"></i>
+                                                                        <a key={i} href={l.u} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 px-2 py-2.5 bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition shadow-sm group">
+                                                                            <span className="text-xs font-bold text-slate-700 dark:text-slate-200 group-hover:text-red-500 transition-colors">{l.n}</span>
+                                                                            <i className="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-300 group-hover:text-red-400"></i>
                                                                         </a>
                                                                     ))}
                                                                 </div>
@@ -1154,9 +1248,94 @@
                         </AppleCard>
                         <AppleCard title="관심 종목 & 검색" subTitle="빠른 조회 및 편집" className="lg:col-span-4 h-full min-h-[400px]">
                             <div className="flex flex-col h-full">
-                                <div className="relative mb-4"><input type="text" className="w-full bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-xl pl-10 pr-4 py-3 text-sm font-bold text-slate-900 force-dark-white outline-none focus:ring-2 focus:ring-[#0071E3]/20" placeholder="종목명 또는 코드 검색 (Enter)" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={e => { if(e.key === 'Enter'){ searchSymbol(searchQuery); setSearchQuery(''); } }} /><i className="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-gray-400 dark:text-gray-300"></i></div>
-                                <div className="flex justify-between items-center mb-2 px-1"><span className="text-xs font-bold text-gray-400 dark:text-gray-300">내 관심 종목 ({favorites.length})</span><button onClick={() => setIsFavEditMode(!isFavEditMode)} className="text-xs font-bold text-[#0071E3]">{isFavEditMode ? '완료' : '편집'}</button></div>
-                                <div className="flex-1 overflow-y-auto space-y-2 pr-1 mb-4 scrollbar-hide">{favorites.map((fav) => (<div key={fav.code} className="bg-[#F2F2F7] dark:bg-[#2C2C2E] p-3 rounded-xl flex justify-between items-center group hover:bg-gray-200 dark:hover:bg-gray-700 transition cursor-pointer" onClick={() => !isFavEditMode && searchSymbol(fav.code)}><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-full bg-white dark:bg-[#1C1C1E] flex items-center justify-center text-xs font-black text-gray-500 shadow-sm">{fav.name.substring(0,1)}</div><div className="flex flex-col"><span className="text-sm font-bold text-slate-900 dark:text-white">{fav.name}</span><span className="text-[10px] font-medium text-gray-400 dark:text-gray-400">{fav.code}</span></div></div>{isFavEditMode ? (<button onClick={(e) => { e.stopPropagation(); setFavorites(favorites.filter(f => f.code !== fav.code)); }} className="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow-sm hover:scale-110 transition"><i className="fa-solid fa-minus text-[10px]"></i></button>) : (<i className="fa-solid fa-chevron-right text-xs text-gray-300 dark:text-gray-500 group-hover:text-gray-400"></i>)}</div>))}</div>
+                                <div className="relative mb-4">
+                                    <input 
+                                        type="text" 
+                                        className="w-full bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-xl pl-10 pr-4 py-3 text-sm font-bold text-slate-900 force-dark-white outline-none focus:ring-2 focus:ring-[#0071E3]/20 transition-shadow" 
+                                        placeholder="종목명 또는 코드 (예: 삼성전자)" 
+                                        value={searchQuery} 
+                                        onChange={e => setSearchQuery(e.target.value)} 
+                                        onKeyDown={e => { if(e.key === 'Enter'){ searchSymbol(searchQuery); setSearchQuery(''); } }} 
+                                    />
+                                    <button 
+                                        onClick={() => { searchSymbol(searchQuery); setSearchQuery(''); }}
+                                        className="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center text-gray-400 dark:text-gray-300 hover:text-[#0071E3] transition-colors"
+                                        title="검색"
+                                    >
+                                        <i className="fa-solid fa-magnifying-glass"></i>
+                                    </button>
+                                </div>
+                                <div className="flex justify-between items-center mb-2 px-1"><span className="text-xs font-bold text-gray-400 dark:text-gray-300">{searchQuery ? '검색 결과' : `내 관심 종목 (${favorites.length})`}</span><button onClick={() => setIsFavEditMode(!isFavEditMode)} className="text-xs font-bold text-[#0071E3]">{isFavEditMode ? '완료' : '편집'}</button></div>
+                                <div className="flex-1 overflow-y-auto space-y-2 pr-1 mb-4 scrollbar-hide">
+                                    {(() => {
+                                        // 검색 로직: 쿼리가 있으면 DB 검색, 없으면 즐겨찾기 표시
+                                        let displayList = favorites;
+                                        let isSearchResult = false;
+
+                                        if (searchQuery) {
+                                            isSearchResult = true;
+                                            // DB + Favorites 병합 검색 (중복 제거)
+                                            const dbMatches = STOCK_DB.filter(s => s.name.includes(searchQuery) || s.code.includes(searchQuery));
+                                            const favMatches = favorites.filter(f => f.name.includes(searchQuery) || f.code.includes(searchQuery));
+                                            
+                                            // 즐겨찾기 매칭을 우선순위로 두고 합치기
+                                            const merged = [...favMatches];
+                                            dbMatches.forEach(dbItem => {
+                                                if (!merged.find(m => m.code === dbItem.code)) {
+                                                    merged.push(dbItem);
+                                                }
+                                            });
+                                            displayList = merged;
+                                        }
+
+                                        if (displayList.length === 0 && isSearchResult) {
+                                            return (
+                                                <div className="text-center py-8 flex flex-col items-center">
+                                                    <p className="text-xs text-gray-400 mb-2">검색 결과가 없습니다.</p>
+                                                    <button onClick={() => searchSymbol(searchQuery)} className="text-xs font-bold text-[#0071E3] hover:underline bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded-lg">
+                                                        네이버 통합검색으로 이동 <i className="fa-solid fa-arrow-up-right-from-square ml-1"></i>
+                                                    </button>
+                                                </div>
+                                            );
+                                        }
+
+                                        return displayList.map((item) => {
+                                            const isAlreadyFav = favorites.some(f => f.code === item.code);
+                                            return (
+                                                <div key={item.code} className="bg-[#F2F2F7] dark:bg-[#2C2C2E] p-3 rounded-xl flex justify-between items-center group hover:bg-gray-200 dark:hover:bg-gray-700 transition cursor-pointer" onClick={() => !isFavEditMode && searchSymbol(item.code)}>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shadow-sm ${isSearchResult && !isAlreadyFav ? 'bg-gray-100 text-gray-400 dark:bg-white/5' : 'bg-white dark:bg-[#1C1C1E] text-gray-500'}`}>
+                                                            {item.name.substring(0,1)}
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1">
+                                                                {item.name}
+                                                                {isSearchResult && isAlreadyFav && <i className="fa-solid fa-star text-[10px] text-yellow-400"></i>}
+                                                            </span>
+                                                            <span className="text-[10px] font-medium text-gray-400 dark:text-gray-400">{item.code}</span>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {isFavEditMode ? (
+                                                        <button onClick={(e) => { e.stopPropagation(); setFavorites(favorites.filter(f => f.code !== item.code)); }} className="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow-sm hover:scale-110 transition"><i className="fa-solid fa-minus text-[10px]"></i></button>
+                                                    ) : (
+                                                        isSearchResult && !isAlreadyFav ? (
+                                                            <button 
+                                                                onClick={(e) => { e.stopPropagation(); setFavorites([...favorites, {code: item.code, name: item.name}]); setSearchQuery(''); }} 
+                                                                className="w-7 h-7 rounded-lg bg-white dark:bg-[#1C1C1E] text-[#0071E3] flex items-center justify-center shadow-sm border border-gray-100 dark:border-white/5 hover:bg-[#0071E3] hover:text-white transition"
+                                                                title="관심종목 추가"
+                                                            >
+                                                                <i className="fa-solid fa-plus text-xs"></i>
+                                                            </button>
+                                                        ) : (
+                                                            <i className="fa-solid fa-chevron-right text-xs text-gray-300 dark:text-gray-500 group-hover:text-gray-400"></i>
+                                                        )
+                                                    )}
+                                                </div>
+                                            );
+                                        });
+                                    })()}
+                                </div>
                                 {isFavEditMode && (<div className="mt-auto pt-4 border-t border-gray-100 dark:border-white/5 animate-fade-in"><div className="flex gap-2"><input className="w-20 bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-lg px-2 py-2 text-xs font-bold text-center outline-none force-dark-white" placeholder="코드" value={newFav.code} onChange={e=>setNewFav({...newFav, code:e.target.value})} /><input className="flex-1 bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-lg px-2 py-2 text-xs font-bold outline-none force-dark-white" placeholder="종목명" value={newFav.name} onChange={e=>setNewFav({...newFav, name:e.target.value})} /><button onClick={() => { if(newFav.code && newFav.name) { setFavorites([...favorites, newFav]); setNewFav({code:'', name:''}); } }} className="w-8 bg-[#0071E3] text-white rounded-lg flex items-center justify-center hover:bg-blue-600"><i className="fa-solid fa-plus text-xs"></i></button></div></div>)}
                             </div>
                         </AppleCard>
