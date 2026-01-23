@@ -427,14 +427,22 @@
             const [errorMsg, setErrorMsg] = useState(null);
             const [lastUpdated, setLastUpdated] = useState(null);
             const [keywords, setKeywords] = useState(() => {
-                const defaultKeywords = ['경제', '주요뉴스', '큐리옥스바이오시스템즈', '에스티팜', '은', '비트코인'];
-                try { const saved = localStorage.getItem('invNav_newsKeywords'); return saved ? JSON.parse(saved) : defaultKeywords; } catch { return defaultKeywords; }
+                // 요청하신 순서대로 기본 키워드 변경
+                const defaultKeywords = ['주요뉴스', '경제', '은', '큐리옥스바이오시스템즈', '에스티팜', '현대해상'];
+                try { 
+                    // 변경된 순서를 즉시 적용하기 위해 localStorage 키 버전을 _v2로 변경
+                    const saved = localStorage.getItem('invNav_newsKeywords_v2'); 
+                    return saved ? JSON.parse(saved) : defaultKeywords; 
+                } catch { return defaultKeywords; }
             });
+            // 첫 시작은 '경제'로 설정
             const [activeKeyword, setActiveKeyword] = useState('경제');
             const [isAdding, setIsAdding] = useState(false);
             const [newKeywordInput, setNewKeywordInput] = useState('');
+            const [isKeywordManagerOpen, setIsKeywordManagerOpen] = useState(false); // 키워드 관리 모달 상태 추가
             
-            useEffect(() => { localStorage.setItem('invNav_newsKeywords', JSON.stringify(keywords)); }, [keywords]);
+            // 저장 키도 _v2로 업데이트
+            useEffect(() => { localStorage.setItem('invNav_newsKeywords_v2', JSON.stringify(keywords)); }, [keywords]);
             
             const fetchNews = useCallback(async (query) => {
                 setLoading(true); setErrorMsg(null);
@@ -469,8 +477,19 @@
             useEffect(() => { fetchNews(activeKeyword); }, [activeKeyword, fetchNews]);
             
             const handleAddKeyword = () => { if (newKeywordInput.trim() && !keywords.includes(newKeywordInput.trim())) { const next = [...keywords, newKeywordInput.trim()]; setKeywords(next); setActiveKeyword(newKeywordInput.trim()); setNewKeywordInput(''); setIsAdding(false); } };
-            const handleRemoveKeyword = (e, k) => { e.stopPropagation(); const next = keywords.filter(w => w !== k); setKeywords(next); if (activeKeyword === k && next.length > 0) setActiveKeyword(next[0]); };
+            const handleRemoveKeyword = (e, k) => { if(e) e.stopPropagation(); const next = keywords.filter(w => w !== k); setKeywords(next); if (activeKeyword === k && next.length > 0) setActiveKeyword(next[0]); };
             
+            // 키워드 순서 변경 함수
+            const moveKeyword = (index, direction) => {
+                const newKeywords = [...keywords];
+                if (direction === 'up' && index > 0) {
+                    [newKeywords[index - 1], newKeywords[index]] = [newKeywords[index], newKeywords[index - 1]];
+                } else if (direction === 'down' && index < newKeywords.length - 1) {
+                    [newKeywords[index + 1], newKeywords[index]] = [newKeywords[index], newKeywords[index + 1]];
+                }
+                setKeywords(newKeywords);
+            };
+
             const handleScroll = (e) => {
                 const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
                 if (scrollHeight - scrollTop <= clientHeight + 100) {
@@ -508,8 +527,9 @@
                     <div className="sticky top-0 z-30 bg-white/95 dark:bg-[#1C1C1E]/95 backdrop-blur-md flex flex-wrap items-center gap-2 p-3 border-y border-gray-100 dark:border-white/5 shadow-sm">
                          <button onClick={() => fetchNews(activeKeyword)} disabled={loading} className={`w-8 h-8 rounded-full bg-gray-100 dark:bg-[#2C2C2E] text-gray-500 hover:text-indigo-600 flex items-center justify-center transition-all flex-shrink-0 ${loading ? 'animate-spin text-indigo-500' : ''}`}><i className="fa-solid fa-arrows-rotate text-xs"></i></button>
                         <div className="w-[1px] h-4 bg-gray-300 dark:bg-gray-700 mx-1 hidden sm:block"></div>
-                        {keywords.map(k => ( <button key={k} onClick={() => setActiveKeyword(k)} className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 select-none ${activeKeyword === k ? 'bg-slate-800 text-white dark:bg-white dark:text-black shadow-md ring-2 ring-offset-1 ring-slate-800 dark:ring-white dark:ring-offset-black' : 'bg-slate-100 text-slate-500 dark:bg-[#2C2C2E] dark:text-gray-400 hover:bg-slate-200 dark:hover:bg-[#3A3A3C]'}`}> <span className="whitespace-nowrap">{k}</span> {k !== '경제' && k !== '주요뉴스' && activeKeyword === k && ( <span onClick={(e) => handleRemoveKeyword(e, k)} className="w-4 h-4 flex items-center justify-center hover:bg-white/20 rounded-full transition-colors ml-0.5"><i className="fa-solid fa-xmark text-[10px]"></i></span> )} </button> ))}
+                        {keywords.map(k => ( <button key={k} onClick={() => setActiveKeyword(k)} className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 select-none ${activeKeyword === k ? 'bg-slate-800 text-white dark:bg-white dark:text-black shadow-md ring-2 ring-offset-1 ring-slate-800 dark:ring-white dark:ring-offset-black' : 'bg-slate-100 text-slate-500 dark:bg-[#2C2C2E] dark:text-gray-400 hover:bg-slate-200 dark:hover:bg-[#3A3A3C]'}`}> <span className="whitespace-nowrap">{k}</span> </button> ))}
                         {isAdding ? ( <div className="flex items-center gap-1 bg-indigo-50 dark:bg-indigo-900/30 rounded-full pl-2 pr-1 py-0.5 border border-indigo-200 dark:border-indigo-700 animate-fade-in flex-shrink-0"> <input type="text" className="w-20 bg-transparent text-xs font-bold text-indigo-700 dark:text-indigo-300 outline-none placeholder-indigo-300" placeholder="키워드" value={newKeywordInput} onChange={(e) => setNewKeywordInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddKeyword()} autoFocus /> <button onClick={handleAddKeyword} className="w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center active:scale-95 transition-transform"><i className="fa-solid fa-check text-[10px]"></i></button> <button onClick={() => setIsAdding(false)} className="w-6 h-6 rounded-full bg-gray-300 dark:bg-gray-600 text-white flex items-center justify-center active:scale-95 transition-transform"><i className="fa-solid fa-xmark text-[10px]"></i></button> </div> ) : ( <button onClick={() => setIsAdding(true)} className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-100 dark:bg-[#2C2C2E] text-slate-400 dark:text-gray-500 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-[#3A3A3C] transition active:scale-95"><i className="fa-solid fa-plus text-xs"></i></button> )}
+                        <button onClick={() => setIsKeywordManagerOpen(true)} className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-100 dark:bg-[#2C2C2E] text-slate-400 dark:text-gray-500 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-[#3A3A3C] transition active:scale-95" title="키워드 순서 변경 및 관리"><i className="fa-solid fa-gear text-xs"></i></button>
                     </div>
                     
                     <div className="min-h-[200px]">
@@ -550,6 +570,32 @@
                             </div> 
                         )}
                     </div>
+
+                    {/* 키워드 관리 모달 */}
+                    {isKeywordManagerOpen && (
+                        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
+                            <div className="bg-white dark:bg-[#1C1C1E] w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-gray-200 dark:border-white/10 max-h-[80vh]">
+                                <div className="px-4 py-3 border-b border-gray-100 dark:border-white/5 flex justify-between items-center bg-white dark:bg-[#1C1C1E]">
+                                    <h3 className="font-bold text-slate-900 force-dark-white flex items-center gap-2"><i className="fa-solid fa-list-check text-indigo-500"></i> 키워드 관리</h3>
+                                    <button onClick={() => setIsKeywordManagerOpen(false)} className="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 flex items-center justify-center transition-colors"><i className="fa-solid fa-xmark text-slate-500"></i></button>
+                                </div>
+                                <div className="flex-1 overflow-y-auto p-2 space-y-1 bg-[#F5F5F7] dark:bg-black/20">
+                                    <div className="text-[11px] text-gray-500 text-center py-2">순서를 변경하거나 불필요한 키워드를 삭제하세요.</div>
+                                    {keywords.map((k, i) => (
+                                        <div key={k} className="flex items-center justify-between p-3 bg-white dark:bg-[#2C2C2E] rounded-xl shadow-sm border border-gray-100 dark:border-white/5">
+                                            <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{k}</span>
+                                            <div className="flex items-center gap-1">
+                                                <button onClick={() => moveKeyword(i, 'up')} disabled={i === 0} className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${i===0 ? 'text-gray-300 dark:text-gray-600' : 'hover:bg-gray-100 dark:hover:bg-white/10 text-indigo-500'}`}><i className="fa-solid fa-arrow-up text-xs"></i></button>
+                                                <button onClick={() => moveKeyword(i, 'down')} disabled={i === keywords.length - 1} className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${i===keywords.length-1 ? 'text-gray-300 dark:text-gray-600' : 'hover:bg-gray-100 dark:hover:bg-white/10 text-indigo-500'}`}><i className="fa-solid fa-arrow-down text-xs"></i></button>
+                                                <div className="w-[1px] h-4 bg-gray-200 dark:bg-gray-600 mx-1"></div>
+                                                <button onClick={(e) => handleRemoveKeyword(e, k)} className="w-8 h-8 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-400 hover:text-red-500 flex items-center justify-center transition-colors"><i className="fa-solid fa-trash-can text-xs"></i></button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             );
         });
