@@ -618,6 +618,10 @@
             const [viewMode, setViewMode] = useState('calendar'); 
             const [calType, setCalType] = useState('all'); 
             
+            // 오늘 날짜 문자열 생성
+            const todayDate = new Date();
+            const todayStr = `${todayDate.getMonth() + 1}월 ${todayDate.getDate()}일 (${['일','월','화','수','목','금','토'][todayDate.getDay()]})`;
+
             const getUrl = () => {
                 const baseUrl = "https://calendar.google.com/calendar/embed";
                 const subCal = "gjbox0301@gmail.com"; 
@@ -643,20 +647,30 @@
             return (
                 <div className="flex flex-col h-full w-full bg-white dark:bg-[#1C1C1E] relative group">
                     <div className="flex flex-col sm:flex-row justify-between items-center gap-2 py-2 px-4 border-b border-gray-100 dark:border-white/5 bg-white dark:bg-[#1C1C1E] flex-shrink-0">
-                        <div className="flex gap-1 p-1 bg-gray-100 dark:bg-[#2C2C2E] rounded-lg">
-                            <button 
-                                onClick={() => setViewMode('calendar')} 
-                                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${viewMode==='calendar' ? 'bg-white dark:bg-[#636366] text-black dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
-                            >
-                                <i className="fa-regular fa-calendar"></i><span className="hidden sm:inline">월간 달력</span>
-                            </button>
-                            <button 
-                                onClick={() => setViewMode('list')} 
-                                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${viewMode==='list' ? 'bg-white dark:bg-[#636366] text-black dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
-                            >
-                                <i className="fa-solid fa-list-ul"></i><span className="hidden sm:inline">통합 리스트</span>
-                            </button>
+                        <div className="flex items-center gap-2">
+                            <div className="flex gap-1 p-1 bg-gray-100 dark:bg-[#2C2C2E] rounded-lg">
+                                <button 
+                                    onClick={() => setViewMode('calendar')} 
+                                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${viewMode==='calendar' ? 'bg-white dark:bg-[#636366] text-black dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
+                                >
+                                    <i className="fa-regular fa-calendar"></i><span className="hidden sm:inline">월간</span>
+                                </button>
+                                <button 
+                                    onClick={() => setViewMode('list')} 
+                                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${viewMode==='list' ? 'bg-white dark:bg-[#636366] text-black dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
+                                >
+                                    <i className="fa-solid fa-list-ul"></i><span className="hidden sm:inline">리스트</span>
+                                </button>
+                            </div>
+                            
+                            {/* 오늘 날짜 표시 배지 - 시인성 강화 (노란색 배경) */}
+                            <div className="flex items-center px-3 py-1.5 bg-[#FFD60A] rounded-lg shadow-sm animate-fade-in border border-yellow-400/50">
+                                <span className="text-[11px] font-black text-black flex items-center gap-1.5 whitespace-nowrap">
+                                    <i className="fa-solid fa-calendar-day"></i> 오늘: {todayStr}
+                                </span>
+                            </div>
                         </div>
+
                         {viewMode === 'calendar' ? (
                             <div className="flex gap-1 p-1 bg-gray-100 dark:bg-[#2C2C2E] rounded-lg animate-fade-in">
                                 <button 
@@ -685,7 +699,8 @@
                             </div>
                         )}
                     </div>
-                    <div className={`flex-1 w-full relative ${isDark ? 'filter brightness-[0.85] contrast-[1.1]' : ''}`}>
+                    {/* iframe Container: 다크모드 시 invert + contrast 필터 적용하여 시인성 개선 */}
+                    <div className={`flex-1 w-full relative ${isDark ? 'invert hue-rotate-180 contrast-125' : ''}`}>
                         <div className="absolute inset-0 -z-10 flex items-center justify-center bg-gray-50 dark:bg-[#2C2C2E]">
                             <i className="fa-solid fa-spinner fa-spin text-gray-300 text-2xl"></i>
                         </div>
