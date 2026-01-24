@@ -986,6 +986,16 @@
             useEffect(() => { localStorage.setItem('invNav_routineLinks_v2', JSON.stringify(routineLinks)); }, [routineLinks]);
             useEffect(() => { localStorage.setItem('invNav_blogLinks_v2', JSON.stringify(blogInsightLinks)); }, [blogInsightLinks]);
 
+            // --- [수정됨] 입력값 저장 로직 (변수명 및 키값 불일치 수정) ---
+            useEffect(() => { 
+                localStorage.setItem('invNav_silverInputs_v6', JSON.stringify(silverAnalysisInputs)); 
+            }, [silverAnalysisInputs]);
+            
+            useEffect(() => { 
+                localStorage.setItem('invNav_btcInputs_v6', JSON.stringify(bitcoinAnalysisInputs)); 
+            }, [bitcoinAnalysisInputs]);
+            // -------------------------------------------------------
+
             // --- 루틴 관리 헬퍼 함수 (코드 정리) ---
             const handleAddRoutineLink = () => {
                 const { category, name, url } = newRoutine;
@@ -1210,7 +1220,10 @@
                     <div className="w-full md:w-1/3 space-y-4">
                         {analysisMode === 'silver' ? (
                             <>
-                                <div><label className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">국제 시세 (USD/oz)</label><div className="relative flex items-center bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-xl overflow-hidden group"><button onClick={() => adjustValue(setSilverAnalysisInputs, 'currentUsdPrice', -0.1)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-minus text-[10px]"></i></button><input className="apple-input flex-1 !rounded-none !bg-transparent text-center !px-0" value={silverAnalysisInputs.currentUsdPrice} onChange={e=>handleCommaChange(e, v=>setSilverAnalysisInputs({...silverAnalysisInputs, currentUsdPrice:v}))} /><button onClick={() => adjustValue(setSilverAnalysisInputs, 'currentUsdPrice', 0.1)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-plus text-[10px]"></i></button></div></div>
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">국제 시세 (USD/oz)</label>
+                                    <input className="apple-input" value={silverAnalysisInputs.currentUsdPrice} onChange={e=>handleCommaChange(e, v=>setSilverAnalysisInputs({...silverAnalysisInputs, currentUsdPrice:v}))} />
+                                </div>
                                 <div><label className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">원달러 환율 ($/₩)</label><div className="apple-input flex justify-between items-center text-slate-400 cursor-default bg-slate-50 dark:bg-white/5"><span className="text-xs">실시간</span><span className="text-slate-900 force-dark-white">{silverAnalysisInputs.currentExch}</span></div></div>
                                 
                                 <div>
@@ -1247,18 +1260,27 @@
                                         </div>
                                     )}
 
-                                    <div className="relative flex items-center bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-xl overflow-hidden group"><button onClick={() => adjustValue(setSilverAnalysisInputs, 'currentDomesticPrice', -10000)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-minus text-[10px]"></i></button><input className="apple-input flex-1 !rounded-none !bg-transparent text-center !px-0" value={silverAnalysisInputs.currentDomesticPrice} onChange={e=>handleCommaChange(e, v=>setSilverAnalysisInputs({...silverAnalysisInputs, currentDomesticPrice:v}))} /><button onClick={() => adjustValue(setSilverAnalysisInputs, 'currentDomesticPrice', 10000)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-plus text-[10px]"></i></button></div>
+                                    <input className="apple-input" value={silverAnalysisInputs.currentDomesticPrice} onChange={e=>handleCommaChange(e, v=>setSilverAnalysisInputs({...silverAnalysisInputs, currentDomesticPrice:v}))} />
                                 </div>
 
-                                <div className="pt-2 border-t border-dashed border-gray-200 dark:border-white/10"><label className="text-xs font-bold text-red-500/80 dark:text-red-400/80 pl-1 mb-1 block">상하이 시세 (CNY/kg)</label><div className="relative flex items-center bg-red-50 dark:bg-red-900/10 rounded-xl overflow-hidden group"><button onClick={() => adjustValue(setSilverAnalysisInputs, 'currentShanghaiPrice', -10)} className="w-8 h-10 flex items-center justify-center text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-minus text-[10px]"></i></button><input className="apple-input flex-1 !rounded-none !bg-transparent !text-red-600 dark:!text-red-300 text-center !px-0 focus:!bg-transparent" value={silverAnalysisInputs.currentShanghaiPrice} onChange={e=>handleCommaChange(e, v=>setSilverAnalysisInputs({...silverAnalysisInputs, currentShanghaiPrice:v}))} /><button onClick={() => adjustValue(setSilverAnalysisInputs, 'currentShanghaiPrice', 10)} className="w-8 h-10 flex items-center justify-center text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-plus text-[10px]"></i></button></div></div>
+                                <div className="pt-2 border-t border-dashed border-gray-200 dark:border-white/10">
+                                    <label className="text-xs font-bold text-red-500/80 dark:text-red-400/80 pl-1 mb-1 block">상하이 시세 (CNY/kg)</label>
+                                    <input className="apple-input !text-red-600 dark:!text-red-400" value={silverAnalysisInputs.currentShanghaiPrice} onChange={e=>handleCommaChange(e, v=>setSilverAnalysisInputs({...silverAnalysisInputs, currentShanghaiPrice:v}))} />
+                                </div>
                                 <div className="pt-2 border-t border-dashed border-gray-200 dark:border-white/10 mt-2"><label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1 block">내 자산 (보유량/평단가)</label><div className="grid grid-cols-2 gap-2"><div><input className="apple-input !text-sm" placeholder="수량(kg)" value={silverAnalysisInputs.holdingQty} onChange={e=>setSilverAnalysisInputs({...silverAnalysisInputs, holdingQty:e.target.value.replace(/[^0-9.]/g, '')})} /></div><div><input className="apple-input !text-sm" placeholder="평단가" value={silverAnalysisInputs.avgPrice} onChange={e=>handleCommaChange(e, v=>setSilverAnalysisInputs({...silverAnalysisInputs, avgPrice:v}))} /></div></div></div>
                             </>
                         ) : (
                             <>
-                                <div><label className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">국제 시세 (BTC/USD)</label><div className="relative flex items-center bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-xl overflow-hidden group"><button onClick={() => adjustValue(setBitcoinAnalysisInputs, 'currentBtcUsd', -100)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-minus text-[10px]"></i></button><input className="apple-input flex-1 !rounded-none !bg-transparent text-center !px-0" value={bitcoinAnalysisInputs.currentBtcUsd} onChange={e=>handleCommaChange(e, v=>setBitcoinAnalysisInputs({...bitcoinAnalysisInputs, currentBtcUsd:v}))} /><button onClick={() => adjustValue(setBitcoinAnalysisInputs, 'currentBtcUsd', 100)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-plus text-[10px]"></i></button></div></div>
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">국제 시세 (BTC/USD)</label>
+                                    <input className="apple-input" value={bitcoinAnalysisInputs.currentBtcUsd} onChange={e=>handleCommaChange(e, v=>setBitcoinAnalysisInputs({...bitcoinAnalysisInputs, currentBtcUsd:v}))} />
+                                </div>
                                 <div className="mb-2"><label className="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 pl-1 mb-1 block">매입 환율 (Avg Exch)</label><input className="apple-input !text-sm border border-indigo-100 dark:border-indigo-900/30" value={bitcoinAnalysisInputs.avgExch} onChange={e=>handleCommaChange(e, v=>setBitcoinAnalysisInputs({...bitcoinAnalysisInputs, avgExch:v}))} /></div>
                                 <div><label className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">환율 (USD/KRW)</label><div className="apple-input flex justify-between items-center text-slate-400 cursor-default bg-slate-50 dark:bg-white/5"><span className="text-xs">실시간</span><span className="text-slate-900 force-dark-white">{silverAnalysisInputs.currentExch}</span></div></div>
-                                <div><label className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">국내 시세 (만원)</label><div className="relative flex items-center bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-xl overflow-hidden group"><button onClick={() => adjustValue(setBitcoinAnalysisInputs, 'currentDomesticPrice', -10)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-minus text-[10px]"></i></button><input className="apple-input flex-1 !rounded-none !bg-transparent text-center !px-0" value={bitcoinAnalysisInputs.currentDomesticPrice} onChange={e=>handleCommaChange(e, v=>setBitcoinAnalysisInputs({...bitcoinAnalysisInputs, currentDomesticPrice:v}))} /><button onClick={() => adjustValue(setBitcoinAnalysisInputs, 'currentDomesticPrice', 10)} className="w-8 h-10 flex items-center justify-center text-gray-500 hover:bg-black/5 active:scale-90 transition opacity-0 group-hover:opacity-100"><i className="fa-solid fa-plus text-[10px]"></i></button></div></div>
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">국내 시세 (만원)</label>
+                                    <input className="apple-input" value={bitcoinAnalysisInputs.currentDomesticPrice} onChange={e=>handleCommaChange(e, v=>setBitcoinAnalysisInputs({...bitcoinAnalysisInputs, currentDomesticPrice:v}))} />
+                                </div>
                                 <div className="pt-2 border-t border-dashed border-gray-200 dark:border-white/10 mt-2 grid grid-cols-2 gap-2"><div><label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">보유수량 (BTC)</label><input className="apple-input !text-sm" placeholder="수량(BTC)" value={bitcoinAnalysisInputs.holdingQty} onChange={e=>setBitcoinAnalysisInputs({...bitcoinAnalysisInputs, holdingQty:e.target.value.replace(/[^0-9.]/g, '')})} /></div><div><label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 pl-1 mb-1 block">평단가 (만원)</label><input className="apple-input !text-sm" placeholder="평단가" value={bitcoinAnalysisInputs.avgPrice} onChange={e=>handleCommaChange(e, v=>setBitcoinAnalysisInputs({...bitcoinAnalysisInputs, avgPrice:v}))} /></div></div>
                             </>
                         )}
