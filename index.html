@@ -1011,6 +1011,29 @@
                 }));
             };
             // -------------------------------------
+
+            // --- [오류 수정] Helper for Don Converter (1돈 -> 1kg 환산) ---
+            const calculateKgPrice = (don) => {
+                const val = parseFloat(String(don).replace(/[^0-9.]/g, '')) || 0;
+                // 1돈 = 3.75g, 1kg = 1000g
+                // 1g 가격 = don / 3.75
+                // 1kg 가격 = (don / 3.75) * 1000
+                return val * (1000 / 3.75);
+            };
+
+            const applyKgPrice = () => {
+                const kgVal = calculateKgPrice(donPrice);
+                if (kgVal > 0) {
+                    setSilverAnalysisInputs(prev => ({
+                        ...prev,
+                        currentDomesticPrice: Math.round(kgVal).toLocaleString('ko-KR')
+                    }));
+                    // 변환기 닫기 (선택사항)
+                    // setShowDonConverter(false); 
+                }
+            };
+            // -----------------------------------------------------------
+
             // --- 관심종목 필터링 최적화 (코딩 경량화) ---
             const filteredWatchlist = useMemo(() => {
                 if (!searchQuery) return favorites;
