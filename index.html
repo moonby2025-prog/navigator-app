@@ -1011,22 +1011,30 @@
                 }));
             };
             // -------------------------------------
-            
-            // --- 돈 단위 변환 헬퍼 ---
-            const calculateKgPrice = (don) => {
-                const val = parseFloat(don.replace(/[^0-9.]/g, '')) || 0;
-                return Math.round(val * (1000 / 3.75));
-            };
-            const applyKgPrice = () => {
-                const kgVal = calculateKgPrice(donPrice);
-                if (kgVal > 0) {
-                    setSilverAnalysisInputs(prev => ({...prev, currentDomesticPrice: kgVal.toLocaleString('ko-KR')}));
-                }
-            };
-            // -----------------------
+            // --- 관심종목 필터링 최적화 (코딩 경량화) ---
+            const filteredWatchlist = useMemo(() => {
+                if (!searchQuery) return favorites;
+                const lowerQuery = searchQuery.toLowerCase();
+                // 검색어 매칭 (대소문자 무시)
+                const dbMatches = STOCK_DB.filter(s => s.name.toLowerCase().includes(lowerQuery) || s.code.includes(lowerQuery));
+                const favMatches = favorites.filter(f => f.name.toLowerCase().includes(lowerQuery) || f.code.includes(lowerQuery));
+                
+                // 즐겨찾기 결과를 우선으로 하되, 중복 제거하여 DB 결과 병합
+                const favCodes = new Set(favMatches.map(f => f.code));
+                return [...favMatches, ...dbMatches.filter(d => !favCodes.has(d.code))];
+            }, [searchQuery, favorites]);
+            // ----------------------------------------
 
             const [targetInputs, setTargetInputs] = useState({ mode: 'cap', price: '', shares: '', currentCap: '', targetCap: '', targetRate: '' });
             const [ipoCalcInputs, setIpoCalcInputs] = useState({ price: '', qty: '', fee: '', rate: 50 });
+            
+            // --- [경량화] 즐겨찾기 토글 핸들러 ---
+            const toggleFav = useCallback((e, item, isAdd) => {
+                e.stopPropagation();
+                setFavorites(prev => isAdd ? [...prev, {code:item.code, name:item.name}] : prev.filter(f => f.code !== item.code));
+                if (isAdd) setSearchQuery('');
+            }, []);
+            
             const [avgRows, setAvgRows] = useState([{ id: 1, q: '', p: '' }]);
             const [exchInputs, setExchInputs] = useState({ base: 'USD', target: 'KRW', amount: '' });
             
@@ -1147,6 +1155,32 @@
                 return { theoreticalKrwPrice, actualPrice: domesticPrice, kPremium, kPremiumPercent, avgPrice, qty, totalValuation: domesticPrice*qty, totalProfit: (domesticPrice-avgPrice)*qty, profitRate, priceContrib, exchContrib };
             }, [bitcoinAnalysisInputs, silverAnalysisInputs]);
 
+            // --- [추가] 성과 차트 렌더링 헬퍼 (카드/팝업 공용) ---
+            const renderPerformanceChart = () => {
+                let chartData, labels, colors, summaryData, percentData, secondarySummaryData;
+                if (analysisMode === 'silver') {
+                    const base = 1530000; const baseUnit = base / 10000; const pContrib = silverProfitData.priceContrib / 10000; const eContrib = silverProfitData.exchContrib / 10000; const kPrem = silverProfitData.kPremium / 10000; const actual = silverProfitData.actualPrice / 10000;
+                    chartData = [[0, Math.round(baseUnit)], [Math.round(baseUnit), Math.round(baseUnit + pContrib)], [Math.round(baseUnit + pContrib), Math.round(baseUnit + pContrib + eContrib)], [Math.round(baseUnit + pContrib + eContrib), Math.round(actual)], [0, Math.round(actual)]];
+                    labels = ['매입가', '국제시세', '환율효과', '프리미엄', '현재가'];
+                    colors = ['#D1D1D6', '#FF3B30', '#0071E3', '#FF9F0A', silverProfitData.totalProfit >= 0 ? '#FF3B30' : '#0071E3'];
+                    percentData = [null, (silverProfitData.priceContrib / base) * 100, (silverProfitData.exchContrib / base) * 100, silverProfitData.kPremiumPercent, null];
+                    summaryData = [{label:'국제시세 기여',value:formatManwon(silverProfitData.priceContrib),color:silverProfitData.priceContrib>=0?'text-red-500':'text-blue-500'}, {label:'환율 기여',value:formatManwon(silverProfitData.exchContrib),color:silverProfitData.exchContrib>=0?'text-red-500':'text-blue-500'}, {label:'프리미엄 잔존',value:'+'+formatManwon(silverProfitData.kPremium),color:'text-amber-500'}];
+                    secondarySummaryData = [{label:'총 평가금액', value:formatManwon(silverProfitData.totalValuation), color:'text-slate-900 dark:text-white'}, {label:'총 평가손익', value:(silverProfitData.totalProfit>=0?'+':'')+formatManwon(silverProfitData.totalProfit), color:silverProfitData.totalProfit>=0?'text-red-500':'text-blue-500'}];
+                } else {
+                    const base = bitcoinProfitData.avgPrice; const baseUnit = base / 10000; const vizQty = bitcoinProfitData.qty > 0 ? bitcoinProfitData.qty : 1; const pContrib = (bitcoinProfitData.priceContrib * vizQty) / 10000; const eContrib = (bitcoinProfitData.exchContrib * vizQty) / 10000; const actual = (bitcoinProfitData.actualPrice * vizQty) / 10000;
+                    chartData = [[0, Math.round(baseUnit * vizQty)], [Math.round(baseUnit * vizQty), Math.round((baseUnit * vizQty) + pContrib)], [Math.round((baseUnit * vizQty) + pContrib), Math.round((baseUnit * vizQty) + pContrib + eContrib)], [Math.round((baseUnit * vizQty) + pContrib + eContrib), Math.round(actual)], [0, Math.round(actual)]];
+                    const isSimulated = bitcoinProfitData.qty <= 0;
+                    labels = [isSimulated ? '매입가(1BTC)' : '총매수', '시세변동', '환율효과', '김치프리미엄', isSimulated ? '현재가(1BTC)' : '총평가'];
+                    colors = ['#D1D1D6', '#FF3B30', '#0071E3', '#FF9F0A', bitcoinProfitData.totalProfit >= 0 ? '#FF3B30' : '#0071E3'];
+                    const totalBuy = base * vizQty; const safeTotalBuy = totalBuy === 0 ? 1 : totalBuy;
+                    percentData = [null, ((bitcoinProfitData.priceContrib * vizQty) / safeTotalBuy) * 100, ((bitcoinProfitData.exchContrib * vizQty) / safeTotalBuy) * 100, bitcoinProfitData.kPremiumPercent, null];
+                    const premTotal = bitcoinProfitData.kPremium * vizQty;
+                    summaryData = [{label:'시세차익',value:formatManwon(bitcoinProfitData.priceContrib * vizQty),color:bitcoinProfitData.priceContrib>=0?'text-red-500':'text-blue-500'}, {label:'환차익',value:formatManwon(bitcoinProfitData.exchContrib * vizQty),color:bitcoinProfitData.exchContrib>=0?'text-red-500':'text-blue-500'}, {label:'프리미엄 잔존',value:(premTotal>=0?'+':'')+formatManwon(premTotal),color:'text-amber-500'}];
+                    secondarySummaryData = [{label:'총 평가금액', value:formatManwon(bitcoinProfitData.totalValuation), color:'text-slate-900 dark:text-white'}, {label:'총 평가손익', value:(bitcoinProfitData.totalProfit>=0?'+':'')+formatManwon(bitcoinProfitData.totalProfit), color:bitcoinProfitData.totalProfit>=0?'text-red-500':'text-blue-500'}];
+                }
+                return (<BridgeChart data={chartData} labels={labels} colors={colors} summaryData={summaryData} isDark={isDark} growthRate={analysisMode === 'silver' ? silverProfitData.actualRate : bitcoinProfitData.profitRate} percentData={percentData} secondarySummaryData={secondarySummaryData} />);
+            };
+
             // --- 분석 카드 컨텐츠 렌더링 헬퍼 (카드/팝업 공용) ---
             const renderAnalysisContent = (isPopup = false) => (
                 <div className="flex flex-col md:flex-row gap-8 h-full">
@@ -1221,45 +1255,39 @@
                             </div>
                             <div className={`${isPopup ? 'h-[600px]' : 'h-[400px]'} rounded-2xl overflow-hidden border border-slate-100 dark:border-white/5 relative bg-white dark:bg-[#1C1C1E]`}>
                                 {analysisMode === 'silver' ? (dashChartTab === 'price' ? <MiniChart symbol="FX_IDC:XAGUSD" theme={isDark?'dark':'light'}/> : dashChartTab === 'gold' ? <MiniChart symbol="TVC:GOLD" theme={isDark?'dark':'light'}/> : dashChartTab === 'shanghai' ? (
-                                    <div className="h-full w-full flex flex-col items-center justify-center p-6 bg-[#F9F9F9] dark:bg-[#2C2C2E] rounded-2xl border border-dashed border-gray-300 dark:border-gray-600">
-                                        <div className="text-center w-full max-w-[320px] space-y-5">
-                                            <div className="flex flex-col items-center">
-                                                <div className="w-12 h-12 rounded-full flex items-center justify-center mb-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"><i className="fa-solid fa-magnifying-glass-chart text-xl"></i></div>
-                                                <h4 className="text-base font-bold text-slate-900 dark:text-white">주요 시세 확인처</h4>
-                                                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">국내 및 상하이 시세 비교</p>
+                                    <div className="h-full w-full flex flex-col items-center justify-center p-4 bg-[#F9F9F9] dark:bg-[#2C2C2E] rounded-2xl border border-dashed border-gray-300 dark:border-gray-600 overflow-y-auto">
+                                        <div className="w-full max-w-[280px] space-y-4">
+                                            <div className="flex flex-col items-center mb-1">
+                                                <div className="w-9 h-9 rounded-full flex items-center justify-center mb-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"><i className="fa-solid fa-magnifying-glass-chart text-base"></i></div>
+                                                <h4 className="text-xs font-bold text-slate-900 dark:text-white">주요 시세 및 정보</h4>
                                             </div>
-                                            <div className="space-y-4 w-full px-2">
-                                                <div className="flex flex-col gap-2">
-                                                    <div className="flex items-center gap-2 px-1 mb-1">
-                                                        <span className="w-1 h-3 bg-red-500 rounded-full"></span>
-                                                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">국내 실물 시세</span>
-                                                    </div>
-                                                    <div className="grid grid-cols-2 gap-2.5">
+                                            <div className="space-y-3 w-full">
+                                                {/* 1. 시세 확인 섹션 */}
+                                                <div className="flex flex-col gap-1.5">
+                                                    <div className="flex items-center gap-2 px-1"><span className="w-1 h-2.5 bg-red-500 rounded-full"></span><span className="text-[11px] font-black text-slate-500 dark:text-slate-400">국내 & 상하이 시세</span></div>
+                                                    <div className="grid grid-cols-2 gap-2">
                                                         {[
-                                                            {n:'스태커스', u:'https://cafe.naver.com/twostepstock'},
-                                                            {n:'순수한금', u:'https://blog.naver.com/wolfkickbox'},
-                                                            {n:'실버테크', u:'http://www.e-silvertech.com/'},
-                                                            {n:'은세계(네이버)', u:'https://smartstore.naver.com/silver_a'}
+                                                            {n:'스태커스', u:'https://cafe.naver.com/twostepstock'}, {n:'순수한금', u:'https://blog.naver.com/wolfkickbox'},
+                                                            {n:'실버테크', u:'http://www.e-silvertech.com/'}, {n:'은세계', u:'https://smartstore.naver.com/silver_a'},
+                                                            {n:'은선물 (East)', u:'https://wap.eastmoney.com/quote/stock/113.agm.html'}, {n:'은현물 (SMM)', u:'https://www.metal.com/en/prices/201102250392'}
                                                         ].map((l,i) => (
-                                                            <a key={i} href={l.u} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center py-2.5 px-1 bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition shadow-sm h-full group">
-                                                                <span className="text-xs font-bold text-slate-700 dark:text-slate-200 text-center leading-tight group-hover:text-red-500 transition-colors">{l.n}</span>
+                                                            <a key={i} href={l.u} target="_blank" rel="noopener noreferrer" className={`py-1.5 bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-gray-700 rounded-lg hover:border-red-500/50 transition text-center flex justify-center items-center gap-1 group ${l.full ? 'col-span-2' : ''}`}>
+                                                                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 group-hover:text-red-600 transition-colors">{l.n}</span>
                                                             </a>
                                                         ))}
                                                     </div>
                                                 </div>
-                                                <div className="flex flex-col gap-2">
-                                                    <div className="flex items-center gap-2 px-1 mb-1">
-                                                        <span className="w-1 h-3 bg-red-500 rounded-full"></span>
-                                                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">중국 상하이 시세</span>
-                                                    </div>
-                                                    <div className="grid grid-cols-2 gap-2.5">
+                                                {/* 2. 커뮤니티 & 정보 섹션 (구분선 추가) */}
+                                                <div className="flex flex-col gap-1.5 pt-2 border-t border-dashed border-gray-200 dark:border-gray-600/50">
+                                                    <div className="flex items-center gap-2 px-1"><span className="w-1 h-2.5 bg-blue-500 rounded-full"></span><span className="text-[11px] font-black text-slate-500 dark:text-slate-400">커뮤니티 & 인사이트</span></div>
+                                                    <div className="grid grid-cols-2 gap-2">
                                                         {[
-                                                            {n:'은선물 (Eastmoney)', u:'https://wap.eastmoney.com/quote/stock/113.agm.html'},
-                                                            {n:'은현물 (SMM)', u:'https://www.metal.com/en/prices/201102250392'}
+                                                            {n:'실버팩토리', u:'https://cafe.naver.com/7silverfactory7'}, {n:'달러와 금', u:'https://cafe.daum.net/DollarnGold'},
+                                                            {n:'불리온스타 (칼럼)', u:'https://www.bullionstar.us/blogs/', full:true}
                                                         ].map((l,i) => (
-                                                            <a key={i} href={l.u} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 px-2 py-2.5 bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition shadow-sm group">
-                                                                <span className="text-xs font-bold text-slate-700 dark:text-slate-200 group-hover:text-red-500 transition-colors">{l.n}</span>
-                                                                <i className="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-300 group-hover:text-red-400"></i>
+                                                            <a key={i} href={l.u} target="_blank" rel="noopener noreferrer" className={`py-1.5 bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500/50 transition text-center flex justify-center items-center gap-1.5 group ${l.full ? 'col-span-2' : ''}`}>
+                                                                <i className="fa-regular fa-comments text-[10px] text-gray-400 group-hover:text-blue-500"></i>
+                                                                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 group-hover:text-blue-600 transition-colors">{l.n}</span>
                                                             </a>
                                                         ))}
                                                     </div>
@@ -1303,125 +1331,51 @@
                         </AppleCard>
                         <AppleCard title="성과 & 프리미엄" subTitle={analysisMode === 'silver' ? "요인별 가격 변동 (Waterfall)" : "김치 프리미엄 구조"} className="lg:col-span-4 h-full">
                             <div className="h-full">
-                                {(() => {
-                                    let chartData, labels, colors, summaryData, percentData, secondarySummaryData;
-                                    if (analysisMode === 'silver') {
-                                        const base = 1530000; const baseUnit = base / 10000; const pContrib = silverProfitData.priceContrib / 10000; const eContrib = silverProfitData.exchContrib / 10000; const kPrem = silverProfitData.kPremium / 10000; const actual = silverProfitData.actualPrice / 10000;
-                                        chartData = [[0, Math.round(baseUnit)], [Math.round(baseUnit), Math.round(baseUnit + pContrib)], [Math.round(baseUnit + pContrib), Math.round(baseUnit + pContrib + eContrib)], [Math.round(baseUnit + pContrib + eContrib), Math.round(actual)], [0, Math.round(actual)]];
-                                        labels = ['매입가', '국제시세', '환율효과', '프리미엄', '현재가'];
-                                        colors = ['#D1D1D6', '#FF3B30', '#0071E3', '#FF9F0A', silverProfitData.totalProfit >= 0 ? '#FF3B30' : '#0071E3'];
-                                        percentData = [null, (silverProfitData.priceContrib / base) * 100, (silverProfitData.exchContrib / base) * 100, silverProfitData.kPremiumPercent, null];
-                                        summaryData = [{label:'국제시세 기여',value:formatManwon(silverProfitData.priceContrib),color:silverProfitData.priceContrib>=0?'text-red-500':'text-blue-500'}, {label:'환율 기여',value:formatManwon(silverProfitData.exchContrib),color:silverProfitData.exchContrib>=0?'text-red-500':'text-blue-500'}, {label:'프리미엄 잔존',value:'+'+formatManwon(silverProfitData.kPremium),color:'text-amber-500'}];
-                                        secondarySummaryData = [{label:'총 평가금액', value:formatManwon(silverProfitData.totalValuation), color:'text-slate-900 dark:text-white'}, {label:'총 평가손익', value:(silverProfitData.totalProfit>=0?'+':'')+formatManwon(silverProfitData.totalProfit), color:silverProfitData.totalProfit>=0?'text-red-500':'text-blue-500'}];
-                                    } else {
-                                        const base = bitcoinProfitData.avgPrice; const baseUnit = base / 10000; const vizQty = bitcoinProfitData.qty > 0 ? bitcoinProfitData.qty : 1; const pContrib = (bitcoinProfitData.priceContrib * vizQty) / 10000; const eContrib = (bitcoinProfitData.exchContrib * vizQty) / 10000; const actual = (bitcoinProfitData.actualPrice * vizQty) / 10000;
-                                        chartData = [[0, Math.round(baseUnit * vizQty)], [Math.round(baseUnit * vizQty), Math.round((baseUnit * vizQty) + pContrib)], [Math.round((baseUnit * vizQty) + pContrib), Math.round((baseUnit * vizQty) + pContrib + eContrib)], [Math.round((baseUnit * vizQty) + pContrib + eContrib), Math.round(actual)], [0, Math.round(actual)]];
-                                        const isSimulated = bitcoinProfitData.qty <= 0;
-                                        labels = [isSimulated ? '매입가(1BTC)' : '총매수', '시세변동', '환율효과', '김치프리미엄', isSimulated ? '현재가(1BTC)' : '총평가'];
-                                        colors = ['#D1D1D6', '#FF3B30', '#0071E3', '#FF9F0A', bitcoinProfitData.totalProfit >= 0 ? '#FF3B30' : '#0071E3'];
-                                        const totalBuy = base * vizQty; const safeTotalBuy = totalBuy === 0 ? 1 : totalBuy;
-                                        percentData = [null, ((bitcoinProfitData.priceContrib * vizQty) / safeTotalBuy) * 100, ((bitcoinProfitData.exchContrib * vizQty) / safeTotalBuy) * 100, bitcoinProfitData.kPremiumPercent, null];
-                                        const premTotal = bitcoinProfitData.kPremium * vizQty;
-                                        summaryData = [{label:'시세차익',value:formatManwon(bitcoinProfitData.priceContrib * vizQty),color:bitcoinProfitData.priceContrib>=0?'text-red-500':'text-blue-500'}, {label:'환차익',value:formatManwon(bitcoinProfitData.exchContrib * vizQty),color:bitcoinProfitData.exchContrib>=0?'text-red-500':'text-blue-500'}, {label:'프리미엄 잔존',value:(premTotal>=0?'+':'')+formatManwon(premTotal),color:'text-amber-500'}];
-                                        secondarySummaryData = [{label:'총 평가금액', value:formatManwon(bitcoinProfitData.totalValuation), color:'text-slate-900 dark:text-white'}, {label:'총 평가손익', value:(bitcoinProfitData.totalProfit>=0?'+':'')+formatManwon(bitcoinProfitData.totalProfit), color:bitcoinProfitData.totalProfit>=0?'text-red-500':'text-blue-500'}];
-                                    }
-                                    return (<BridgeChart data={chartData} labels={labels} colors={colors} summaryData={summaryData} isDark={isDark} growthRate={analysisMode === 'silver' ? silverProfitData.actualRate : bitcoinProfitData.profitRate} percentData={percentData} secondarySummaryData={secondarySummaryData} />);
-                                })()}
+                                {renderPerformanceChart()}
                             </div>
                         </AppleCard>
+                        
+                        {/* 관심 종목 & 검색 카드 (초경량화 적용) */}
                         <AppleCard title="관심 종목 & 검색" subTitle="빠른 조회 및 편집" className="lg:col-span-4 h-full min-h-[400px]">
                             <div className="flex flex-col h-full">
-                                <div className="relative mb-4">
-                                    <input 
-                                        type="text" 
-                                        className="w-full bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-xl pl-10 pr-4 py-3 text-sm font-bold text-slate-900 force-dark-white outline-none focus:ring-2 focus:ring-[#0071E3]/20 transition-shadow" 
-                                        placeholder="종목명 또는 코드 (예: 삼성전자)" 
-                                        value={searchQuery} 
-                                        onChange={e => setSearchQuery(e.target.value)} 
-                                        onKeyDown={e => { if(e.key === 'Enter'){ searchSymbol(searchQuery); setSearchQuery(''); } }} 
-                                    />
-                                    <button 
-                                        onClick={() => { searchSymbol(searchQuery); setSearchQuery(''); }}
-                                        className="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center text-gray-400 dark:text-gray-300 hover:text-[#0071E3] transition-colors"
-                                        title="검색"
-                                    >
-                                        <i className="fa-solid fa-magnifying-glass"></i>
-                                    </button>
+                                <div className="relative mb-3">
+                                    <input type="text" className="w-full bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-xl pl-10 pr-4 py-3 text-sm font-bold outline-none text-slate-900 force-dark-white" placeholder="종목명/코드" value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} onKeyDown={e=>e.key==='Enter'&&(searchSymbol(searchQuery),setSearchQuery(''))}/>
+                                    <button onClick={()=>{searchSymbol(searchQuery);setSearchQuery('')}} className="absolute left-0 top-0 h-full w-10 text-gray-400 hover:text-[#0071E3]"><i className="fa-solid fa-magnifying-glass"></i></button>
                                 </div>
-                                <div className="flex justify-between items-center mb-2 px-1"><span className="text-xs font-bold text-gray-400 dark:text-gray-300">{searchQuery ? '검색 결과' : `내 관심 종목 (${favorites.length})`}</span><button onClick={() => setIsFavEditMode(!isFavEditMode)} className="text-xs font-bold text-[#0071E3]">{isFavEditMode ? '완료' : '편집'}</button></div>
+                                <div className="flex justify-between items-center mb-2 px-1 text-xs font-bold"><span className="text-gray-400">{searchQuery?'검색 결과':`관심 종목 (${favorites.length})`}</span><button onClick={()=>setIsFavEditMode(!isFavEditMode)} className="text-[#0071E3]">{isFavEditMode?'완료':'편집'}</button></div>
+
                                 <div className="flex-1 overflow-y-auto space-y-2 pr-1 mb-4 scrollbar-hide">
-                                    {(() => {
-                                        // 검색 로직: 쿼리가 있으면 DB 검색, 없으면 즐겨찾기 표시
-                                        let displayList = favorites;
-                                        let isSearchResult = false;
-
-                                        if (searchQuery) {
-                                            isSearchResult = true;
-                                            // DB + Favorites 병합 검색 (중복 제거)
-                                            const dbMatches = STOCK_DB.filter(s => s.name.includes(searchQuery) || s.code.includes(searchQuery));
-                                            const favMatches = favorites.filter(f => f.name.includes(searchQuery) || f.code.includes(searchQuery));
-                                            
-                                            // 즐겨찾기 매칭을 우선순위로 두고 합치기
-                                            const merged = [...favMatches];
-                                            dbMatches.forEach(dbItem => {
-                                                if (!merged.find(m => m.code === dbItem.code)) {
-                                                    merged.push(dbItem);
-                                                }
-                                            });
-                                            displayList = merged;
-                                        }
-
-                                        if (displayList.length === 0 && isSearchResult) {
-                                            return (
-                                                <div className="text-center py-8 flex flex-col items-center">
-                                                    <p className="text-xs text-gray-400 mb-2">검색 결과가 없습니다.</p>
-                                                    <button onClick={() => searchSymbol(searchQuery)} className="text-xs font-bold text-[#0071E3] hover:underline bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded-lg">
-                                                        네이버 통합검색으로 이동 <i className="fa-solid fa-arrow-up-right-from-square ml-1"></i>
-                                                    </button>
+                                    {filteredWatchlist.length===0 ? (
+                                        <div className="text-center py-10 text-xs text-gray-400">
+                                            <p className="mb-2">결과 없음</p>
+                                            {searchQuery&&<button onClick={()=>searchSymbol(searchQuery)} className="bg-blue-50 dark:bg-blue-900/20 text-[#0071E3] px-3 py-1.5 rounded-lg font-bold">네이버 검색 <i className="fa-solid fa-arrow-up-right-from-square"></i></button>}
+                                        </div>
+                                    ) : filteredWatchlist.map(item => {
+                                        const isFav = favorites.some(f => f.code === item.code);
+                                        return (
+                                            <div key={item.code} onClick={()=>!isFavEditMode&&searchSymbol(item.code)} className="bg-[#F2F2F7] dark:bg-[#2C2C2E] p-2.5 rounded-xl flex justify-between items-center group hover:bg-gray-200 dark:hover:bg-gray-700 transition cursor-pointer">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black ${searchQuery&&!isFav?'bg-gray-100 text-gray-400':'bg-white dark:bg-[#1C1C1E] text-gray-500'}`}>{(item.name||'?')[0]}</div>
+                                                    <div><div className="text-sm font-bold text-slate-900 dark:text-white">{item.name}{searchQuery&&isFav&&<i className="fa-solid fa-star text-[10px] text-yellow-400 ml-1"></i>}</div><div className="text-[10px] text-gray-400 font-medium">{item.code}</div></div>
                                                 </div>
-                                            );
-                                        }
-
-                                        return displayList.map((item) => {
-                                            const isAlreadyFav = favorites.some(f => f.code === item.code);
-                                            return (
-                                                <div key={item.code} className="bg-[#F2F2F7] dark:bg-[#2C2C2E] p-3 rounded-xl flex justify-between items-center group hover:bg-gray-200 dark:hover:bg-gray-700 transition cursor-pointer" onClick={() => !isFavEditMode && searchSymbol(item.code)}>
-                                                    <div className="flex items-center gap-3">
-                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shadow-sm ${isSearchResult && !isAlreadyFav ? 'bg-gray-100 text-gray-400 dark:bg-white/5' : 'bg-white dark:bg-[#1C1C1E] text-gray-500'}`}>
-                                                            {item.name.substring(0,1)}
-                                                        </div>
-                                                        <div className="flex flex-col">
-                                                            <span className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1">
-                                                                {item.name}
-                                                                {isSearchResult && isAlreadyFav && <i className="fa-solid fa-star text-[10px] text-yellow-400"></i>}
-                                                            </span>
-                                                            <span className="text-[10px] font-medium text-gray-400 dark:text-gray-400">{item.code}</span>
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    {isFavEditMode ? (
-                                                        <button onClick={(e) => { e.stopPropagation(); setFavorites(favorites.filter(f => f.code !== item.code)); }} className="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow-sm hover:scale-110 transition"><i className="fa-solid fa-minus text-[10px]"></i></button>
-                                                    ) : (
-                                                        isSearchResult && !isAlreadyFav ? (
-                                                            <button 
-                                                                onClick={(e) => { e.stopPropagation(); setFavorites([...favorites, {code: item.code, name: item.name}]); setSearchQuery(''); }} 
-                                                                className="w-7 h-7 rounded-lg bg-white dark:bg-[#1C1C1E] text-[#0071E3] flex items-center justify-center shadow-sm border border-gray-100 dark:border-white/5 hover:bg-[#0071E3] hover:text-white transition"
-                                                                title="관심종목 추가"
-                                                            >
-                                                                <i className="fa-solid fa-plus text-xs"></i>
-                                                            </button>
-                                                        ) : (
-                                                            <i className="fa-solid fa-chevron-right text-xs text-gray-300 dark:text-gray-500 group-hover:text-gray-400"></i>
-                                                        )
-                                                    )}
-                                                </div>
-                                            );
-                                        });
-                                    })()}
+                                                {isFavEditMode ? <button onClick={e=>toggleFav(e,item,false)} className="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow-sm hover:scale-110"><i className="fa-solid fa-minus text-[10px]"></i></button>
+                                                : searchQuery&&!isFav ? <button onClick={e=>toggleFav(e,item,true)} className="w-7 h-7 rounded-lg bg-white text-[#0071E3] flex items-center justify-center shadow-sm hover:bg-[#0071E3] hover:text-white"><i className="fa-solid fa-plus text-xs"></i></button>
+                                                : <i className="fa-solid fa-chevron-right text-xs text-gray-300 group-hover:text-gray-400"></i>}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
-                                {isFavEditMode && (<div className="mt-auto pt-4 border-t border-gray-100 dark:border-white/5 animate-fade-in"><div className="flex gap-2"><input className="w-20 bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-lg px-2 py-2 text-xs font-bold text-center outline-none force-dark-white" placeholder="코드" value={newFav.code} onChange={e=>setNewFav({...newFav, code:e.target.value})} /><input className="flex-1 bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-lg px-2 py-2 text-xs font-bold outline-none force-dark-white" placeholder="종목명" value={newFav.name} onChange={e=>setNewFav({...newFav, name:e.target.value})} /><button onClick={() => { if(newFav.code && newFav.name) { setFavorites([...favorites, newFav]); setNewFav({code:'', name:''}); } }} className="w-8 bg-[#0071E3] text-white rounded-lg flex items-center justify-center hover:bg-blue-600"><i className="fa-solid fa-plus text-xs"></i></button></div></div>)}
+                                
+                                {isFavEditMode && (
+                                    <div className="pt-3 border-t border-gray-100 dark:border-white/5 flex gap-2 animate-fade-in">
+                                        <input className="w-20 bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-lg px-2 py-2 text-xs font-bold text-center outline-none force-dark-white" placeholder="코드" value={newFav.code} onChange={e=>setNewFav({...newFav, code:e.target.value})} />
+                                        <input className="flex-1 bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-lg px-2 py-2 text-xs font-bold outline-none force-dark-white" placeholder="종목명" value={newFav.name} onChange={e=>setNewFav({...newFav, name:e.target.value})} />
+                                        <button onClick={()=>{if(newFav.code&&newFav.name){setFavorites(p=>[...p,newFav]);setNewFav({code:'',name:''})}}} className="w-8 bg-[#0071E3] text-white rounded-lg flex items-center justify-center hover:bg-blue-600"><i className="fa-solid fa-plus text-xs"></i></button>
+                                    </div>
+                                )}
                             </div>
                         </AppleCard>
+
                         <AppleCard className="lg:col-span-8 h-[780px] min-h-[600px] !p-0 overflow-hidden">
                             <div className="flex flex-col h-full w-full">
                                 {/* 상단: 일정 및 맵 (높이를 40% -> 50%로 확대하여 달력 시인성 확보) */}
@@ -1526,8 +1480,9 @@
                     {/* 대시보드 분석 카드 확대 모달 */}
                     {isAnalysisExpanded && (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
-                            <div className="bg-white dark:bg-[#1C1C1E] w-full max-w-6xl h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col relative border border-gray-200 dark:border-white/10">
-                                <div className="px-6 py-4 border-b border-gray-100 dark:border-white/5 flex justify-between items-center bg-white dark:bg-[#1C1C1E]">
+                            <div className="bg-white dark:bg-[#1C1C1E] w-full max-w-7xl h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col relative border border-gray-200 dark:border-white/10">
+                                {/* Header */}
+                                <div className="px-6 py-4 border-b border-gray-100 dark:border-white/5 flex justify-between items-center bg-white dark:bg-[#1C1C1E] flex-shrink-0">
                                     <div className="flex items-center gap-3">
                                         <h2 className="text-xl font-bold text-slate-900 force-dark-white tracking-tight flex items-center gap-2">
                                             <i className="fa-solid fa-chart-pie text-indigo-500"></i> {analysisMode === 'silver' ? '은(Silver) 심층 분석' : '비트코인(BTC) 심층 분석'}
@@ -1541,8 +1496,25 @@
                                         <i className="fa-solid fa-xmark text-lg text-slate-500 group-hover:text-slate-900 dark:text-gray-400 dark:group-hover:text-white"></i>
                                     </button>
                                 </div>
-                                <div className="flex-1 relative min-h-0 bg-white dark:bg-[#1C1C1E] overflow-auto p-6">
-                                    {renderAnalysisContent(true)}
+                                
+                                {/* Content Body - Split Layout (Mobile: Vertical, PC: Horizontal) */}
+                                <div className="flex-1 relative min-h-0 bg-white dark:bg-[#1C1C1E] overflow-y-auto lg:overflow-hidden flex flex-col lg:flex-row">
+                                    
+                                    {/* Left Pane: Inputs & Basic Analysis */}
+                                    <div className="w-full lg:w-7/12 h-auto lg:h-full overflow-y-auto p-6 border-b lg:border-b-0 lg:border-r border-gray-100 dark:border-white/5">
+                                        {renderAnalysisContent(true)}
+                                    </div>
+
+                                    {/* Right Pane: Performance & Premium Chart */}
+                                    <div className="w-full lg:w-5/12 h-auto lg:h-full overflow-y-auto p-6 bg-slate-50 dark:bg-black/20">
+                                        <h3 className="text-lg font-bold text-slate-900 force-dark-white mb-4 flex items-center gap-2">
+                                            <i className="fa-solid fa-chart-column text-indigo-500"></i> 성과 & 프리미엄 분석
+                                        </h3>
+                                        <div className="h-[400px] lg:h-[calc(100%-3rem)] w-full bg-[#F9F9F9] dark:bg-[#2C2C2E] rounded-2xl p-4 border border-slate-100 dark:border-white/5 shadow-inner">
+                                            {renderPerformanceChart()}
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -1552,104 +1524,64 @@
             
             const renderRoutine = () => {
                 const currentLinks = linkMode === 'blogs' ? blogInsightLinks : routineLinks;
-                
-                const togglePreview = (key) => {
-                    setPreviewStates(prev => ({ ...prev, [key]: !prev[key] }));
-                };
-
-                const toggleCategoryPreview = (cat, links) => {
+                // [경량화] 미리보기 토글 로직 통합
+                const toggleCat = (cat, links) => {
                     const allOpen = links.every(l => previewStates[`${cat}_${l.url}`]);
-                    const newStates = { ...previewStates };
-                    links.forEach(l => { newStates[`${cat}_${l.url}`] = !allOpen; });
-                    setPreviewStates(newStates);
+                    setPreviewStates(prev => { const n={...prev}; links.forEach(l=>n[`${cat}_${l.url}`]=!allOpen); return n; });
                 };
-
-                const handleOpenAll = (links) => {
-                    let opened = 0;
+                // [경량화] 모두 열기 로직 통합
+                const openAll = (links) => {
                     let blocked = false;
-                    links.forEach(l => {
-                        try {
-                            const w = window.open(l.url, '_blank');
-                            if (w) opened++; else blocked = true;
-                        } catch (e) { blocked = true; }
-                    });
-                    if (opened === 0) {
-                        alert("모든 팝업이 차단되었습니다.\n\n브라우저 주소창 우측의 '팝업 차단됨' 아이콘을 눌러\n[이 사이트의 팝업 및 리디렉션 항상 허용]을 선택해주세요.");
-                    } else if (blocked || opened < links.length) {
-                        alert(`총 ${links.length}개 중 ${opened}개만 열렸습니다.\n나머지는 팝업 차단에 의해 막혔습니다.\n\n'모두 열기'를 정상적으로 사용하려면\n브라우저 설정에서 [팝업 항상 허용]을 체크해주세요.`);
-                    }
+                    links.forEach(l => { try { if(!window.open(l.url,'_blank')) blocked=true; } catch{ blocked=true; } });
+                    if(blocked) alert("일부 팝업이 차단되었습니다. 브라우저 설정을 확인해주세요.");
                 };
 
                 return (
-                    <div className="animate-fade-in pb-10 space-y-6">
-                        <div className="flex flex-col gap-4 px-1">
-                            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                                <div><h2 className="text-3xl font-bold tracking-tight text-slate-900 force-dark-white">오늘의 루틴</h2><p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">{linkMode === 'investment' ? '매일 체크하는 투자 및 생활 정보' : '깊이 있는 분석과 인사이트 블로그'}</p></div>
-                                <div className="flex items-center gap-3"><div className="bg-[#E5E5EA] dark:bg-[#2C2C2E] p-1 rounded-full flex"><button onClick={() => setLinkMode('investment')} className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${linkMode === 'investment' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-500 dark:text-gray-300'}`}>투자 & 일상</button><button onClick={() => setLinkMode('blogs')} className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${linkMode === 'blogs' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-500 dark:text-gray-300'}`}>인사이트</button></div><button onClick={() => setIsRoutineEditMode(!isRoutineEditMode)} className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${isRoutineEditMode ? 'bg-[#0071E3] text-white' : 'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-[#0071E3]'}`}>{isRoutineEditMode ? '완료' : '편집'}</button></div>
-                            </div>
+                    <div className="animate-fade-in pb-10 space-y-5">
+                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 px-1">
+                            <div><h2 className="text-3xl font-bold tracking-tight text-slate-900 force-dark-white">오늘의 루틴</h2><p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">{linkMode==='investment'?'매일 체크하는 투자 정보':'깊이 있는 인사이트 블로그'}</p></div>
+                            <div className="flex gap-2"><div className="bg-[#E5E5EA] dark:bg-[#2C2C2E] p-1 rounded-full flex"><button onClick={()=>setLinkMode('investment')} className={`px-4 py-1.5 rounded-full text-xs font-bold transition ${linkMode==='investment'?'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white':'text-gray-500'}`}>투자</button><button onClick={()=>setLinkMode('blogs')} className={`px-4 py-1.5 rounded-full text-xs font-bold transition ${linkMode==='blogs'?'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white':'text-gray-500'}`}>인사이트</button></div><button onClick={()=>setIsRoutineEditMode(!isRoutineEditMode)} className={`px-4 py-1.5 rounded-full text-xs font-bold transition ${isRoutineEditMode?'bg-[#0071E3] text-white':'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-[#0071E3]'}`}>{isRoutineEditMode?'완료':'편집'}</button></div>
                         </div>
 
-                        <AppleCard title="루틴 메모" subTitle="투자 아이디어나 할 일 기록" className="!p-4">
-                            <textarea 
-                                className="w-full h-20 bg-transparent resize-none outline-none text-sm text-slate-700 dark:text-slate-200 placeholder-gray-400" 
-                                placeholder="여기에 메모를 입력하세요... (자동 저장됨)"
-                                value={routineMemo}
-                                onChange={e => setRoutineMemo(e.target.value)}
-                            />
+                        <AppleCard title="루틴 메모" className="!p-4">
+                            <textarea className="w-full h-16 bg-transparent resize-none outline-none text-sm text-slate-700 dark:text-slate-200 placeholder-gray-400" placeholder="메모 입력..." value={routineMemo} onChange={e=>setRoutineMemo(e.target.value)}/>
                         </AppleCard>
 
                         {isRoutineEditMode && (
-                            <AppleCard className="bg-indigo-50/50 dark:bg-indigo-900/10 border-indigo-100 dark:border-indigo-800">
-                                <div className="flex items-center gap-2 mb-4 text-[#0071E3]"><i className="fa-solid fa-circle-plus"></i><span className="text-sm font-bold">새로운 링크 추가</span></div>
-                                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                                    <div className="sm:col-span-3">
-                                        <select className="apple-input w-full" value={newRoutine.category} onChange={e=>setNewRoutine({...newRoutine, category:e.target.value})}>
-                                            <option value="">카테고리 선택</option>
-                                            {Object.keys(currentLinks).map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                                        </select>
-                                    </div>
-                                    <div className="sm:col-span-3"><input type="text" placeholder="사이트명" className="apple-input" value={newRoutine.name} onChange={e=>setNewRoutine({...newRoutine, name:e.target.value})} /></div>
-                                    <div className="sm:col-span-4"><input type="text" placeholder="URL (https://...)" className="apple-input" value={newRoutine.url} onChange={e=>setNewRoutine({...newRoutine, url:e.target.value})} /></div>
-                                    <div className="sm:col-span-2"><button onClick={handleAddRoutineLink} className="w-full h-full bg-[#0071E3] hover:bg-blue-600 text-white rounded-xl font-bold text-xs transition py-3 sm:py-0">추가하기</button></div>
+                            <AppleCard className="bg-indigo-50/50 dark:bg-indigo-900/10 border-indigo-100 dark:border-indigo-800 !p-4">
+                                <div className="flex flex-col sm:flex-row gap-3">
+                                    <select className="apple-input sm:w-1/4" value={newRoutine.category} onChange={e=>setNewRoutine({...newRoutine, category:e.target.value})}><option value="">카테고리</option>{Object.keys(currentLinks).map(k=><option key={k} value={k}>{k}</option>)}</select>
+                                    <input className="apple-input sm:w-1/4" placeholder="이름" value={newRoutine.name} onChange={e=>setNewRoutine({...newRoutine, name:e.target.value})} />
+                                    <input className="apple-input sm:w-1/3" placeholder="URL" value={newRoutine.url} onChange={e=>setNewRoutine({...newRoutine, url:e.target.value})} />
+                                    <button onClick={handleAddRoutineLink} className="flex-1 bg-[#0071E3] text-white rounded-xl font-bold text-xs py-2 hover:bg-blue-600">추가</button>
                                 </div>
                             </AppleCard>
                         )}
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             {Object.entries(currentLinks).map(([cat, links]) => {
-                                const allPreviewsOpen = links.length > 0 && links.every(l => previewStates[`${cat}_${l.url}`]);
+                                const allOpen = links.length > 0 && links.every(l => previewStates[`${cat}_${l.url}`]);
                                 return (
                                     <AppleCard key={cat} title={cat} className="h-full" rightContent={
-                                        <div className="flex gap-2">
-                                            <button onClick={() => toggleCategoryPreview(cat, links)} className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors flex items-center gap-1.5 ${allPreviewsOpen ? 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300' : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50'}`}>
-                                                <i className={`fa-solid ${allPreviewsOpen ? 'fa-chevron-up' : 'fa-newspaper'}`}></i><span className="hidden sm:inline">{allPreviewsOpen ? '접기' : '미리보기'}</span>
-                                            </button>
-                                            <button onClick={() => handleOpenAll(links)} className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-3 py-1.5 rounded-lg text-[11px] font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors flex items-center gap-1.5">
-                                                <i className="fa-solid fa-arrow-up-right-from-square"></i><span className="hidden sm:inline">모두 열기</span>
-                                            </button>
+                                        <div className="flex gap-1.5">
+                                            <button onClick={()=>toggleCat(cat, links)} className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition flex gap-1 items-center ${allOpen?'bg-gray-200 text-gray-600':'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600'}`}><i className={`fa-solid ${allOpen?'fa-chevron-up':'fa-newspaper'}`}></i><span className="hidden sm:inline">미리보기</span></button>
+                                            <button onClick={()=>openAll(links)} className="px-2.5 py-1.5 rounded-lg text-[10px] font-bold bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 hover:bg-indigo-100 transition flex gap-1 items-center"><i className="fa-solid fa-arrow-up-right-from-square"></i><span className="hidden sm:inline">모두 열기</span></button>
                                         </div>
                                     }>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                                             {links.map((l, i) => {
-                                                const checkKey = `${cat}_${l.url}`;
-                                                const isPreviewOpen = previewStates[checkKey];
+                                                const key = `${cat}_${l.url}`;
                                                 return (
-                                                    <div key={`${cat}-${l.url}-${i}`} className="relative group flex flex-col bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-xl transition-all border border-transparent hover:border-gray-200 dark:hover:border-white/10 overflow-hidden">
-                                                        <div className="flex items-center p-3 gap-3">
-                                                            <a href={l.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 flex-1 min-w-0">
-                                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-white dark:bg-white/10 ${l.color || 'text-slate-500'}`}><i className={`fa-solid ${l.icon || 'fa-link'} text-xs`}></i></div>
-                                                                <span className="text-sm font-bold truncate text-slate-900 dark:text-white">{l.name}</span>
+                                                    <div key={i} className="relative group bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-xl overflow-hidden hover:ring-1 hover:ring-gray-200 dark:hover:ring-gray-700 transition">
+                                                        <div className="flex items-center p-2.5 gap-2.5">
+                                                            <a href={l.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 flex-1 min-w-0">
+                                                                <div className={`w-7 h-7 rounded-lg flex items-center justify-center bg-white dark:bg-white/10 ${l.color||'text-slate-500'}`}><i className={`fa-solid ${l.icon||'fa-link'} text-[10px]`}></i></div>
+                                                                <span className="text-[13px] font-bold truncate text-slate-900 dark:text-white">{l.name}</span>
                                                             </a>
-                                                            <button onClick={(e) => { e.stopPropagation(); togglePreview(checkKey); }} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-indigo-500 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition">
-                                                                <i className={`fa-solid ${isPreviewOpen ? 'fa-chevron-up' : 'fa-chevron-down'} text-xs`}></i>
-                                                            </button>
+                                                            <button onClick={e=>{e.stopPropagation();setPreviewStates(p=>({...p,[key]:!p[key]}))}} className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-indigo-500 hover:bg-white dark:hover:bg-white/10 rounded-full transition"><i className={`fa-solid ${previewStates[key]?'fa-chevron-up':'fa-chevron-down'} text-[10px]`}></i></button>
                                                         </div>
-                                                        {isPreviewOpen && <MiniNewsPreview query={l.name} isDark={isDark} />}
-                                                        {isRoutineEditMode && (
-                                                            <button onClick={(e) => { e.preventDefault(); handleDeleteRoutineLink(cat, i); }} className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-[#FF3B30] text-white rounded-full flex items-center justify-center shadow-md hover:scale-110 transition z-10 border-2 border-white dark:border-[#1C1C1E]">
-                                                                <i className="fa-solid fa-minus text-[10px]"></i>
-                                                            </button>
-                                                        )}
+                                                        {previewStates[key] && <MiniNewsPreview query={l.name} isDark={isDark} />}
+                                                        {isRoutineEditMode && <button onClick={e=>{e.preventDefault();handleDeleteRoutineLink(cat,i)}} className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md hover:scale-110 z-10"><i className="fa-solid fa-minus text-[8px]"></i></button>}
                                                     </div>
                                                 );
                                             })}
