@@ -958,6 +958,10 @@
             const [donPrice, setDonPrice] = useState('');
             // -------------------------------------
 
+            // --- [추가] 도구 탭 단위 변환기 상태 ---
+            const [unitConv, setUnitConv] = useState({ type: 'weight', value: '', base: 'don' });
+            // -------------------------------------
+
             const [routineMemo, setRoutineMemo] = useState(() => localStorage.getItem('invNav_routineMemo') || '');
             const [previewStates, setPreviewStates] = useState({});
 
@@ -1713,6 +1717,82 @@
                                             <div className="flex justify-between items-center pt-2 border-t border-emerald-100 dark:border-emerald-800/50"><span className="text-xs font-bold text-emerald-600/70 dark:text-emerald-400/70">최종 평단가</span><span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{q ? formatNumber(c/q) : 0}원</span></div>
                                         </div>
                                     );
+                                })()}
+                            </div>
+                        </AppleCard>
+                        
+                        {/* [NEW] 단위 변환기 */}
+                        <AppleCard title="단위 변환기" subTitle="무게/면적 간편 환산" className="flex flex-col h-full md:col-span-2">
+                            <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] p-1 rounded-xl flex mb-4 max-w-sm mx-auto w-full">
+                                <button onClick={() => setUnitConv({ ...unitConv, type: 'weight', base: 'don' })} className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${unitConv.type === 'weight' ? 'bg-white dark:bg-[#636366] shadow-sm text-black dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}>무게 (금/은)</button>
+                                <button onClick={() => setUnitConv({ ...unitConv, type: 'area', base: 'pyeong' })} className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${unitConv.type === 'area' ? 'bg-white dark:bg-[#636366] shadow-sm text-black dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}>면적 (부동산)</button>
+                            </div>
+                            <div className="flex gap-3 mb-4 items-center">
+                                <div className="flex-1 relative">
+                                    <input type="text" className="apple-input w-full !text-right !pr-4 !text-lg !font-black !py-3" placeholder="0" value={unitConv.value} onChange={e => handleCommaChange(e, v => setUnitConv({ ...unitConv, value: v }))} />
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">입력</span>
+                                </div>
+                                <div className="relative w-32">
+                                    <select className="apple-input w-full text-center appearance-none !bg-slate-100 dark:!bg-[#3A3A3C] !py-3 font-bold cursor-pointer" value={unitConv.base} onChange={e => setUnitConv({ ...unitConv, base: e.target.value })}>
+                                        {unitConv.type === 'weight' ? (
+                                            <>
+                                                <option value="don">돈 (3.75g)</option>
+                                                <option value="g">그램 (g)</option>
+                                                <option value="kg">킬로 (kg)</option>
+                                                <option value="oz">온스 (oz)</option>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <option value="pyeong">평</option>
+                                                <option value="m2">제곱 (㎡)</option>
+                                            </>
+                                        )}
+                                    </select>
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500"><i className="fa-solid fa-chevron-down text-xs"></i></div>
+                                </div>
+                            </div>
+                            <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-2xl p-5 space-y-3 border border-transparent dark:border-white/5">
+                                {(() => {
+                                    const val = parseFormattedNumber(unitConv.value);
+                                    if (val === 0) return <div className="py-4 text-center text-xs text-gray-400 font-medium">변환할 값을 입력해주세요.</div>;
+                                    
+                                    if (unitConv.type === 'weight') {
+                                        const factors = { g: 1, kg: 1000, don: 3.75, oz: 31.1034768 };
+                                        const baseG = val * factors[unitConv.base];
+                                        const list = [
+                                            { u: 'don', l: '돈 (3.75g)', v: baseG / factors.don, d: 2 },
+                                            { u: 'g', l: '그램 (g)', v: baseG, d: 2 },
+                                            { u: 'oz', l: '트로이온스', v: baseG / factors.oz, d: 4 },
+                                            { u: 'kg', l: '킬로그램', v: baseG / factors.kg, d: 5 },
+                                        ];
+                                        return (
+                                            <div className="grid grid-cols-2 gap-x-8 gap-y-3">
+                                                {list.map(i => (
+                                                    <div key={i.u} className={`flex justify-between items-center ${i.u === unitConv.base ? 'opacity-30' : ''}`}>
+                                                        <span className="text-xs font-bold text-gray-500 dark:text-gray-400">{i.l}</span>
+                                                        <span className="text-base font-black text-slate-700 dark:text-white tracking-tight">{i.v.toLocaleString(undefined, { maximumFractionDigits: i.d })} <span className="text-[10px] font-normal text-gray-400">{i.u === 'don' ? '돈' : i.u}</span></span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        );
+                                    } else {
+                                        const factors = { m2: 1, pyeong: 3.305785 };
+                                        const baseM2 = val * factors[unitConv.base];
+                                        const list = [
+                                            { u: 'pyeong', l: '평 (3.3㎡)', v: baseM2 / factors.pyeong, d: 2 },
+                                            { u: 'm2', l: '제곱미터 (㎡)', v: baseM2, d: 2 },
+                                        ];
+                                        return (
+                                            <div className="space-y-3">
+                                                {list.map(i => (
+                                                    <div key={i.u} className={`flex justify-between items-center ${i.u === unitConv.base ? 'opacity-30' : ''}`}>
+                                                        <span className="text-xs font-bold text-gray-500 dark:text-gray-400">{i.l}</span>
+                                                        <span className="text-lg font-black text-slate-700 dark:text-white tracking-tight">{i.v.toLocaleString(undefined, { maximumFractionDigits: i.d })} <span className="text-[10px] font-normal text-gray-400">{i.u === 'pyeong' ? '평' : '㎡'}</span></span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        );
+                                    }
                                 })()}
                             </div>
                         </AppleCard>
