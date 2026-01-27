@@ -1184,9 +1184,38 @@
             useEffect(() => { runSimulation(); }, [runSimulation]);
 
             const silverProfitData = useMemo(() => {
-                const exch = parseFloat(silverAnalysisInputs.currentExch.replace(/[^0-9.]/g, '')) || 0; const usd = parseFloat(silverAnalysisInputs.currentUsdPrice.replace(/[^0-9.]/g, '')) || 0; const domesticPrice = parseFloat(silverAnalysisInputs.currentDomesticPrice.replace(/[^0-9.]/g, '')) || 0; const theoreticalKrwPrice = usd * exch * TROY_OZ_TO_KG; const kPremium = domesticPrice - theoreticalKrwPrice; const kPremiumPercent = theoreticalKrwPrice > 0 ? (kPremium / theoreticalKrwPrice) * 100 : 0; const shanghaiCNY = parseFloat(silverAnalysisInputs.currentShanghaiPrice.replace(/[^0-9.]/g, '')) || 0; const usdKrw = exchangeRates['USD']?.krw || 1380; const cnyKrw = exchangeRates['CNY']?.krw || 190; const usdToCny = cnyKrw > 0 ? usdKrw / cnyKrw : 7.2; const theoreticalShanghaiCNY = usd * usdToCny * TROY_OZ_TO_KG; const sPremiumPercent = theoreticalShanghaiCNY > 0 ? ((shanghaiCNY - theoreticalShanghaiCNY) / theoreticalShanghaiCNY) * 100 : 0; const shanghaiUsdOz = usdToCny > 0 ? (shanghaiCNY / usdToCny) / TROY_OZ_TO_KG : 0; const priceContrib = (usd - BASE_USD_PRICE) * BASE_EXCH_RATE * TROY_OZ_TO_KG; const exchContrib = (exch - BASE_EXCH_RATE) * BASE_USD_PRICE * TROY_OZ_TO_KG; const actualRate = ((domesticPrice / FIXED_BUY_PRICE_KG) - 1) * 100; const qty = parseFloat(silverAnalysisInputs.holdingQty) || 0; const avgPrice = parseFloat(silverAnalysisInputs.avgPrice.replace(/,/g, '')) || 0; const totalValuation = domesticPrice * qty; const totalProfit = (domesticPrice - avgPrice) * qty;
+                const exch = parseFloat(silverAnalysisInputs.currentExch.replace(/[^0-9.]/g, '')) || 0; 
+                const usd = parseFloat(silverAnalysisInputs.currentUsdPrice.replace(/[^0-9.]/g, '')) || 0; 
+                const domesticPrice = parseFloat(silverAnalysisInputs.currentDomesticPrice.replace(/[^0-9.]/g, '')) || 0; 
+                
+                const theoreticalKrwPrice = usd * exch * TROY_OZ_TO_KG; 
+                const kPremium = domesticPrice - theoreticalKrwPrice; 
+                const kPremiumPercent = theoreticalKrwPrice > 0 ? (kPremium / theoreticalKrwPrice) * 100 : 0; 
+                
+                const shanghaiCNY = parseFloat(silverAnalysisInputs.currentShanghaiPrice.replace(/[^0-9.]/g, '')) || 0; 
+                const usdKrw = exchangeRates['USD']?.krw || 1380; 
+                const cnyKrw = exchangeRates['CNY']?.krw || 190; 
+                const usdToCny = cnyKrw > 0 ? usdKrw / cnyKrw : 7.2; 
+                const theoreticalShanghaiCNY = usd * usdToCny * TROY_OZ_TO_KG; 
+                const sPremiumPercent = theoreticalShanghaiCNY > 0 ? ((shanghaiCNY - theoreticalShanghaiCNY) / theoreticalShanghaiCNY) * 100 : 0; 
+                const shanghaiUsdOz = usdToCny > 0 ? (shanghaiCNY / usdToCny) / TROY_OZ_TO_KG : 0; 
+                
+                const priceContrib = (usd - BASE_USD_PRICE) * BASE_EXCH_RATE * TROY_OZ_TO_KG; 
+                const exchContrib = (exch - BASE_EXCH_RATE) * BASE_USD_PRICE * TROY_OZ_TO_KG; 
+                
+                const qty = parseFloat(silverAnalysisInputs.holdingQty) || 0; 
+                const avgPrice = parseFloat(silverAnalysisInputs.avgPrice.replace(/,/g, '')) || 0; 
+                
+                // [수정] 평단가가 있으면 평단가 기준, 없으면 기본값(FIXED_BUY_PRICE_KG) 기준으로 수익률 계산
+                const calcBasePrice = avgPrice > 0 ? avgPrice : FIXED_BUY_PRICE_KG;
+                const actualRate = ((domesticPrice / calcBasePrice) - 1) * 100; 
+                
+                const totalValuation = domesticPrice * qty; 
+                const totalProfit = (domesticPrice - avgPrice) * qty;
+                
                 return { actualRate, theoreticalKrwPrice, actualPrice: domesticPrice, kPremium, kPremiumPercent, sPremiumPercent, theoreticalShanghaiCNY, priceContrib, exchContrib, shanghaiUsdOz, qty, avgPrice, totalValuation, totalProfit };
             }, [silverAnalysisInputs, exchangeRates]);
+
             const bitcoinProfitData = useMemo(() => {
                 const currentExch = parseFloat(silverAnalysisInputs.currentExch.replace(/[^0-9.]/g, '')) || 1331; const avgExch = parseFloat(bitcoinAnalysisInputs.avgExch.replace(/[^0-9.]/g, '')) || 1331; const currentBtcUsd = parseFloat(bitcoinAnalysisInputs.currentBtcUsd.replace(/[^0-9.]/g, '')) || 0; const domesticPrice = parseFloat(bitcoinAnalysisInputs.currentDomesticPrice.replace(/[^0-9.]/g, '')) * 10000 || 0; const qty = parseFloat(bitcoinAnalysisInputs.holdingQty) || 0; const avgPrice = parseFloat(bitcoinAnalysisInputs.avgPrice.replace(/[^0-9.]/g, '')) * 10000 || 0; const avgBtcUsd = avgExch > 0 ? avgPrice / avgExch : 0; const priceContrib = (currentBtcUsd - avgBtcUsd) * avgExch; const exchContrib = (currentExch - avgExch) * currentBtcUsd; const theoreticalKrwPrice = currentBtcUsd * currentExch; const kPremium = domesticPrice - theoreticalKrwPrice; const kPremiumPercent = theoreticalKrwPrice > 0 ? (kPremium / theoreticalKrwPrice) * 100 : 0; const profitRate = avgPrice > 0 ? ((domesticPrice - avgPrice) / avgPrice) * 100 : 0;
                 return { theoreticalKrwPrice, actualPrice: domesticPrice, kPremium, kPremiumPercent, avgPrice, qty, totalValuation: domesticPrice*qty, totalProfit: (domesticPrice-avgPrice)*qty, profitRate, priceContrib, exchContrib };
@@ -1196,10 +1225,18 @@
             const renderPerformanceChart = () => {
                 let chartData, labels, colors, summaryData, percentData, secondarySummaryData;
                 if (analysisMode === 'silver') {
-                    const base = 1530000; const baseUnit = base / 10000; const pContrib = silverProfitData.priceContrib / 10000; const eContrib = silverProfitData.exchContrib / 10000; const kPrem = silverProfitData.kPremium / 10000; const actual = silverProfitData.actualPrice / 10000;
+                    // [수정] 사용자가 입력한 평단가가 있으면 그것을 Base로 사용
+                    const base = silverProfitData.avgPrice > 0 ? silverProfitData.avgPrice : FIXED_BUY_PRICE_KG;
+                    
+                    const baseUnit = base / 10000; 
+                    const pContrib = silverProfitData.priceContrib / 10000; 
+                    const eContrib = silverProfitData.exchContrib / 10000; 
+                    // const kPrem = silverProfitData.kPremium / 10000; // Unused in bars directly, implied by gap
+                    const actual = silverProfitData.actualPrice / 10000;
+                    
                     chartData = [[0, Math.round(baseUnit)], [Math.round(baseUnit), Math.round(baseUnit + pContrib)], [Math.round(baseUnit + pContrib), Math.round(baseUnit + pContrib + eContrib)], [Math.round(baseUnit + pContrib + eContrib), Math.round(actual)], [0, Math.round(actual)]];
                     labels = ['매입가', '국제시세', '환율효과', '프리미엄', '현재가'];
-                    colors = ['#D1D1D6', '#FF3B30', '#0071E3', '#FF9F0A', silverProfitData.totalProfit >= 0 ? '#FF3B30' : '#0071E3'];
+                    colors = ['#D1D1D6', '#FF3B30', '#0071E3', '#FF9F0A', silverProfitData.actualRate >= 0 ? '#FF3B30' : '#0071E3'];
                     percentData = [null, (silverProfitData.priceContrib / base) * 100, (silverProfitData.exchContrib / base) * 100, silverProfitData.kPremiumPercent, null];
                     summaryData = [{label:'국제시세 기여',value:formatManwon(silverProfitData.priceContrib),color:silverProfitData.priceContrib>=0?'text-red-500':'text-blue-500'}, {label:'환율 기여',value:formatManwon(silverProfitData.exchContrib),color:silverProfitData.exchContrib>=0?'text-red-500':'text-blue-500'}, {label:'프리미엄 잔존',value:'+'+formatManwon(silverProfitData.kPremium),color:'text-amber-500'}];
                     secondarySummaryData = [{label:'총 평가금액', value:formatManwon(silverProfitData.totalValuation), color:'text-slate-900 dark:text-white'}, {label:'총 평가손익', value:(silverProfitData.totalProfit>=0?'+':'')+formatManwon(silverProfitData.totalProfit), color:silverProfitData.totalProfit>=0?'text-red-500':'text-blue-500'}];
