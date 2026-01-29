@@ -271,8 +271,8 @@
                 });
                 return () => { if (chartInstance.current) chartInstance.current.destroy(); };
             }, [history]);
-            // Height reduced for better PC view: md:h-[400px] -> md:h-[320px]
-            return <div className="h-[280px] md:h-[320px] w-full"><canvas ref={canvasRef}></canvas></div>;
+            // Changed from fixed md:h-[320px] to responsive md:h-[40vh] with min/max constraints
+            return <div className="h-[280px] md:h-[40vh] min-h-[320px] max-h-[600px] w-full"><canvas ref={canvasRef}></canvas></div>;
         });
 
         const TradingViewTicker = memo(({ theme }) => {
@@ -1080,8 +1080,8 @@
                          <TradingViewTicker theme={isDark ? 'dark' : 'light'} />
                     </div>
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                         {/* Reduced fixed height from 620px to 520px for PC */}
-                         <AppleCard title="시장 심층 분석" subTitle="은(Silver) & 비트코인 프리미엄 분석" className="col-span-1 lg:col-span-2 h-auto lg:h-[520px]" 
+                         {/* Changed fixed h-[600px] to responsive h-[65vh] with min-h-[550px] */}
+                         <AppleCard title="시장 심층 분석" subTitle="은(Silver) & 비트코인 프리미엄 분석" className="col-span-1 lg:col-span-2 h-auto lg:h-[65vh] min-h-[550px]" 
                                     onExpand={() => setExpandedView('combined_analysis')}
                                     rightContent={
                                         <div className="flex bg-[#F2F2F7] dark:bg-[#2C2C2E] p-1.5 rounded-xl"> 
@@ -1091,13 +1091,13 @@
                                     }>
                                     {renderAnalysisContent()}
                          </AppleCard>
-                         {/* Reduced fixed height from 620px to 520px for PC */}
-                         <AppleCard title="자산 성과 시각화" subTitle={analysisMode === 'silver' ? '은 투자 수익 구조 분석' : '비트코인 김프/수익 구조'} className="col-span-1 h-auto lg:h-[520px] min-h-[350px]" onExpand={() => setExpandedView('combined_analysis')}> {renderPerformanceChart()} </AppleCard>
+                         {/* Changed fixed h-[600px] to responsive h-[65vh] with min-h-[550px] */}
+                         <AppleCard title="자산 성과 시각화" subTitle={analysisMode === 'silver' ? '은 투자 수익 구조 분석' : '비트코인 김프/수익 구조'} className="col-span-1 h-auto lg:h-[65vh] min-h-[550px]" onExpand={() => setExpandedView('combined_analysis')}> {renderPerformanceChart()} </AppleCard>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                         {/* Reduced fixed height from 500px to 480px */}
-                         <AppleCard title="시장 지도 (S&P 500)" subTitle="미국 증시 히트맵" className="h-[480px]" onExpand={() => setExpandedView('heatmap')}> <TradingViewHeatmap theme={isDark ? 'dark' : 'light'} /> </AppleCard>
-                         <AppleCard title={topSectionTab === 'calendar' ? "IPO & 시장 일정" : "실시간 주요 뉴스"} subTitle="주요 일정 및 소식을 확인하세요" className="col-span-1 h-[480px]" 
+                         {/* Changed fixed h-[480px] to responsive h-[50vh] with min-h-[450px] */}
+                         <AppleCard title="시장 지도 (S&P 500)" subTitle="미국 증시 히트맵" className="h-[480px] lg:h-[50vh] min-h-[450px]" onExpand={() => setExpandedView('heatmap')}> <TradingViewHeatmap theme={isDark ? 'dark' : 'light'} /> </AppleCard>
+                         <AppleCard title={topSectionTab === 'calendar' ? "IPO & 시장 일정" : "실시간 주요 뉴스"} subTitle="주요 일정 및 소식을 확인하세요" className="col-span-1 h-[480px] lg:h-[50vh] min-h-[450px]" 
                                     onExpand={() => setExpandedView('schedule_news_combined')}
                                     rightContent={<div className="flex bg-[#F2F2F7] dark:bg-[#2C2C2E] p-1 rounded-lg"> <button onClick={() => setTopSectionTab('calendar')} className={`px-3 py-1 rounded-md text-[11px] font-bold ${topSectionTab === 'calendar' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-400'}`}>일정</button> <button onClick={() => setTopSectionTab('news')} className={`px-3 py-1 rounded-md text-[11px] font-bold ${topSectionTab === 'news' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-400'}`}>뉴스</button> </div>}>
                                     {topSectionTab === 'calendar' ? <IpoCalendarWidget isDark={isDark} /> : <div className="h-full relative overflow-hidden rounded-xl border border-gray-100 dark:border-white/5"><GoogleNewsWidget isDark={isDark} /></div>}
