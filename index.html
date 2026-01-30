@@ -18,15 +18,33 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+        /* [수정 1] 스크롤바 개선: 두께 대폭 확대(20px) 및 확실한 클릭 영역 확보 */
+        ::-webkit-scrollbar { width: 20px; height: 20px; }
+        ::-webkit-scrollbar-thumb { 
+            background-color: #8E8E93; 
+            border-radius: 10px; 
+            border: 5px solid transparent; /* 투명 테두리를 두어 둥근 느낌은 유지하되 */
+            background-clip: content-box;  /* 실제 클릭 영역은 20px 전체가 되도록 설정 */
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: #636366; /* 호버 시 색상 진하게 */
+            border: 4px solid transparent; /* 호버 시 알맹이를 살짝 더 키움 */
+        }
+        ::-webkit-scrollbar-track { 
+            background: rgba(0,0,0,0.03); /* 트랙 배경을 살짝 넣어 위치 파악 용이하게 */
+            margin-block: 4px; /* 상하 끝 여백 */
+        }
         
-        /* --- Base & Reset --- */
-        body { font-family: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; letter-spacing: -0.01em; overflow-x: hidden; }
-        
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-thumb { background: #A1A1AA; border-radius: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        .dark ::-webkit-scrollbar-thumb { background: #4B5563; }
+        .dark ::-webkit-scrollbar-thumb { 
+            background-color: #636366; 
+            border: 5px solid transparent;
+            background-clip: content-box;
+        }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background-color: #98989D;
+            border: 4px solid transparent;
+        }
+        .dark ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
         
         .animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -348,6 +366,50 @@
             return <div ref={ref} className="h-full w-full"></div>;
         });
 
+        const TradingViewMarketQuotes = memo(({ theme }) => {
+            // [원복] 사용자가 요청한 기존 TradingView Iframe Widget으로 복구
+            // [설정] 에너지&금속 > 주요 환율 순서 유지, 농산물 제외
+            // [추가] 브렌트유(UKOIL), 백금(PLATINUM), 팔라듐(PALLADIUM) 추가
+            // [수정] 구리 심볼 변경 (TVC:COPPER -> COMEX:HG1!) 데이터 수신 안정화
+            const ref = useRef(null);
+            useEffect(() => {
+                if (!ref.current) return;
+                ref.current.innerHTML = '';
+                const container = document.createElement('div'); container.className = 'tradingview-widget-container'; container.style.width = '100%'; container.style.height = '100%';
+                const widget = document.createElement('div'); widget.className = 'tradingview-widget-container__widget'; container.appendChild(widget);
+                const script = document.createElement('script'); script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js'; script.async = true;
+                script.innerHTML = JSON.stringify({
+                    "width": "100%", "height": "100%",
+                    "symbolsGroups": [
+                        {
+                            "name": "에너지 & 금속 (Commodities)",
+                            "symbols": [
+                                { "name": "TVC:GOLD", "displayName": "금 (Gold)" },
+                                { "name": "TVC:SILVER", "displayName": "은 (Silver)" },
+                                { "name": "TVC:USOIL", "displayName": "WTI 원유" },
+                                { "name": "TVC:UKOIL", "displayName": "브렌트유 (Brent)" },
+                                { "name": "COMEX:HG1!", "displayName": "구리 (Copper)" },
+                                { "name": "TVC:PLATINUM", "displayName": "백금 (Platinum)" },
+                                { "name": "TVC:NATGAS", "displayName": "천연가스" },
+                                { "name": "TVC:PALLADIUM", "displayName": "팔라듐 (Palladium)" }
+                            ]
+                        },
+                        {
+                            "name": "주요 환율 (FX)",
+                            "symbols": [
+                                { "name": "FX_IDC:USDKRW", "displayName": "원달러 환율 (USD/KRW)" },
+                                { "name": "FX_IDC:JPYKRW", "displayName": "엔화 환율 (JPY/KRW)" },
+                                { "name": "FX_IDC:EURKRW", "displayName": "유로 환율 (EUR/KRW)" }
+                            ]
+                        }
+                    ],
+                    "showSymbolLogo": true, "isTransparent": true, "colorTheme": theme, "locale": "kr"
+                });
+                container.appendChild(script); ref.current.appendChild(container);
+            }, [theme]);
+            return <div ref={ref} className="h-full w-full"></div>;
+        });
+
         const GoogleNewsWidget = memo(({ isDark }) => {
             const [news, setNews] = useState([]);
             const [visibleCount, setVisibleCount] = useState(20);
@@ -632,8 +694,8 @@
                         </div>
                     </div>
                 )}
-                {/* Added overflow-y-auto to prevent content clipping when height is reduced */}
-                <div className="flex-1 min-w-0 min-h-0 overflow-y-auto scrollbar-hide">{children}</div>
+                {/* [수정 1] scrollbar-hide 제거 -> 세로 스크롤바가 보이도록 변경 (사용자가 원하는 경우) */}
+                <div className="flex-1 min-w-0 min-h-0 overflow-y-auto">{children}</div>
             </div>
         );
         const AppleStatBox = ({ label, value, subValue, valueClassName }) => (
@@ -656,10 +718,10 @@
             const [analysisMode, setAnalysisMode] = useState('silver'); 
             const [dashChartTab, setDashChartTab] = useState('price');
             const [topSectionTab, setTopSectionTab] = useState('calendar');
+            const [marketMapTab, setMarketMapTab] = useState('heatmap'); // New State for Market Map Tab
             const [isNewsExpanded, setIsNewsExpanded] = useState(false); 
             const [isTopSectionExpanded, setIsTopSectionExpanded] = useState(false); 
             const [isSimTableExpanded, setIsSimTableExpanded] = useState(false); 
-            const [isSimInputModalOpen, setIsSimInputModalOpen] = useState(false); 
             // Replaced isAnalysisExpanded with generic expandedView
             const [expandedView, setExpandedView] = useState(null); // 'analysis', 'performance', 'heatmap', 'calendar', 'news'
             const [tempSimInputs, setTempSimInputs] = useState(null);
@@ -1066,7 +1128,8 @@
                             </div>
                         </div>
                         <div className="flex-1 flex flex-col min-h-0">
-                            <div className="flex gap-2 mb-3 w-full overflow-x-auto scrollbar-hide">
+                            {/* [수정 1] scrollbar-hide 제거 -> 가로 스크롤바 노출하여 마우스 조작 용이하게 개선 */}
+                            <div className="flex gap-2 mb-3 w-full overflow-x-auto pb-2">
                                 {analysisMode === 'silver' 
                                     ? ['price:은($)', 'shanghai:국내/상하이', 'gold:금($)', 'ratio:금은비'].map(t=>{const [k,l]=t.split(':'); return <button key={k} onClick={()=>setDashChartTab(k)} className={`flex-1 min-w-0 px-1 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap ${dashChartTab===k?'bg-[#0071E3] text-white shadow-md':'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}>{l}</button>}) 
                                     : ['btc:바이낸스($)', 'btc_upbit:업비트(₩)', 'btc_link:거래소'].map(t=>{const [k,l]=t.split(':'); return <button key={k} onClick={()=>setDashChartTab(k)} className={`flex-1 min-w-fit px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab===k?'bg-[#0071E3] text-white shadow-md':'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}>{l}</button>})
@@ -1309,20 +1372,30 @@
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
                          {/* Bottom Row: 38vh height with min 320px safety */}
+                         {/* [수정 2] 시장 지도 탭 통합: 미국 증시 / 원자재 / 네이버 증권(링크) */}
                          <AppleCard 
-                            title={
-                                <div className="flex items-center gap-2">
-                                    <span>시장 지도 (S&P 500)</span>
-                                    <a href="https://stock.naver.com/" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-5 h-5 rounded bg-[#03C75A] hover:bg-[#02b352] text-white transition-colors shadow-sm" title="네이버 증권" onClick={e=>e.stopPropagation()}>
-                                        <i className="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                                    </a>
-                                </div>
-                            } 
-                            subTitle="미국 증시 히트맵" 
+                            title="글로벌 시장 & 원자재 시세" 
+                            subTitle={marketMapTab === 'heatmap' ? "S&P 500 전맵 시각화" : "주요 원자재 및 선물 시세"}
                             className="h-[400px] lg:h-[38vh] min-h-[320px]" 
-                            onExpand={() => setExpandedView('heatmap')}
+                            onExpand={() => setExpandedView('market_map_combined')}
+                            rightContent={
+                                <div className="flex items-center gap-2">
+                                    <div className="flex bg-[#F2F2F7] dark:bg-[#2C2C2E] p-1 rounded-lg"> 
+                                        <button onClick={() => setMarketMapTab('heatmap')} className={`px-3 py-1.5 rounded-md text-[11px] font-bold transition-all flex items-center gap-1 ${marketMapTab === 'heatmap' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-400'}`}>
+                                            <span>🇺🇸 미국증시</span>
+                                        </button> 
+                                        <button onClick={() => setMarketMapTab('commodities')} className={`px-3 py-1.5 rounded-md text-[11px] font-bold transition-all flex items-center gap-1 ${marketMapTab === 'commodities' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-400'}`}>
+                                            <span>🛢️ 원자재</span>
+                                        </button> 
+                                        <a href="https://stock.naver.com/" target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-md text-[11px] font-bold transition-all flex items-center gap-1 text-gray-400 hover:text-green-500 hover:bg-white dark:hover:bg-[#3A3A3C]" onClick={e=>e.stopPropagation()}>
+                                            <span>🇰🇷 네이버</span>
+                                            <i className="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            }
                         > 
-                            <TradingViewHeatmap theme={isDark ? 'dark' : 'light'} /> 
+                            {marketMapTab === 'heatmap' ? <TradingViewHeatmap theme={isDark ? 'dark' : 'light'} /> : <TradingViewMarketQuotes theme={isDark ? 'dark' : 'light'} />}
                         </AppleCard>
                          <AppleCard title={topSectionTab === 'calendar' ? "IPO & 시장 일정" : "실시간 주요 뉴스"} subTitle="주요 일정 및 소식을 확인하세요" className="col-span-1 h-[400px] lg:h-[38vh] min-h-[320px]" 
                                     onExpand={() => setExpandedView('schedule_news_combined')}
@@ -1340,7 +1413,7 @@
                                          <h2 className="text-xl font-bold text-slate-900 force-dark-white flex items-center gap-2 whitespace-nowrap">
                                              <i className="fa-solid fa-maximize text-indigo-500"></i> 
                                              {expandedView === 'combined_analysis' ? "시장 분석 및 성과 종합 상세" : 
-                                              expandedView === 'heatmap' ? "시장 지도 (S&P 500) 상세" :
+                                              expandedView === 'market_map_combined' ? "시장 데이터 상세 보기" :
                                               expandedView === 'schedule_news_combined' ? "IPO 일정 & 뉴스 상세" : ""}
                                          </h2>
                                          {expandedView === 'combined_analysis' && (
@@ -1355,12 +1428,18 @@
                                                  <button onClick={() => setTopSectionTab('news')} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${topSectionTab === 'news' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-400 hover:text-gray-600'}`}>뉴스</button> 
                                              </div>
                                          )}
-                                         {expandedView === 'heatmap' && (
-                                            <a href="https://stock.naver.com/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1.5 bg-[#03C75A] hover:bg-[#02b352] text-white rounded-lg transition-colors shadow-sm group text-xs font-bold ml-2">
-                                                <span className="font-black">N</span>
-                                                <span className="hidden sm:inline">네이버 증권</span>
-                                                <i className="fa-solid fa-arrow-up-right-from-square text-[9px] opacity-70 group-hover:opacity-100"></i>
-                                            </a>
+                                         {expandedView === 'market_map_combined' && (
+                                            <div className="flex items-center gap-2">
+                                                {/* [수정 2] 확장 뷰에서도 동일하게 3개 탭 적용 */}
+                                                <div className="flex bg-[#F2F2F7] dark:bg-[#2C2C2E] p-1 rounded-lg"> 
+                                                    <button onClick={() => setMarketMapTab('heatmap')} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${marketMapTab === 'heatmap' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-400 hover:text-gray-600'}`}>🇺🇸 미국증시</button> 
+                                                    <button onClick={() => setMarketMapTab('commodities')} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${marketMapTab === 'commodities' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-400 hover:text-gray-600'}`}>🛢️ 원자재</button> 
+                                                    <a href="https://stock.naver.com/" target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1 text-gray-400 hover:text-green-500 hover:bg-white dark:hover:bg-[#3A3A3C]">
+                                                        <span>🇰🇷 네이버</span>
+                                                        <i className="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
                                          )}
                                      </div>
                                      <button onClick={() => setExpandedView(null)} className="w-10 h-10 rounded-full bg-gray-100 dark:bg-[#2C2C2E] hover:bg-gray-200 dark:hover:bg-[#3A3A3C] flex items-center justify-center transition-colors"><i className="fa-solid fa-xmark text-slate-500 dark:text-gray-400"></i></button>
@@ -1382,7 +1461,7 @@
                                              </div>
                                          </div>
                                      )}
-                                     {expandedView === 'heatmap' && <TradingViewHeatmap theme={isDark ? 'dark' : 'light'} />}
+                                     {expandedView === 'market_map_combined' && (marketMapTab === 'heatmap' ? <TradingViewHeatmap theme={isDark ? 'dark' : 'light'} /> : <TradingViewMarketQuotes theme={isDark ? 'dark' : 'light'} />)}
                                      {expandedView === 'schedule_news_combined' && (
                                          topSectionTab === 'calendar' ? <IpoCalendarWidget isDark={isDark} /> : <GoogleNewsWidget isDark={isDark} />
                                      )}
@@ -1727,6 +1806,49 @@
                             </div>
                         </div>
                     )}
+                    
+                    {/* Table Section */}
+                    <AppleCard title="연령별 상세 자금 흐름" subTitle="시뮬레이션 결과 데이터" className="h-[400px] lg:h-[50vh]">
+                        <div className="flex flex-col h-full">
+                            <div className="mb-3 px-1 flex justify-between items-center">
+                                <div className="flex flex-wrap gap-x-3 gap-y-2 text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-700/30 p-2 rounded-lg border border-slate-100 dark:border-slate-600/50">
+                                    <span className="text-slate-400 dark:text-slate-500 mr-1 flex items-center"><i className="fa-solid fa-circle-info mr-1"></i>잔고 구성:</span>
+                                    <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-500 shadow-sm"></span>본인일반</div>
+                                    <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-500 shadow-sm"></span>배우자일반</div>
+                                    <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-purple-500 shadow-sm"></span>공모주</div>
+                                    <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm"></span>본인ISA</div>
+                                    <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-500 shadow-sm"></span>배우자ISA</div>
+                                </div>
+                                
+                                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                                    <button onClick={() => setShowTableDetails(!showTableDetails)} className={`w-full sm:w-auto px-3 py-1.5 rounded-lg text-xs font-black flex items-center justify-center gap-2 transition-all shadow-sm border ${showTableDetails ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-white border-slate-300 dark:border-slate-600'}`}><i className={`fa-solid ${showTableDetails ? 'fa-eye' : 'fa-eye-slash'}`}></i> 상세 내역 {showTableDetails ? 'ON' : 'OFF'}</button>
+                                    <div className="relative w-full sm:w-auto">
+                                        <button onClick={() => setIsSimColMenuOpen(!isSimColMenuOpen)} className="w-full sm:w-auto bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 px-3 py-1.5 rounded-lg text-xs font-black flex items-center justify-center gap-2 hover:bg-slate-200 dark:hover:bg-slate-600 !text-black dark:!text-white transition-all"><i className="fa-solid fa-gear"></i> 항목 선택</button>
+                                        {isSimColMenuOpen && ( <div className="absolute right-0 bottom-12 sm:bottom-auto sm:top-10 z-20 w-48 bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-xl shadow-2xl p-4 animate-fade-in"> <h4 className="text-[10px] font-black mb-3 border-b pb-2 dark:text-white">표시할 항목</h4> <div className="space-y-2"> {[{id: 'taxable', l: '종합과세 대상'}, {id: 'exempt', l: '비과세/분리수익'}, {id: 'income', l: '기타수입/연금'}, {id: 'expense', l: '총 지출'}, {id: 'flow', l: '현금흐름/증감'}, {id: 'status', l: '상태'}].map(col => ( <label key={col.id} className="flex items-center gap-2 cursor-pointer group"><input type="checkbox" className="w-3 h-3 rounded text-indigo-600 focus:ring-indigo-500" checked={simTableVisibleCols[col.id]} onChange={() => setSimTableVisibleCols({...simTableVisibleCols, [col.id]: !simTableVisibleCols[col.id]})}/><span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 group-hover:text-indigo-600">{col.l}</span></label> ))} </div> <button onClick={() => setIsSimColMenuOpen(false)} className="mt-4 w-full bg-indigo-600 text-white py-1.5 rounded-lg text-[10px] font-black">확인</button> </div> )}
+                                    </div>
+                                    <button onClick={() => setIsSimTableExpanded(true)} className="w-full sm:w-auto px-3 py-1.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 transition flex items-center justify-center gap-1"><i className="fa-solid fa-maximize"></i> 전체화면</button>
+                                </div>
+                            </div>
+                            <div className="flex-1 min-h-0 overflow-hidden relative rounded-xl border border-gray-100 dark:border-white/5">
+                                {renderTableContent(false)}
+                            </div>
+                        </div>
+                    </AppleCard>
+
+                    {/* Table Expansion Modal */}
+                    {isSimTableExpanded && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
+                            <div className="bg-white dark:bg-[#1C1C1E] w-full max-w-7xl h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col relative border border-gray-200 dark:border-white/10">
+                                <div className="px-6 py-4 border-b border-gray-100 dark:border-white/5 flex justify-between items-center bg-white dark:bg-[#1C1C1E] flex-shrink-0">
+                                    <h2 className="text-xl font-bold text-slate-900 force-dark-white tracking-tight flex items-center gap-2"><i className="fa-solid fa-table text-indigo-500"></i> 연령별 상세 자금 흐름 분석</h2>
+                                    <button onClick={() => setIsSimTableExpanded(false)} className="w-10 h-10 rounded-full bg-gray-100 dark:bg-[#2C2C2E] hover:bg-gray-200 dark:hover:bg-[#3A3A3C] flex items-center justify-center transition-colors group"><i className="fa-solid fa-xmark text-lg text-slate-500 group-hover:text-slate-900 dark:text-gray-400 dark:group-hover:text-white"></i></button>
+                                </div>
+                                <div className="flex-1 overflow-hidden relative bg-white dark:bg-[#1C1C1E]">
+                                    {renderTableContent(true)}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             );
 
@@ -1742,7 +1864,8 @@
                                 </div>
                                 <div><h1 className="text-2xl font-black tracking-tight text-slate-900 force-dark-white">Investment Navigator</h1><p className="text-xs font-bold text-slate-500 dark:text-slate-400">통합 투자 관리 시스템</p></div>
                             </div>
-                            <div className="flex items-center gap-4 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+                            {/* [수정 1] scrollbar-hide 제거 -> 가로 스크롤바 노출 */}
+                            <div className="flex items-center gap-4 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
                                 <div className="flex bg-[#E5E5EA] dark:bg-[#2C2C2E] p-1.5 rounded-2xl">
                                     {['dashboard', 'routine', 'tools', 'simulation'].map(tab => (
                                         <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${activeTab === tab ? 'bg-white dark:bg-[#636366] text-black force-dark-white shadow-sm scale-105' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}>
@@ -1760,50 +1883,7 @@
                             {activeTab === 'dashboard' && renderDashboard()}
                             {activeTab === 'routine' && renderRoutine()}
                             {activeTab === 'tools' && renderTools()}
-                            {activeTab === 'simulation' && (
-                                <>
-                                    {renderSimulation()}
-                                    {/* 인라인 시뮬레이션 표 */}
-                                    <div className="mt-6 bg-white dark:bg-slate-800 p-3 rounded-xl border dark:border-slate-700 shadow-sm relative">
-                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
-                                            <div className="flex items-center">
-                                                <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2"><i className="fa-solid fa-table text-indigo-500"></i> 연령별 상세 자금 흐름 분석</h3>
-                                                <button onClick={() => setIsSimTableExpanded(true)} className="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 flex items-center justify-center text-gray-500 hover:text-indigo-600 transition-colors ml-2" title="크게 보기"><i className="fa-solid fa-expand text-xs"></i></button>
-                                            </div>
-                                            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                                                <button onClick={() => setShowTableDetails(!showTableDetails)} className={`w-full sm:w-auto px-3 py-1.5 rounded-lg text-xs font-black flex items-center justify-center gap-2 transition-all shadow-sm border ${showTableDetails ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-white border-slate-300 dark:border-slate-600'}`}><i className={`fa-solid ${showTableDetails ? 'fa-eye' : 'fa-eye-slash'}`}></i> 상세 내역 {showTableDetails ? 'ON' : 'OFF'}</button>
-                                                <div className="relative w-full sm:w-auto">
-                                                    <button onClick={() => setIsSimColMenuOpen(!isSimColMenuOpen)} className="w-full sm:w-auto bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 px-3 py-1.5 rounded-lg text-xs font-black flex items-center justify-center gap-2 hover:bg-slate-200 dark:hover:bg-slate-600 !text-black dark:!text-white transition-all"><i className="fa-solid fa-gear"></i> 항목 선택</button>
-                                                    {isSimColMenuOpen && ( <div className="absolute right-0 bottom-12 sm:bottom-auto sm:top-10 z-20 w-48 bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-xl shadow-2xl p-4 animate-fade-in"> <h4 className="text-[10px] font-black mb-3 border-b pb-2 dark:text-white">표시할 항목</h4> <div className="space-y-2"> {[{id: 'taxable', l: '종합과세 대상'}, {id: 'exempt', l: '비과세/분리수익'}, {id: 'income', l: '기타수입/연금'}, {id: 'expense', l: '총 지출'}, {id: 'flow', l: '현금흐름/증감'}, {id: 'status', l: '상태'}].map(col => ( <label key={col.id} className="flex items-center gap-2 cursor-pointer group"><input type="checkbox" className="w-3 h-3 rounded text-indigo-600 focus:ring-indigo-500" checked={simTableVisibleCols[col.id]} onChange={() => setSimTableVisibleCols({...simTableVisibleCols, [col.id]: !simTableVisibleCols[col.id]})}/><span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 group-hover:text-indigo-600">{col.l}</span></label> ))} </div> <button onClick={() => setIsSimColMenuOpen(false)} className="mt-4 w-full bg-indigo-600 text-white py-1.5 rounded-lg text-[10px] font-black">확인</button> </div> )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="mb-3 px-1 flex flex-wrap gap-x-3 gap-y-2 text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-700/30 p-2 rounded-lg border border-slate-100 dark:border-slate-600/50">
-                                            <span className="text-slate-400 dark:text-slate-500 mr-1 flex items-center"><i className="fa-solid fa-circle-info mr-1"></i>잔고 구성:</span>
-                                            <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-500 shadow-sm"></span>본인일반</div>
-                                            <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-500 shadow-sm"></span>배우자일반</div>
-                                            <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-purple-500 shadow-sm"></span>공모주</div>
-                                            <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm"></span>본인ISA</div>
-                                            <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-500 shadow-sm"></span>배우자ISA</div>
-                                        </div>
-                                        {renderTableContent(false)}
-                                    </div>
-
-                                    {isSimTableExpanded && (
-                                        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
-                                            <div className="bg-white dark:bg-[#1C1C1E] w-full max-w-7xl h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col relative border border-gray-200 dark:border-white/10">
-                                                <div className="px-6 py-4 border-b border-gray-100 dark:border-white/5 flex justify-between items-center bg-white dark:bg-[#1C1C1E] flex-shrink-0">
-                                                    <h2 className="text-xl font-bold text-slate-900 force-dark-white tracking-tight flex items-center gap-2"><i className="fa-solid fa-table text-indigo-500"></i> 연령별 상세 자금 흐름 분석</h2>
-                                                    <button onClick={() => setIsSimTableExpanded(false)} className="w-10 h-10 rounded-full bg-gray-100 dark:bg-[#2C2C2E] hover:bg-gray-200 dark:hover:bg-[#3A3A3C] flex items-center justify-center transition-colors group"><i className="fa-solid fa-xmark text-lg text-slate-500 group-hover:text-slate-900 dark:text-gray-400 dark:group-hover:text-white"></i></button>
-                                                </div>
-                                                <div className="flex-1 overflow-hidden relative bg-white dark:bg-[#1C1C1E]">
-                                                    {renderTableContent(true)}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </>
-                            )}
+                            {activeTab === 'simulation' && renderSimulation()}
                         </main>
                         <footer className="text-center py-8 text-[10px] text-gray-400 font-medium">
                             <p>© 2026 Investment Navigator. All data is for reference only.</p>
@@ -1817,4 +1897,3 @@
         root.render(<App />);
     </script>
 </body>
-</html>
