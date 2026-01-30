@@ -1084,17 +1084,16 @@
                                                     <i className="fa-solid fa-fire text-[10px] text-rose-500"></i>
                                                     <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">필수 시세 확인</span>
                                                 </div>
-                                                <div className="grid grid-cols-2 gap-2">
+                                                <div className="grid grid-cols-3 gap-2">
                                                     {[{n:'스태커스', u:'https://cafe.naver.com/twostepstock', i:'fa-chart-line'}, {n:'순수한금', u:'https://blog.naver.com/wolfkickbox', i:'fa-gem'}, {n:'실버테크', u:'http://www.e-silvertech.com/', i:'fa-industry'}, {n:'은세계', u:'https://smartstore.naver.com/silver_a', i:'fa-store'}, {n:'은선물(East)', u:'https://wap.eastmoney.com/quote/stock/113.agm.html', i:'fa-globe'}, {n:'은현물(SMM)', u:'https://www.metal.com/en/prices/201102250392', i:'fa-layer-group'}].map((l,i) => (
                                                         <a key={i} href={l.u} target="_blank" rel="noopener noreferrer" 
-                                                           className="group relative flex items-center gap-3 p-2 bg-white dark:bg-[#252528] rounded-xl border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
-                                                            <div className="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-900/20 text-rose-500 dark:text-rose-400 flex items-center justify-center group-hover:bg-rose-500 group-hover:text-white transition-colors">
-                                                                <i className={`fa-solid ${l.i} text-[10px]`}></i>
+                                                           className="group relative flex flex-col items-center justify-center gap-1.5 p-2 bg-white dark:bg-[#252528] rounded-xl border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 text-center h-full">
+                                                            <div className="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-900/20 text-rose-500 dark:text-rose-400 flex items-center justify-center group-hover:bg-rose-500 group-hover:text-white transition-colors mb-0.5">
+                                                                <i className={`fa-solid ${l.i} text-[12px]`}></i>
                                                             </div>
-                                                            <div className="flex-1 min-w-0">
-                                                                <div className="text-[11px] font-bold text-slate-700 dark:text-slate-200 truncate">{l.n}</div>
+                                                            <div className="w-full">
+                                                                <div className="text-[10px] font-bold text-slate-700 dark:text-slate-200 truncate w-full">{l.n}</div>
                                                             </div>
-                                                            <i className="fa-solid fa-chevron-right text-[9px] text-slate-300 dark:text-slate-600 group-hover:text-rose-500 transition-colors"></i>
                                                         </a>
                                                     ))}
                                                 </div>
@@ -1106,17 +1105,16 @@
                                                     <i className="fa-solid fa-users text-[10px] text-indigo-500"></i>
                                                     <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">커뮤니티 & 인사이트</span>
                                                 </div>
-                                                <div className="grid grid-cols-2 gap-2">
+                                                <div className="grid grid-cols-3 gap-2">
                                                     {[{n:'실버팩토리', u:'https://cafe.naver.com/7silverfactory7', i:'fa-comments'}, {n:'달러와 금', u:'https://cafe.daum.net/DollarnGold', i:'fa-coins'}, {n:'불리온스타', u:'https://www.bullionstar.us/blogs/', i:'fa-newspaper'}].map((l,i) => (
                                                         <a key={i} href={l.u} target="_blank" rel="noopener noreferrer" 
-                                                           className="group relative flex items-center gap-3 p-2 bg-white dark:bg-[#252528] rounded-xl border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
-                                                            <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500 dark:text-indigo-400 flex items-center justify-center group-hover:bg-indigo-500 group-hover:text-white transition-colors">
-                                                                <i className={`fa-solid ${l.i} text-[10px]`}></i>
+                                                           className="group relative flex flex-col items-center justify-center gap-1.5 p-2 bg-white dark:bg-[#252528] rounded-xl border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 text-center h-full">
+                                                            <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500 dark:text-indigo-400 flex items-center justify-center group-hover:bg-indigo-500 group-hover:text-white transition-colors mb-0.5">
+                                                                <i className={`fa-solid ${l.i} text-[12px]`}></i>
                                                             </div>
-                                                            <div className="flex-1 min-w-0">
-                                                                <div className="text-[11px] font-bold text-slate-700 dark:text-slate-200 truncate">{l.n}</div>
+                                                            <div className="w-full">
+                                                                <div className="text-[10px] font-bold text-slate-700 dark:text-slate-200 truncate w-full">{l.n}</div>
                                                             </div>
-                                                            <i className="fa-solid fa-chevron-right text-[9px] text-slate-300 dark:text-slate-600 group-hover:text-indigo-500 transition-colors"></i>
                                                         </a>
                                                     ))}
                                                 </div>
