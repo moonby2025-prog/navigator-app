@@ -1065,26 +1065,132 @@
                             </div>
                             <div className={`${isPopup ? 'h-[400px] lg:h-auto lg:flex-1 lg:min-h-0' : 'h-[350px] md:h-auto md:flex-1 md:min-h-0'} rounded-2xl overflow-hidden border border-slate-100 dark:border-white/5 relative bg-white dark:bg-[#1C1C1E]`}>
                                 {analysisMode === 'silver' ? (dashChartTab === 'price' ? <MiniChart symbol="FX_IDC:XAGUSD" theme={isDark?'dark':'light'}/> : dashChartTab === 'gold' ? <MiniChart symbol="TVC:GOLD" theme={isDark?'dark':'light'}/> : dashChartTab === 'shanghai' ? (
-                                    <div className="h-full w-full flex flex-col items-center justify-center p-2 bg-[#F9F9F9] dark:bg-[#2C2C2E] rounded-2xl border border-dashed border-gray-300 dark:border-gray-600">
-                                        <div className="w-full max-w-[280px] space-y-2">
-                                            <div className="flex flex-col items-center"><div className="w-8 h-8 rounded-full flex items-center justify-center mb-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"><i className="fa-solid fa-magnifying-glass-chart text-sm"></i></div><h4 className="text-xs font-bold text-slate-900 dark:text-white">주요 시세 및 정보</h4></div>
-                                            <div className="space-y-2 w-full">
-                                                <div className="flex flex-col gap-1">
-                                                    <div className="flex items-center gap-2 px-1"><span className="w-1 h-2.5 bg-red-500 rounded-full"></span><span className="text-[10px] font-black text-slate-500 dark:text-slate-400">국내 & 상하이 시세</span></div>
-                                                    <div className="grid grid-cols-2 gap-1.5">
-                                                        {[{n:'스태커스', u:'https://cafe.naver.com/twostepstock'}, {n:'순수한금', u:'https://blog.naver.com/wolfkickbox'}, {n:'실버테크', u:'http://www.e-silvertech.com/'}, {n:'은세계', u:'https://smartstore.naver.com/silver_a'}, {n:'은선물 (East)', u:'https://wap.eastmoney.com/quote/stock/113.agm.html'}, {n:'은현물 (SMM)', u:'https://www.metal.com/en/prices/201102250392'}].map((l,i) => (<a key={i} href={l.u} target="_blank" rel="noopener noreferrer" className={`py-1.5 bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-gray-700 rounded-lg hover:border-red-500/50 transition text-center flex justify-center items-center gap-1 group ${l.full ? 'col-span-2' : ''}`}><span className="text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-200 group-hover:text-red-600 transition-colors">{l.n}</span></a>))}
+                                    <div className="h-full w-full flex flex-col p-3 bg-[#FAFAFA] dark:bg-[#151517] overflow-y-auto custom-scrollbar">
+                                        <div className="w-full space-y-4">
+                                            {/* Header */}
+                                            <div className="flex items-center justify-between px-1">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-red-400 to-rose-600 flex items-center justify-center shadow-lg shadow-red-500/20">
+                                                        <i className="fa-solid fa-magnifying-glass-chart text-[10px] text-white"></i>
                                                     </div>
+                                                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">실버 투자 내비게이션</h4>
                                                 </div>
-                                                <div className="flex flex-col gap-1 pt-1.5 border-t border-dashed border-gray-200 dark:border-gray-600/50">
-                                                    <div className="flex items-center gap-2 px-1"><span className="w-1 h-2.5 bg-blue-500 rounded-full"></span><span className="text-[10px] font-black text-slate-500 dark:text-slate-400">커뮤니티 & 인사이트</span></div>
-                                                    <div className="grid grid-cols-2 gap-1.5">
-                                                        {[{n:'실버팩토리', u:'https://cafe.naver.com/7silverfactory7'}, {n:'달러와 금', u:'https://cafe.daum.net/DollarnGold'}, {n:'불리온스타 (칼럼)', u:'https://www.bullionstar.us/blogs/', full:true}].map((l,i) => (<a key={i} href={l.u} target="_blank" rel="noopener noreferrer" className={`py-1.5 bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500/50 transition text-center flex justify-center items-center gap-1.5 group ${l.full ? 'col-span-2' : ''}`}><i className="fa-regular fa-comments text-[10px] text-gray-400 group-hover:text-blue-500"></i><span className="text-[10px] sm:text-[11px] font-bold text-slate-700 dark:text-slate-200 group-hover:text-blue-600 transition-colors">{l.n}</span></a>))}
-                                                    </div>
+                                                <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500">엄선된 정보 소스</span>
+                                            </div>
+
+                                            {/* Section 1: Price & Market */}
+                                            <div className="space-y-2">
+                                                <div className="flex items-center gap-1.5 px-1 mb-1 opacity-80">
+                                                    <i className="fa-solid fa-fire text-[10px] text-rose-500"></i>
+                                                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">필수 시세 확인</span>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    {[{n:'스태커스', u:'https://cafe.naver.com/twostepstock', i:'fa-chart-line'}, {n:'순수한금', u:'https://blog.naver.com/wolfkickbox', i:'fa-gem'}, {n:'실버테크', u:'http://www.e-silvertech.com/', i:'fa-industry'}, {n:'은세계', u:'https://smartstore.naver.com/silver_a', i:'fa-store'}, {n:'은선물(East)', u:'https://wap.eastmoney.com/quote/stock/113.agm.html', i:'fa-globe'}, {n:'은현물(SMM)', u:'https://www.metal.com/en/prices/201102250392', i:'fa-layer-group'}].map((l,i) => (
+                                                        <a key={i} href={l.u} target="_blank" rel="noopener noreferrer" 
+                                                           className="group relative flex items-center gap-3 p-2 bg-white dark:bg-[#252528] rounded-xl border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+                                                            <div className="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-900/20 text-rose-500 dark:text-rose-400 flex items-center justify-center group-hover:bg-rose-500 group-hover:text-white transition-colors">
+                                                                <i className={`fa-solid ${l.i} text-[10px]`}></i>
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="text-[11px] font-bold text-slate-700 dark:text-slate-200 truncate">{l.n}</div>
+                                                            </div>
+                                                            <i className="fa-solid fa-chevron-right text-[9px] text-slate-300 dark:text-slate-600 group-hover:text-rose-500 transition-colors"></i>
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Section 2: Community */}
+                                            <div className="space-y-2 pt-2 border-t border-dashed border-slate-200 dark:border-white/5">
+                                                <div className="flex items-center gap-1.5 px-1 mb-1 opacity-80">
+                                                    <i className="fa-solid fa-users text-[10px] text-indigo-500"></i>
+                                                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">커뮤니티 & 인사이트</span>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    {[{n:'실버팩토리', u:'https://cafe.naver.com/7silverfactory7', i:'fa-comments'}, {n:'달러와 금', u:'https://cafe.daum.net/DollarnGold', i:'fa-coins'}, {n:'불리온스타', u:'https://www.bullionstar.us/blogs/', i:'fa-newspaper'}].map((l,i) => (
+                                                        <a key={i} href={l.u} target="_blank" rel="noopener noreferrer" 
+                                                           className="group relative flex items-center gap-3 p-2 bg-white dark:bg-[#252528] rounded-xl border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+                                                            <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500 dark:text-indigo-400 flex items-center justify-center group-hover:bg-indigo-500 group-hover:text-white transition-colors">
+                                                                <i className={`fa-solid ${l.i} text-[10px]`}></i>
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="text-[11px] font-bold text-slate-700 dark:text-slate-200 truncate">{l.n}</div>
+                                                            </div>
+                                                            <i className="fa-solid fa-chevron-right text-[9px] text-slate-300 dark:text-slate-600 group-hover:text-indigo-500 transition-colors"></i>
+                                                        </a>
+                                                    ))}
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                ) : <MiniChart symbol="TVC:GOLDSILVER" theme={isDark?'dark':'light'}/>) : (dashChartTab === 'btc' ? <MiniChart symbol="BINANCE:BTCUSDT" theme={isDark?'dark':'light'}/> : dashChartTab === 'btc_upbit' ? <MiniChart symbol="UPBIT:BTCKRW" theme={isDark?'dark':'light'}/> : <LinkPanel title="가상화폐 시세 확인" subTitle={`국내외 거래소 시세 및\n김치 프리미엄 분석`} icon="fa-bitcoin" colorClass="bg-orange-100 dark:bg-orange-900/30 text-orange-500" links={[{name:"🇰🇷 업비트 (Upbit)", url:"https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC"}, {name:"🌍 바이낸스 (Binance)", url:"https://www.binance.com/en/trade/BTC_USDT?type=spot"}, {name:"📊 김프가 (Kimpga)", url:"https://kimpga.com/"}]} />)}
+                                ) : <MiniChart symbol="TVC:GOLDSILVER" theme={isDark?'dark':'light'}/>) : (dashChartTab === 'btc' ? <MiniChart symbol="BINANCE:BTCUSDT" theme={isDark?'dark':'light'}/> : dashChartTab === 'btc_upbit' ? <MiniChart symbol="UPBIT:BTCKRW" theme={isDark?'dark':'light'}/> : (
+                                    <div className="h-full w-full flex flex-col p-3 bg-[#FAFAFA] dark:bg-[#151517] overflow-y-auto custom-scrollbar">
+                                        <div className="w-full space-y-4">
+                                            {/* Header */}
+                                            <div className="flex items-center justify-between px-1">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-orange-400 to-amber-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
+                                                        <i className="fa-brands fa-bitcoin text-[12px] text-white"></i>
+                                                    </div>
+                                                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">크립토 거래 & 분석</h4>
+                                                </div>
+                                                <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500">실시간 데이터</span>
+                                            </div>
+
+                                            {/* Section 1: Exchanges */}
+                                            <div className="space-y-2">
+                                                <div className="flex items-center gap-1.5 px-1 mb-1 opacity-80">
+                                                    <i className="fa-solid fa-arrow-trend-up text-[10px] text-orange-500"></i>
+                                                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">주요 거래소 바로가기</span>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    {[
+                                                        {n:"업비트 (Upbit)", u:"https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC", i:"KRW"}, 
+                                                        {n:"바이낸스 (Binance)", u:"https://www.binance.com/en/trade/BTC_USDT?type=spot", i:"BTC"}
+                                                    ].map((l,i) => (
+                                                        <a key={i} href={l.u} target="_blank" rel="noopener noreferrer" 
+                                                           className="group relative flex items-center gap-3 p-2 bg-white dark:bg-[#252528] rounded-xl border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+                                                            <div className="w-8 h-8 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 flex items-center justify-center font-black text-[9px] group-hover:bg-orange-500 group-hover:text-white transition-colors">
+                                                                {l.i}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="text-[11px] font-bold text-slate-700 dark:text-slate-200 truncate">{l.n}</div>
+                                                                <div className="text-[9px] text-slate-400 truncate">실시간 시세 확인</div>
+                                                            </div>
+                                                            <i className="fa-solid fa-arrow-up-right-from-square text-[9px] text-slate-300 dark:text-slate-600 group-hover:text-orange-500 transition-colors"></i>
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Section 2: Analysis Tools */}
+                                            <div className="space-y-2 pt-2 border-t border-dashed border-slate-200 dark:border-white/5">
+                                                <div className="flex items-center gap-1.5 px-1 mb-1 opacity-80">
+                                                    <i className="fa-solid fa-chart-simple text-[10px] text-blue-500"></i>
+                                                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">프리미엄 분석 도구</span>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    {[
+                                                         {n:"김프가 (Kimpga)", u:"https://kimpga.com/", d:"김치프리미엄 분석"},
+                                                         {n:"Coinglass", u:"https://www.coinglass.com/ko", d:"청산맵/펀딩비"}
+                                                    ].map((l,i) => (
+                                                        <a key={i} href={l.u} target="_blank" rel="noopener noreferrer" 
+                                                           className="group relative flex items-center gap-3 p-2 bg-white dark:bg-[#252528] rounded-xl border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+                                                            <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                                                <i className="fa-solid fa-magnifying-glass-chart text-[10px]"></i>
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="text-[11px] font-bold text-slate-700 dark:text-slate-200 truncate">{l.n}</div>
+                                                                <div className="text-[9px] text-slate-400 truncate">{l.d}</div>
+                                                            </div>
+                                                            <i className="fa-solid fa-chevron-right text-[9px] text-slate-300 dark:text-slate-600 group-hover:text-blue-500 transition-colors"></i>
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>
