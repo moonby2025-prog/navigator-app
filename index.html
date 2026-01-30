@@ -1137,7 +1137,9 @@
                     </div>
                     {expandedView && (
                          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
-                             <div className="bg-white dark:bg-[#1C1C1E] w-full max-w-[90vw] h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col relative border border-gray-200 dark:border-white/10">
+                             {/* max-w-[90vw] -> max-w-6xl (Changed to limit width on PC for better readability) */}
+                             {/* h-[90vh] -> h-[85vh] (Adjusted height ratio) */}
+                             <div className="bg-white dark:bg-[#1C1C1E] w-full max-w-6xl h-[85vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col relative border border-gray-200 dark:border-white/10">
                                  <div className="px-6 py-4 border-b border-gray-100 dark:border-white/5 flex justify-between items-center bg-white dark:bg-[#1C1C1E] flex-shrink-0">
                                      <div className="flex items-center gap-4 flex-1 min-w-0">
                                          <h2 className="text-xl font-bold text-slate-900 force-dark-white flex items-center gap-2 whitespace-nowrap">
