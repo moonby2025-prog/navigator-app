@@ -271,8 +271,8 @@
                 });
                 return () => { if (chartInstance.current) chartInstance.current.destroy(); };
             }, [history]);
-            // Height adjusted: Reduced to 30vh on PC to fit better
-            return <div className="h-[250px] md:h-[300px] lg:h-[30vh] min-h-[250px] max-h-[380px] w-full"><canvas ref={canvasRef}></canvas></div>;
+            // Height adjusted: Responsive vh with min-height safety
+            return <div className="h-[300px] lg:h-[40vh] min-h-[320px] w-full"><canvas ref={canvasRef}></canvas></div>;
         });
 
         const TradingViewTicker = memo(({ theme }) => {
@@ -284,12 +284,44 @@
                 container.innerHTML = '';
                 const widgetDiv = document.createElement('div'); widgetDiv.className = 'tradingview-widget-container__widget'; container.appendChild(widgetDiv);
                 const script = document.createElement('script'); script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js'; script.async = true;
-                script.innerHTML = JSON.stringify({ "symbols": [ { "proName": "FX_IDC:XAGUSD", "title": "실시간 은(Silver)" }, { "proName": "TVC:GOLD", "title": "금 현물 (XAU/USD)" }, { "proName": "FX_IDC:USDKRW", "title": "원달러 환율" }, { "proName": "FOREXCOM:SPXUSD", "title": "S&P 500" }, { "proName": "NASDAQ:QQQ", "title": "나스닥 QQQ" }, { "proName": "BINANCE:BTCUSDT", "title": "비트코인" }, { "proName": "FX_IDC:JPYKRW", "title": "엔화 환율" } ], "showSymbolLogo": true, "colorTheme": theme, "isTransparent": true, "displayMode": "adaptive", "locale": "kr" });
+                
+                // Reordered symbols: Silver > Gold > Bitcoin > USD/KRW ...
+                script.innerHTML = JSON.stringify({ 
+                    "symbols": [ 
+                        { "proName": "FX_IDC:XAGUSD", "title": "실시간 은(Silver)" }, 
+                        { "proName": "TVC:GOLD", "title": "금 현물 (XAU/USD)" }, 
+                        { "proName": "BINANCE:BTCUSDT", "title": "비트코인" },
+                        { "proName": "FX_IDC:USDKRW", "title": "원달러 환율" }, 
+                        { "proName": "FOREXCOM:SPXUSD", "title": "S&P 500" }, 
+                        { "proName": "NASDAQ:QQQ", "title": "나스닥 QQQ" }, 
+                        { "proName": "FX_IDC:JPYKRW", "title": "엔화 환율" } 
+                    ], 
+                    "showSymbolLogo": true, 
+                    "colorTheme": theme, 
+                    "isTransparent": true, 
+                    "displayMode": "adaptive", 
+                    "locale": "kr" 
+                });
+                
                 script.onload = () => setIsLoaded(true); container.appendChild(script);
                 const checkTimer = setTimeout(() => { if (container && container.querySelector('iframe')) setIsLoaded(true); }, 2500);
                 return () => clearTimeout(checkTimer);
             }, [theme]);
-            return ( <div className="relative w-full h-full overflow-hidden flex items-center"> <div className={`tradingview-widget-container w-full ${isLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500`} ref={containerRef}></div> {!isLoaded && ( <div className="absolute inset-0 ticker-fallback text-[11px] font-bold text-slate-500 dark:text-slate-300"> <div className="ticker-scroll"> <span><i className="fa-solid fa-coins mr-1 text-slate-400"></i> 은(Silver): 연결 중...</span> <span><i className="fa-solid fa-crown mr-1 text-yellow-500"></i> 금(Gold): 로딩 중...</span> <span><i className="fa-solid fa-money-bill-1-wave mr-1 text-emerald-500"></i> USD/KRW: 1,380.00</span> </div> </div> )} </div> );
+            return ( 
+                <div className="relative w-full h-full overflow-hidden flex items-center"> 
+                    <div className={`tradingview-widget-container w-full ${isLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500`} ref={containerRef}></div> 
+                    {!isLoaded && ( 
+                        <div className="absolute inset-0 ticker-fallback text-[11px] font-bold text-slate-500 dark:text-slate-300"> 
+                            <div className="ticker-scroll"> 
+                                <span><i className="fa-solid fa-coins mr-1 text-slate-400"></i> 은(Silver): 연결 중...</span> 
+                                <span><i className="fa-solid fa-crown mr-1 text-yellow-500"></i> 금(Gold): 로딩 중...</span> 
+                                <span><i className="fa-brands fa-bitcoin mr-1 text-orange-500"></i> 비트코인: 대기 중...</span>
+                                <span><i className="fa-solid fa-money-bill-1-wave mr-1 text-emerald-500"></i> USD/KRW: 1,380.00</span> 
+                            </div> 
+                        </div> 
+                    )} 
+                </div> 
+            );
         });
 
         const TradingViewHeatmap = memo(({ theme }) => {
@@ -565,7 +597,7 @@
             }, [data, isDark, labels, colors, growthRate, percentData, secondarySummaryData]);
             return ( 
                 <div className="flex flex-col h-full w-full"> 
-                    <div className="flex-1 min-h-[300px] md:min-h-[200px]"><canvas ref={canvasRef}></canvas></div> 
+                    <div className="flex-1 min-h-[250px] md:min-h-[240px]"><canvas ref={canvasRef}></canvas></div> 
                     {summaryData && ( <div className="mt-2 bg-slate-50 dark:bg-slate-900/50 rounded-xl p-3 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2 text-center"> {summaryData.map((d, i) => ( <div key={i} className={`py-1 ${i > 0 ? "sm:border-l border-slate-200 dark:border-slate-700" : ""}`}> <div className="text-[10px] text-slate-500 font-bold mb-1 truncate">{d.label}</div> <div className={`text-[10px] sm:text-xs font-black ${d.color} break-words`}>{d.value}</div> </div> ))} </div> )}
                     {secondarySummaryData && ( <div className="mt-2 bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-xl p-3 grid grid-cols-2 gap-4 text-center border border-slate-200 dark:border-slate-700/50"> {secondarySummaryData.map((d, i) => ( <div key={i} className={i > 0 ? "border-l border-gray-300 dark:border-gray-600" : ""}> <div className="text-[11px] text-gray-500 dark:text-gray-400 font-bold mb-1 truncate">{d.label}</div> <div className={`text-sm font-black ${d.color} break-words`}>{d.value}</div> </div> ))} </div> )}
                 </div> 
@@ -1003,7 +1035,7 @@
                                     : ['btc:바이낸스($)', 'btc_upbit:업비트(₩)', 'btc_link:거래소'].map(t=>{const [k,l]=t.split(':'); return <button key={k} onClick={()=>setDashChartTab(k)} className={`flex-1 min-w-fit px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab===k?'bg-[#0071E3] text-white shadow-md':'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}>{l}</button>})
                                 }
                             </div>
-                            <div className={`${isPopup ? 'h-[600px]' : 'h-[350px] md:h-auto md:flex-1 md:min-h-0'} rounded-2xl overflow-hidden border border-slate-100 dark:border-white/5 relative bg-white dark:bg-[#1C1C1E]`}>
+                            <div className={`${isPopup ? 'h-[400px] lg:h-auto lg:flex-1 lg:min-h-0' : 'h-[350px] md:h-auto md:flex-1 md:min-h-0'} rounded-2xl overflow-hidden border border-slate-100 dark:border-white/5 relative bg-white dark:bg-[#1C1C1E]`}>
                                 {analysisMode === 'silver' ? (dashChartTab === 'price' ? <MiniChart symbol="FX_IDC:XAGUSD" theme={isDark?'dark':'light'}/> : dashChartTab === 'gold' ? <MiniChart symbol="TVC:GOLD" theme={isDark?'dark':'light'}/> : dashChartTab === 'shanghai' ? (
                                     <div className="h-full w-full flex flex-col items-center justify-center p-2 bg-[#F9F9F9] dark:bg-[#2C2C2E] rounded-2xl border border-dashed border-gray-300 dark:border-gray-600">
                                         <div className="w-full max-w-[280px] space-y-2">
@@ -1074,14 +1106,14 @@
             );
 
             const renderDashboard = () => (
-                <div className="space-y-6">
-                    <div className="h-10 sm:h-12 w-full bg-white dark:bg-[#1C1C1E] border border-gray-100 dark:border-white/5 rounded-2xl overflow-hidden shadow-sm flex items-center mb-6">
+                <div className="space-y-4 lg:space-y-6">
+                    <div className="h-10 sm:h-12 w-full bg-white dark:bg-[#1C1C1E] border border-gray-100 dark:border-white/5 rounded-2xl overflow-hidden shadow-sm flex items-center mb-2 lg:mb-6">
                          <div className="bg-[#0071E3] h-full px-4 flex items-center justify-center"><i className="fa-solid fa-globe text-white"></i></div>
                          <TradingViewTicker theme={isDark ? 'dark' : 'light'} />
                     </div>
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                         {/* Reverted to pre-modification state: 55vh on PC */}
-                         <AppleCard title="시장 심층 분석" subTitle="은(Silver) & 비트코인 프리미엄 분석" className="col-span-1 lg:col-span-2 h-auto lg:h-[55vh] lg:min-h-[480px] lg:max-h-[600px]" 
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+                         {/* Top Row: 42vh height (approx 400-450px on FHD) with min 380px safety */}
+                         <AppleCard title="시장 심층 분석" subTitle="은(Silver) & 비트코인 프리미엄 분석" className="col-span-1 lg:col-span-2 h-auto lg:h-[42vh] min-h-[380px]" 
                                     onExpand={() => setExpandedView('combined_analysis')}
                                     rightContent={
                                         <div className="flex bg-[#F2F2F7] dark:bg-[#2C2C2E] p-1.5 rounded-xl"> 
@@ -1091,13 +1123,13 @@
                                     }>
                                     {renderAnalysisContent()}
                          </AppleCard>
-                         {/* Reverted to pre-modification state: 55vh on PC */}
-                         <AppleCard title="자산 성과 시각화" subTitle={analysisMode === 'silver' ? '은 투자 수익 구조 분석' : '비트코인 김프/수익 구조'} className="col-span-1 h-auto lg:h-[55vh] lg:min-h-[480px] lg:max-h-[600px]" onExpand={() => setExpandedView('combined_analysis')}> {renderPerformanceChart()} </AppleCard>
+                         {/* Top Row: 42vh height with min 380px safety */}
+                         <AppleCard title="자산 성과 시각화" subTitle={analysisMode === 'silver' ? '은 투자 수익 구조 분석' : '비트코인 김프/수익 구조'} className="col-span-1 h-auto lg:h-[42vh] min-h-[380px]" onExpand={() => setExpandedView('combined_analysis')}> {renderPerformanceChart()} </AppleCard>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                         {/* Adjusted: 5% reduction from pre-mod state (45vh -> 40vh) */}
-                         <AppleCard title="시장 지도 (S&P 500)" subTitle="미국 증시 히트맵" className="h-[380px] lg:h-[40vh] lg:min-h-[380px] lg:max-h-[480px]" onExpand={() => setExpandedView('heatmap')}> <TradingViewHeatmap theme={isDark ? 'dark' : 'light'} /> </AppleCard>
-                         <AppleCard title={topSectionTab === 'calendar' ? "IPO & 시장 일정" : "실시간 주요 뉴스"} subTitle="주요 일정 및 소식을 확인하세요" className="col-span-1 h-[380px] lg:h-[40vh] lg:min-h-[380px] lg:max-h-[480px]" 
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+                         {/* Bottom Row: 38vh height with min 320px safety */}
+                         <AppleCard title="시장 지도 (S&P 500)" subTitle="미국 증시 히트맵" className="h-[400px] lg:h-[38vh] min-h-[320px]" onExpand={() => setExpandedView('heatmap')}> <TradingViewHeatmap theme={isDark ? 'dark' : 'light'} /> </AppleCard>
+                         <AppleCard title={topSectionTab === 'calendar' ? "IPO & 시장 일정" : "실시간 주요 뉴스"} subTitle="주요 일정 및 소식을 확인하세요" className="col-span-1 h-[400px] lg:h-[38vh] min-h-[320px]" 
                                     onExpand={() => setExpandedView('schedule_news_combined')}
                                     rightContent={<div className="flex bg-[#F2F2F7] dark:bg-[#2C2C2E] p-1 rounded-lg"> <button onClick={() => setTopSectionTab('calendar')} className={`px-3 py-1 rounded-md text-[11px] font-bold ${topSectionTab === 'calendar' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-400'}`}>일정</button> <button onClick={() => setTopSectionTab('news')} className={`px-3 py-1 rounded-md text-[11px] font-bold ${topSectionTab === 'news' ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-400'}`}>뉴스</button> </div>}>
                                     {topSectionTab === 'calendar' ? <IpoCalendarWidget isDark={isDark} /> : <div className="h-full relative overflow-hidden rounded-xl border border-gray-100 dark:border-white/5"><GoogleNewsWidget isDark={isDark} /></div>}
@@ -1134,7 +1166,7 @@
                                          <div className="flex flex-col lg:flex-row gap-6 lg:h-full">
                                              <div className="w-full lg:w-2/3 flex flex-col bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-white/5 overflow-y-auto shrink-0">
                                                  <h3 className="text-base font-bold text-slate-500 dark:text-slate-400 mb-4 flex items-center gap-2 flex-shrink-0"><i className="fa-solid fa-magnifying-glass-chart"></i> 시장 심층 분석 데이터</h3>
-                                                 <div className="flex-1 min-h-[600px]">
+                                                 <div className="flex-1 min-h-[400px] flex flex-col">
                                                      {renderAnalysisContent(true)}
                                                  </div>
                                              </div>
