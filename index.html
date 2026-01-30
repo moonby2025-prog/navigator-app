@@ -199,17 +199,18 @@
         };
 
         const formatNumber = (num) => {
-            if (num === null || num === undefined || isNaN(num)) return '0';
+            if (num === null || num === undefined || isNaN(num) || !isFinite(num)) return '0';
             return Math.round(num).toLocaleString('ko-KR');
         };
         const formatManwon = (num) => {
-            if (num === null || num === undefined || isNaN(num)) return '0';
+            if (num === null || num === undefined || isNaN(num) || !isFinite(num)) return '0';
             return Math.round(num / 10000).toLocaleString('ko-KR') + '만원';
         };
         
         const parseFormattedNumber = (value) => {
             if (typeof value !== 'string') return value || 0;
-            return parseFloat(value.replace(/,/g, '')) || 0;
+            const parsed = parseFloat(value.replace(/,/g, ''));
+            return isNaN(parsed) ? 0 : parsed;
         };
         
         const calculateProgressiveIncomeTax = (income, rates) => {
@@ -398,7 +399,7 @@
                     
                     <div className="min-h-[200px]">
                         {loading && news.length === 0 ? <div className="py-20 flex flex-col items-center justify-center text-gray-400 gap-2"><i className="fa-solid fa-circle-notch fa-spin text-2xl text-[#0071E3]"></i><span className="text-xs font-bold">뉴스 불러오는 중...</span></div> 
-                        : errorMsg ? <div className="py-20 text-center text-xs text-gray-400">{errorMsg}</div> 
+                        : errorMsg ? <div className="py-20 text-center text-xs text-gray-400 flex flex-col items-center gap-2"><span>{errorMsg}</span><a href={`https://news.google.com/search?q=${encodeURIComponent(activeKeyword)}&hl=ko&gl=KR&ceid=KR:ko`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg font-bold hover:bg-indigo-100">구글 뉴스 직접 보기</a></div> 
                         : news.length > 0 ? <div className="divide-y divide-gray-100 dark:divide-white/5 pb-10"> {news.slice(0, visibleCount).map((item, idx) => ( <a key={item.guid + idx} href={item.link} target="_blank" rel="noopener noreferrer" className="block p-3 sm:p-4 hover:bg-gray-50 dark:hover:bg-white/5 transition group"> <div className="flex justify-between items-start gap-3"> <div className="flex-1 min-w-0"> <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-snug group-hover:text-[#0071E3] transition-colors mb-1.5 line-clamp-2">{item.title}</h4> <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-medium text-gray-400 dark:text-gray-500"> <span className="text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-[#2C2C2E] px-1.5 py-0.5 rounded">{item.source}</span> <span>•</span> <span className="text-orange-500 dark:text-orange-400">{item.timeAgo}</span> </div> </div> </div> </a> ))} <div className="p-4 text-center"> <a href={`https://news.google.com/search?q=${encodeURIComponent(activeKeyword)}&hl=ko&gl=KR&ceid=KR:ko`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center px-4 py-2 rounded-full bg-gray-100 dark:bg-[#2C2C2E] text-xs font-bold text-gray-500 hover:text-[#0071E3] transition">Google 뉴스에서 더보기 <i className="fa-solid fa-arrow-right ml-2"></i></a> </div> </div> 
                         : <div className="py-20 flex flex-col items-center justify-center text-gray-400 gap-2"><i className="fa-regular fa-newspaper text-3xl opacity-20"></i><span className="text-xs font-bold">관련 뉴스가 없습니다.</span></div>}
                     </div>
@@ -518,7 +519,7 @@
         const BridgeChart = memo(({ data, labels, colors, title, summaryData, isDark, growthRate, percentData, secondarySummaryData }) => {
             const canvasRef = useRef(null); const chartInstance = useRef(null);
             useEffect(() => {
-                if (!canvasRef.current || !data) return;
+                if (!canvasRef.current || !data || data.length === 0) return;
                 const ctx = canvasRef.current.getContext('2d');
                 if (chartInstance.current) chartInstance.current.destroy();
 
@@ -570,11 +571,11 @@
                             if (bar && datapoint) { 
                                 ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.font = 'bold 11px Pretendard'; ctx.fillStyle = isDark ? '#fff' : '#000'; 
                                 let label = ""; 
-                                if(index === 0 || index === data.length - 1) { label = datapoint[1].toLocaleString(); } else { if (percentData && percentData[index] !== undefined) { const val = percentData[index]; const xLabel = chart.data.labels[index]; if (xLabel.includes('프리미엄')) { label = `KP ${val.toFixed(1)}%`; } else { label = (val > 0 ? '+' : '') + val.toFixed(1) + '%'; } } else { const val = datapoint[1] - datapoint[0]; label = (val > 0 ? '+' : '') + val.toLocaleString(); } } 
+                                if(index === 0 || index === data.length - 1) { label = datapoint[1].toLocaleString(); } else { if (percentData && percentData[index] !== undefined && !isNaN(percentData[index])) { const val = percentData[index]; const xLabel = chart.data.labels[index]; if (xLabel.includes('프리미엄')) { label = `KP ${val.toFixed(1)}%`; } else { label = (val > 0 ? '+' : '') + val.toFixed(1) + '%'; } } else { const val = datapoint[1] - datapoint[0]; label = (val > 0 ? '+' : '') + val.toLocaleString(); } } 
                                 const yPos = Math.min(bar.y, bar.base) - 5; ctx.fillText(label, bar.x, yPos); ctx.restore(); 
                             } 
                         }); 
-                        if (growthRate !== undefined && growthRate !== null) {
+                        if (growthRate !== undefined && growthRate !== null && !isNaN(growthRate) && isFinite(growthRate)) {
                             const metaLine = chart.getDatasetMeta(1); const startPoint = metaLine.data[0]; const endPoint = metaLine.data[data.length - 1];
                             if (startPoint && endPoint && !startPoint.skip && !endPoint.skip) {
                                 const centerX = (startPoint.x + endPoint.x) / 2; const centerY = (startPoint.y + endPoint.y) / 2; const text = `${growthRate > 0 ? '+' : ''}${growthRate.toFixed(1)}%`;
@@ -907,26 +908,47 @@
             // 4. RENDER FUNCTIONS (렌더링 컴포넌트)
             // ==========================================
             
-            const renderPerformanceChart = () => {
-                let chartData, labels, colors, summaryData, percentData, secondarySummaryData;
+            // [최적화] 차트 데이터 메모이제이션 (불필요한 리렌더링 방지)
+            const performanceChartData = useMemo(() => {
+                let chartData, labels, colors, summaryData, percentData, secondarySummaryData, growthRate;
+                
                 if (analysisMode === 'silver') {
                     const base = silverProfitData.avgPrice > 0 ? silverProfitData.avgPrice : FIXED_BUY_PRICE_KG;
-                    const baseUnit = base / 10000; const pContrib = silverProfitData.priceContrib / 10000; const eContrib = silverProfitData.exchContrib / 10000; const actual = silverProfitData.actualPrice / 10000;
+                    const baseUnit = base / 10000; 
+                    const pContrib = silverProfitData.priceContrib / 10000; 
+                    const eContrib = silverProfitData.exchContrib / 10000; 
+                    const actual = silverProfitData.actualPrice / 10000;
+                    
                     chartData = [[0, Math.round(baseUnit)], [Math.round(baseUnit), Math.round(baseUnit + pContrib)], [Math.round(baseUnit + pContrib), Math.round(baseUnit + pContrib + eContrib)], [Math.round(baseUnit + pContrib + eContrib), Math.round(actual)], [0, Math.round(actual)]];
-                    labels = ['매입가', '국제시세', '환율효과', '프리미엄', '현재가']; colors = ['#D1D1D6', '#FF3B30', '#0071E3', '#FF9F0A', silverProfitData.actualRate >= 0 ? '#FF3B30' : '#0071E3'];
+                    labels = ['매입가', '국제시세', '환율효과', '프리미엄', '현재가']; 
+                    colors = ['#D1D1D6', '#FF3B30', '#0071E3', '#FF9F0A', silverProfitData.actualRate >= 0 ? '#FF3B30' : '#0071E3'];
                     percentData = [null, (silverProfitData.priceContrib / base) * 100, (silverProfitData.exchContrib / base) * 100, silverProfitData.kPremiumPercent, null];
                     summaryData = [{label:'국제시세 기여',value:formatManwon(silverProfitData.priceContrib),color:silverProfitData.priceContrib>=0?'text-red-500':'text-blue-500'}, {label:'환율 기여',value:formatManwon(silverProfitData.exchContrib),color:silverProfitData.exchContrib>=0?'text-red-500':'text-blue-500'}, {label:'프리미엄 잔존',value:'+'+formatManwon(silverProfitData.kPremium),color:'text-amber-500'}];
                     secondarySummaryData = [{label:'총 평가금액', value:formatManwon(silverProfitData.totalValuation), color:'text-slate-900 dark:text-white'}, {label:'총 평가손익', value:(silverProfitData.totalProfit>=0?'+':'')+formatManwon(silverProfitData.totalProfit), color:silverProfitData.totalProfit>=0?'text-red-500':'text-blue-500'}];
+                    growthRate = silverProfitData.actualRate;
                 } else {
-                    const base = bitcoinProfitData.avgPrice; const baseUnit = base / 10000; const vizQty = bitcoinProfitData.qty > 0 ? bitcoinProfitData.qty : 1; const pContrib = (bitcoinProfitData.priceContrib * vizQty) / 10000; const eContrib = (bitcoinProfitData.exchContrib * vizQty) / 10000; const actual = (bitcoinProfitData.actualPrice * vizQty) / 10000;
+                    const base = bitcoinProfitData.avgPrice; 
+                    const baseUnit = base / 10000; 
+                    const vizQty = bitcoinProfitData.qty > 0 ? bitcoinProfitData.qty : 1; 
+                    const pContrib = (bitcoinProfitData.priceContrib * vizQty) / 10000; 
+                    const eContrib = (bitcoinProfitData.exchContrib * vizQty) / 10000; 
+                    const actual = (bitcoinProfitData.actualPrice * vizQty) / 10000;
+                    
                     chartData = [[0, Math.round(baseUnit * vizQty)], [Math.round(baseUnit * vizQty), Math.round((baseUnit * vizQty) + pContrib)], [Math.round((baseUnit * vizQty) + pContrib), Math.round((baseUnit * vizQty) + pContrib + eContrib)], [Math.round((baseUnit * vizQty) + pContrib + eContrib), Math.round(actual)], [0, Math.round(actual)]];
-                    const isSimulated = bitcoinProfitData.qty <= 0; labels = [isSimulated ? '매입가(1BTC)' : '총매수', '시세변동', '환율효과', '김치프리미엄', isSimulated ? '현재가(1BTC)' : '총평가']; colors = ['#D1D1D6', '#FF3B30', '#0071E3', '#FF9F0A', bitcoinProfitData.totalProfit >= 0 ? '#FF3B30' : '#0071E3'];
-                    const totalBuy = base * vizQty; const safeTotalBuy = totalBuy === 0 ? 1 : totalBuy; percentData = [null, ((bitcoinProfitData.priceContrib * vizQty) / safeTotalBuy) * 100, ((bitcoinProfitData.exchContrib * vizQty) / safeTotalBuy) * 100, bitcoinProfitData.kPremiumPercent, null];
-                    const premTotal = bitcoinProfitData.kPremium * vizQty; summaryData = [{label:'시세차익',value:formatManwon(bitcoinProfitData.priceContrib * vizQty),color:bitcoinProfitData.priceContrib>=0?'text-red-500':'text-blue-500'}, {label:'환차익',value:formatManwon(bitcoinProfitData.exchContrib * vizQty),color:bitcoinProfitData.exchContrib>=0?'text-red-500':'text-blue-500'}, {label:'프리미엄 잔존',value:(premTotal>=0?'+':'')+formatManwon(premTotal),color:'text-amber-500'}];
+                    const isSimulated = bitcoinProfitData.qty <= 0; 
+                    labels = [isSimulated ? '매입가(1BTC)' : '총매수', '시세변동', '환율효과', '김치프리미엄', isSimulated ? '현재가(1BTC)' : '총평가']; 
+                    colors = ['#D1D1D6', '#FF3B30', '#0071E3', '#FF9F0A', bitcoinProfitData.totalProfit >= 0 ? '#FF3B30' : '#0071E3'];
+                    const totalBuy = base * vizQty; 
+                    const safeTotalBuy = totalBuy === 0 ? 1 : totalBuy; 
+                    percentData = [null, ((bitcoinProfitData.priceContrib * vizQty) / safeTotalBuy) * 100, ((bitcoinProfitData.exchContrib * vizQty) / safeTotalBuy) * 100, bitcoinProfitData.kPremiumPercent, null];
+                    const premTotal = bitcoinProfitData.kPremium * vizQty; 
+                    summaryData = [{label:'시세차익',value:formatManwon(bitcoinProfitData.priceContrib * vizQty),color:bitcoinProfitData.priceContrib>=0?'text-red-500':'text-blue-500'}, {label:'환차익',value:formatManwon(bitcoinProfitData.exchContrib * vizQty),color:bitcoinProfitData.exchContrib>=0?'text-red-500':'text-blue-500'}, {label:'프리미엄 잔존',value:(premTotal>=0?'+':'')+formatManwon(premTotal),color:'text-amber-500'}];
                     secondarySummaryData = [{label:'총 평가금액', value:formatManwon(bitcoinProfitData.totalValuation), color:'text-slate-900 dark:text-white'}, {label:'총 평가손익', value:(bitcoinProfitData.totalProfit>=0?'+':'')+formatManwon(bitcoinProfitData.totalProfit), color:bitcoinProfitData.totalProfit>=0?'text-red-500':'text-blue-500'}];
+                    growthRate = bitcoinProfitData.profitRate;
                 }
-                return (<BridgeChart data={chartData} labels={labels} colors={colors} summaryData={summaryData} isDark={isDark} growthRate={analysisMode === 'silver' ? silverProfitData.actualRate : bitcoinProfitData.profitRate} percentData={percentData} secondarySummaryData={secondarySummaryData} />);
-            };
+                
+                return { data: chartData, labels, colors, summaryData, percentData, secondarySummaryData, growthRate };
+            }, [analysisMode, silverProfitData, bitcoinProfitData]);
 
             const renderAnalysisContent = (isPopup = false) => (
                 <div className="flex flex-col md:flex-row gap-8 h-full">
@@ -982,7 +1004,13 @@
                                             <input className="apple-input !py-1 !text-xs flex-1 text-right !bg-white dark:!bg-white/10" placeholder="원화 입력" value={btcCalcInput.inputKrw} onChange={(e) => handleCommaChange(e, v => setBtcCalcInput({...btcCalcInput, inputKrw: v}))} />
                                             <span className="text-[10px] font-bold text-gray-400 w-8 text-center">KRW</span>
                                             <i className="fa-solid fa-arrow-right text-gray-300 text-[10px]"></i>
-                                            <span className="text-xs font-bold text-slate-900 dark:text-white flex-1 text-right">{btcCalcInput.inputKrw ? (parseFormattedNumber(btcCalcInput.inputKrw) / (parseFormattedNumber(bitcoinAnalysisInputs.currentDomesticPrice) * 10000)).toFixed(8) : '0'} BTC</span>
+                                            <span className="text-xs font-bold text-slate-900 dark:text-white flex-1 text-right">
+                                                {btcCalcInput.inputKrw 
+                                                    ? (parseFormattedNumber(bitcoinAnalysisInputs.currentDomesticPrice) > 0 
+                                                        ? (parseFormattedNumber(btcCalcInput.inputKrw) / (parseFormattedNumber(bitcoinAnalysisInputs.currentDomesticPrice) * 10000)).toFixed(8) 
+                                                        : '0') 
+                                                    : '0'} BTC
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -1164,7 +1192,9 @@
                                     {renderAnalysisContent()}
                          </AppleCard>
                          {/* Top Row: 42vh height with min 380px safety */}
-                         <AppleCard title="자산 성과 시각화" subTitle={analysisMode === 'silver' ? '은 투자 수익 구조 분석' : '비트코인 김프/수익 구조'} className="col-span-1 h-auto lg:h-[42vh] min-h-[380px]" onExpand={() => setExpandedView('combined_analysis')}> {renderPerformanceChart()} </AppleCard>
+                         <AppleCard title="자산 성과 시각화" subTitle={analysisMode === 'silver' ? '은 투자 수익 구조 분석' : '비트코인 김프/수익 구조'} className="col-span-1 h-auto lg:h-[42vh] min-h-[380px]" onExpand={() => setExpandedView('combined_analysis')}> 
+                             <BridgeChart {...performanceChartData} isDark={isDark} />
+                         </AppleCard>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
                          {/* Bottom Row: 38vh height with min 320px safety */}
@@ -1236,7 +1266,7 @@
                                              <div className="w-full lg:w-1/3 flex flex-col bg-white dark:bg-[#1C1C1E] rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-white/5 shrink-0">
                                                  <h3 className="text-base font-bold text-slate-500 dark:text-slate-400 mb-4 flex items-center gap-2 flex-shrink-0"><i className="fa-solid fa-chart-pie"></i> 자산 성과 시각화</h3>
                                                  <div className="h-[400px] lg:flex-1 lg:min-h-0 w-full">
-                                                     {renderPerformanceChart()}
+                                                     <BridgeChart {...performanceChartData} isDark={isDark} />
                                                  </div>
                                              </div>
                                          </div>
@@ -1592,7 +1622,7 @@
             // --- 렌더링 시작 ---
             return (
                 <div className={`min-h-screen transition-colors duration-200 ${isDark ? 'dark bg-black' : 'bg-[#F5F5F7]'}`}>
-                    <div className="max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+                    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
                         {/* Header & Navigation */}
                         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fade-in">
                             <div className="flex items-center gap-3">
@@ -1665,7 +1695,7 @@
                             )}
                         </main>
                         <footer className="text-center py-8 text-[10px] text-gray-400 font-medium">
-                            <p>© 2024 Investment Navigator. All data is for reference only.</p>
+                            <p>© 2026 Investment Navigator. All data is for reference only.</p>
                         </footer>
                     </div>
                 </div>
