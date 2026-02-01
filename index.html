@@ -279,7 +279,7 @@
                 return () => { if (chartInstance.current) chartInstance.current.destroy(); };
             }, [history]);
             // Height adjusted: Responsive vh with min-height safety
-            return <div className="h-[300px] lg:h-[40vh] min-h-[320px] w-full"><canvas ref={canvasRef}></canvas></div>;
+            return <div className="h-[300px] lg:h-[40vh] min-height-[320px] w-full"><canvas ref={canvasRef}></canvas></div>;
         });
 
         const TradingViewTicker = memo(({ theme }) => {
@@ -355,10 +355,6 @@
         });
 
         const TradingViewMarketQuotes = memo(({ theme }) => {
-            // [원복] 사용자가 요청한 기존 TradingView Iframe Widget으로 복구
-            // [설정] 에너지&금속 > 주요 환율 순서 유지, 농산물 제외
-            // [추가] 브렌트유(UKOIL), 백금(PLATINUM), 팔라듐(PALLADIUM) 추가
-            // [수정] 구리 심볼 변경 (TVC:COPPER -> COMEX:HG1!) 데이터 수신 안정화
             const ref = useRef(null);
             useEffect(() => {
                 if (!ref.current) return;
@@ -406,7 +402,8 @@
             const [keywords, setKeywords] = useState(() => {
                 try { const saved = localStorage.getItem('invNav_newsKeywords_v2'); return saved ? JSON.parse(saved) : ['주요뉴스', '경제', '은', '큐리옥스바이오시스템즈', '에스티팜']; } catch { return ['주요뉴스', '경제', '은', '큐리옥스바이오시스템즈', '에스티팜']; }
             });
-            const [activeKeyword, setActiveKeyword] = useState('경제');
+            // 초기 검색 키워드를 '은'으로 유지
+            const [activeKeyword, setActiveKeyword] = useState('은');
             const [isAdding, setIsAdding] = useState(false);
             const [newKeywordInput, setNewKeywordInput] = useState('');
             const [isKeywordManagerOpen, setIsKeywordManagerOpen] = useState(false);
@@ -417,7 +414,8 @@
                 setLoading(true); setErrorMsg(null);
                 try {
                     let searchQuery = query;
-                    if (query === '은') searchQuery = '은 시세 OR 은 선물 OR 국제 은값 OR 실버바 OR silver';
+                    // [수정] 뉴스 키워드 검색식 강화: 은 시세, 은 값, silver, 선물 등 투자 관련 키워드 최적화
+                    if (query === '은') searchQuery = '"은 시세" OR "은 값" OR "silver" OR "silver price" OR "은 선물" OR "실버바"';
                     else if (query === '금') searchQuery = '금 시세 OR 국제 금값 OR 골드바';
                     else if (query === '비트코인') searchQuery = '비트코인 OR 암호화폐 OR BTC';
                     
@@ -465,7 +463,7 @@
 
                     {isKeywordManagerOpen && (
                         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
-                            <div className="bg-white dark:bg-[#1C1C1E] w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-gray-200 dark:border-white/10 max-h-[80vh]">
+                            <div className="bg-white dark:bg-[#1C1C1E] w-full max-md rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-gray-200 dark:border-white/10 max-h-[80vh]">
                                 <div className="px-4 py-3 border-b border-gray-100 dark:border-white/5 flex justify-between items-center bg-white dark:bg-[#1C1C1E]">
                                     <h3 className="font-bold text-slate-900 force-dark-white flex items-center gap-2"><i className="fa-solid fa-list-check text-indigo-500"></i> 키워드 관리</h3>
                                     <button onClick={() => setIsKeywordManagerOpen(false)} className="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 flex items-center justify-center transition-colors"><i className="fa-solid fa-xmark text-slate-500"></i></button>
@@ -505,7 +503,6 @@
         });
 
         const IpoCalendarWidget = memo(({ isDark }) => {
-            // [수정] viewMode 상태 삭제 (캘린더 뷰 고정으로 불필요)
             const [calType, setCalType] = useState('all'); 
             const todayDate = new Date();
             const todayStr = `${todayDate.getMonth() + 1}월 ${todayDate.getDate()}일 (${['일','월','화','수','목','금','토'][todayDate.getDay()]})`;
@@ -516,7 +513,6 @@
                 const listCal = "6ece61bb8be35674d49e32ddd31247808effcc2c6001235f154b8e9e28fab902@group.calendar.google.com"; 
                 let params = `ctz=Asia%2FSeoul&showTitle=0&showPrint=0&showCalendars=0&showTz=0`;
                 
-                // [수정] 리스트 뷰 분기 로직 제거하고 캘린더 URL 생성만 남김
                 let url = `${baseUrl}?${params}&mode=MONTH`;
                 if (calType === 'all') {
                     url += `&src=${encodeURIComponent(subCal)}&color=%233F51B5&src=${encodeURIComponent(listCal)}&color=%238E24AA`;
@@ -532,12 +528,10 @@
                 <div className="flex flex-col h-full w-full bg-white dark:bg-[#1C1C1E] relative group">
                     <div className="flex flex-col sm:flex-row justify-between items-center gap-2 py-2 px-4 border-b border-gray-100 dark:border-white/5 bg-white dark:bg-[#1C1C1E] flex-shrink-0">
                         <div className="flex items-center gap-2">
-                            {/* [수정] 뷰 전환 버튼 삭제됨 */}
                             <div className="flex items-center px-3 py-1.5 bg-[#FFD60A] rounded-lg shadow-sm animate-fade-in border border-yellow-400/50">
                                 <span className="text-[11px] font-black text-black flex items-center gap-1.5 whitespace-nowrap"><i className="fa-solid fa-calendar-day"></i> 오늘: {todayStr}</span>
                             </div>
                         </div>
-                        {/* [수정] 필터 버튼 그룹 단순화 (조건부 렌더링 제거) */}
                         <div className="flex gap-1 p-1 bg-gray-100 dark:bg-[#2C2C2E] rounded-lg animate-fade-in">
                             <button onClick={() => setCalType('all')} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${calType==='all' ? 'bg-white dark:bg-[#636366] text-slate-800 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}>전체</button>
                             <button onClick={() => setCalType('subscription')} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${calType==='subscription' ? 'bg-white dark:bg-[#636366] text-indigo-600 dark:text-indigo-300 shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}>청약</button>
@@ -630,7 +624,6 @@
                                 ctx.save(); ctx.font = 'bold 12px Pretendard'; const textWidth = ctx.measureText(text).width; const paddingX = 8; const paddingY = 4; const boxWidth = textWidth + paddingX * 2; const boxHeight = 20;
                                 ctx.shadowColor = 'rgba(0, 0, 0, 0.1)'; ctx.shadowBlur = 4; ctx.shadowOffsetY = 2; ctx.fillStyle = isDark ? '#2C2C2E' : '#FFFFFF'; ctx.strokeStyle = rateColor; ctx.lineWidth = 1.5;
                                 ctx.beginPath(); 
-                                // Polyfill for roundRect
                                 if (ctx.roundRect) {
                                     ctx.roundRect(centerX - boxWidth/2, centerY - boxHeight/2, boxWidth, boxHeight, 10);
                                 } else {
@@ -671,7 +664,6 @@
                         </div>
                     </div>
                 )}
-                {/* [수정 1] scrollbar-hide 제거 -> 세로 스크롤바가 보이도록 변경 (사용자가 원하는 경우) */}
                 <div className="flex-1 min-w-0 min-h-0 overflow-y-auto">{children}</div>
             </div>
         );
@@ -695,12 +687,11 @@
             const [analysisMode, setAnalysisMode] = useState('silver'); 
             const [dashChartTab, setDashChartTab] = useState('price');
             const [topSectionTab, setTopSectionTab] = useState('calendar');
-            const [marketMapTab, setMarketMapTab] = useState('heatmap'); // New State for Market Map Tab
+            const [marketMapTab, setMarketMapTab] = useState('heatmap'); 
             const [isNewsExpanded, setIsNewsExpanded] = useState(false); 
             const [isTopSectionExpanded, setIsTopSectionExpanded] = useState(false); 
             const [isSimTableExpanded, setIsSimTableExpanded] = useState(false); 
-            // Replaced isAnalysisExpanded with generic expandedView
-            const [expandedView, setExpandedView] = useState(null); // 'analysis', 'performance', 'heatmap', 'calendar', 'news'
+            const [expandedView, setExpandedView] = useState(null); 
             const [tempSimInputs, setTempSimInputs] = useState(null);
             const [exchangeRates, setExchangeRates] = useState(DEFAULT_EXCHANGE_RATES);
             const [lastUpdated, setLastUpdated] = useState('연결 중...');
@@ -715,17 +706,15 @@
             const [unitConv, setUnitConv] = useState({ type: 'weight', value: '', base: 'don' });
             const [btcCalcInput, setBtcCalcInput] = useState({ inputBtc: '', inputKrw: '' });
             
-            // 주식 목표가 계산기 상태
             const [targetInputs, setTargetInputs] = useState({ 
-                mode: 'cap', // 'cap' (시총비례) or 'price' (가격직접)
+                mode: 'cap',
                 currentPrice: '', 
                 shares: '', 
-                currentCap: '', // 단위: 조
-                targetCap: '', // 단위: 조
+                currentCap: '', 
+                targetCap: '', 
                 targetPriceInput: '' 
             });
             
-            // IPO 계산기 상태
             const [ipoCalcInputs, setIpoCalcInputs] = useState({ price: '', qty: '', marginRate: 50 });
             
             const [isSimInputModalOpen, setIsSimInputModalOpen] = useState(false);
@@ -737,7 +726,6 @@
 
             const DEFAULT_SIM_INPUTS = { currentAge: 52, spouseCurrentAge: 48, simulationStartAge: 53, pensionStrategyUser: "normal", pensionStrategySpouse: "normal", highCostStartAge: 80, regionalInsStartAge: 60, capUserNonISA: 0.0, capSpouseNonISA: 0.0, capUserISA: 2.0, capSpouseISA: 1.0, capIPO: 6.5, returnUserNonISA: 0.0, returnSpouseNonISA: 0.0, returnUserISA: 5.0, returnSpouseISA: 5.0, returnIPO: 4.0, returnCMA: 2.0, inflationRate: 2.0, livingCostInflationRate: 1.5, taxRate1: 6.6, taxRate2: 16.5, taxRate3: 27.5, monthlyLiving: "5,000,000", pensionSelf: "1,000,000", pensionSpouse: "1,000,000", ipoProfit: "6,000,000", otherIncome: "4,500,000", stockLending: "0", rentalIncome: "850,000", tradingProfit: "0", targetLegacy: "200,000,000", extraReserve: "5,000,000", monthlyMedical: "1,000,000", monthlyRegionalIns: "0", housingMarketPrice: "5" };
             
-            // Local Storage Initializers
             const [simInputs, setSimInputs] = useState(() => { try { return { ...DEFAULT_SIM_INPUTS, ...JSON.parse(localStorage.getItem('invNav_simInputs_v3')) }; } catch { return DEFAULT_SIM_INPUTS; } });
             const [silverAnalysisInputs, setSilverAnalysisInputs] = useState(() => {
                 try { const saved = JSON.parse(localStorage.getItem('invNav_silverInputs_v6')); return { ...(saved || { currentExch: '1,331', currentUsdPrice: '60.00', currentDomesticPrice: '3,000,000', currentShanghaiPrice: '15,000', avgPrice: '1,530,000' }), holdingQty: '' }; } catch { return { currentExch: '1,331', currentUsdPrice: '60.00', currentDomesticPrice: '3,000,000', currentShanghaiPrice: '15,000', holdingQty: '', avgPrice: '1,530,000' }; }
@@ -939,10 +927,9 @@
             };
 
             // ==========================================
-            // 4. RENDER FUNCTIONS (렌더링 컴포넌트)
+            // 4. RENDER FUNCTIONS 
             // ==========================================
             
-            // [최적화] 차트 데이터 메모이제이션 (불필요한 리렌더링 방지)
             const performanceChartData = useMemo(() => {
                 let chartData, labels, colors, summaryData, percentData, secondarySummaryData, growthRate;
                 
@@ -977,7 +964,7 @@
                     percentData = [null, ((bitcoinProfitData.priceContrib * vizQty) / safeTotalBuy) * 100, ((bitcoinProfitData.exchContrib * vizQty) / safeTotalBuy) * 100, bitcoinProfitData.kPremiumPercent, null];
                     const premTotal = bitcoinProfitData.kPremium * vizQty; 
                     summaryData = [{label:'시세차익',value:formatManwon(bitcoinProfitData.priceContrib * vizQty),color:bitcoinProfitData.priceContrib>=0?'text-red-500':'text-blue-500'}, {label:'환차익',value:formatManwon(bitcoinProfitData.exchContrib * vizQty),color:bitcoinProfitData.exchContrib>=0?'text-red-500':'text-blue-500'}, {label:'프리미엄 잔존',value:(premTotal>=0?'+':'')+formatManwon(premTotal),color:'text-amber-500'}];
-                    secondarySummaryData = [{label:'총 평가금액', value:formatManwon(bitcoinProfitData.totalValuation), color:'text-slate-900 dark:text-white'}, {label:'총 평가손익', value:(bitcoinProfitData.totalProfit>=0?'+':'')+formatManwon(bitcoinProfitData.totalProfit), color:bitcoinProfitData.totalProfit>=0?'text-red-500':'text-blue-500'}];
+                    secondarySummaryData = [{label:'총 평가금액', value:formatManwon(bitcoinProfitData.totalValuation), color:'text-slate-900 dark:text-white'}, {label:'총 평가손익', value:(bitcoinProfitData.totalProfit>=0?'+':'')+formatManwon(bitcoinProfitData.totalProfit), color:silverProfitData.totalProfit>=0?'text-red-500':'text-blue-500'}];
                     growthRate = bitcoinProfitData.profitRate;
                 }
                 
@@ -989,7 +976,6 @@
                     <div className="w-full md:w-1/3 flex flex-col gap-3 min-w-[240px]">
                         {analysisMode === 'silver' ? (
                             <>
-                                {/* [그룹 1] 시장 데이터: 중요도에 따라 강약 조절 및 레이블 간소화 */}
                                 <div className="bg-[#F9F9F9] dark:bg-[#2C2C2E] p-3 rounded-xl border border-slate-100 dark:border-white/5 space-y-3">
                                     <div className="flex justify-between items-center border-b border-slate-200 dark:border-white/10 pb-2">
                                         <h5 className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5"><i className="fa-solid fa-globe"></i> 시장 시세</h5>
@@ -1010,13 +996,11 @@
                                     <div>
                                         <div className="flex justify-between items-end mb-1">
                                             <label className="text-[10px] font-bold text-red-500 dark:text-red-400">국내(원/kg)</label>
-                                            {/* 계산기 토글 버튼으로 변경 */}
                                             <button onClick={() => setShowDonConverter(!showDonConverter)} className={`text-[9px] px-1.5 py-0.5 rounded transition-colors flex items-center gap-1 ${showDonConverter ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'}`}>
                                                 <i className="fa-solid fa-calculator"></i> 1돈 환산
                                             </button>
                                         </div>
                                         
-                                        {/* 숨겨진 계산기 영역 */}
                                         {showDonConverter && (
                                             <div className="bg-indigo-50 dark:bg-indigo-900/20 p-2 rounded-lg mb-2 animate-fade-in border border-indigo-100 dark:border-indigo-800/30">
                                                 <div className="flex items-center gap-2">
@@ -1031,7 +1015,6 @@
                                     </div>
                                 </div>
 
-                                {/* [그룹 2] 자산 정보: 심플하게 정리 */}
                                 <div className="bg-[#F9F9F9] dark:bg-[#2C2C2E] p-3 rounded-xl border border-slate-100 dark:border-white/5 space-y-2">
                                     <h5 className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5"><i className="fa-solid fa-wallet"></i> 내 자산</h5>
                                     <div className="grid grid-cols-2 gap-3">
@@ -1048,11 +1031,9 @@
                             </>
                         ) : (
                             <>
-                                {/* 비트코인 섹션도 동일한 스타일 적용 */}
                                 <div className="bg-[#F9F9F9] dark:bg-[#2C2C2E] p-3 rounded-xl border border-slate-100 dark:border-white/5 space-y-3">
                                     <div className="flex justify-between items-center border-b border-slate-200 dark:border-white/10 pb-2">
                                         <h5 className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5"><i className="fa-solid fa-globe"></i> 시장 시세</h5>
-                                        {/* 실시간 환율 정보 우측 배치 */}
                                         <div className="text-[10px] text-slate-400">실시간: <span className="text-slate-600 dark:text-slate-300 font-bold">{silverAnalysisInputs.currentExch}</span>원</div>
                                     </div>
 
@@ -1062,7 +1043,6 @@
                                             <input className="apple-input !py-1.5 !px-2 !text-xs text-right !bg-white dark:!bg-black/20" value={bitcoinAnalysisInputs.currentBtcUsd} onChange={e=>handleCommaChange(e, v=>setBitcoinAnalysisInputs({...bitcoinAnalysisInputs, currentBtcUsd:v}))} />
                                         </div>
                                         <div>
-                                             {/* 매입 환율 입력 */}
                                             <label className="text-[10px] font-semibold text-indigo-400 mb-1 block">평균 환율(원)</label>
                                             <input className="apple-input !py-1.5 !px-2 !text-xs text-right !bg-white dark:!bg-black/20 border border-indigo-100 dark:border-indigo-900/30" value={bitcoinAnalysisInputs.avgExch} onChange={e=>handleCommaChange(e, v=>setBitcoinAnalysisInputs({...bitcoinAnalysisInputs, avgExch:v}))} />
                                         </div>
@@ -1071,13 +1051,11 @@
                                     <div>
                                         <div className="flex justify-between items-end mb-1">
                                             <label className="text-[10px] font-bold text-red-500 dark:text-red-400">국내 BTC(만원)</label>
-                                             {/* 계산기 토글 */}
                                              <button onClick={() => setShowDonConverter(!showDonConverter)} className={`text-[9px] px-1.5 py-0.5 rounded transition-colors flex items-center gap-1 ${showDonConverter ? 'bg-orange-100 text-orange-600' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'}`}>
                                                 <i className="fa-solid fa-calculator"></i> 계산기
                                             </button>
                                         </div>
 
-                                        {/* 숨겨진 비트코인 계산기 */}
                                         {showDonConverter && (
                                             <div className="bg-orange-50 dark:bg-orange-900/20 p-2 rounded-lg mb-2 animate-fade-in border border-orange-100 dark:border-orange-800/30 space-y-1.5">
                                                 <div className="flex items-center gap-2">
@@ -1117,12 +1095,10 @@
                             </>
                         )}
                     </div>
-                    {/* [복원] 누락되었던 우측 분석 결과 영역 (수익률, 프리미엄, 차트) */}
                     <div className="w-full md:w-2/3 flex flex-col gap-4 min-h-0">
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                             <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-2xl p-3"><AppleStatBox label="수익률" value={`${(analysisMode === 'silver' ? silverProfitData.actualRate : bitcoinProfitData.profitRate).toFixed(1)}%`} valueClassName={(analysisMode === 'silver' ? silverProfitData.actualRate : bitcoinProfitData.profitRate) >= 0 ? 'text-stat-up' : 'text-stat-down'} /></div>
                             
-                            {/* 김치 프리미엄 섹션 */}
                             <div className="bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-2xl p-3 relative overflow-hidden flex flex-col justify-between">
                                 <AppleStatBox 
                                     label="김치 프리미엄" 
@@ -1157,21 +1133,17 @@
                             </div>
                         </div>
                         <div className="flex-1 flex flex-col min-h-0">
-                            {/* [수정 1] scrollbar-hide 제거 -> 가로 스크롤바 노출하여 마우스 조작 용이하게 개선 */}
+                            {/* [수정] 탭 버튼 패딩 및 정렬 개선 - 텍스트 잘림 현상 방지 */}
                             <div className="flex gap-2 mb-3 w-full overflow-x-auto pb-2">
                                 {analysisMode === 'silver' 
-                                    /* [수정 2] 구리(Copper) 탭 삭제 요청 반영 -> ['price:은($)', 'shanghai:국내/상하이', 'gold:금($)', 'ratio:금은비'] */
-                                    ? ['price:은($)', 'shanghai:국내/상하이', 'gold:금($)', 'ratio:금은비'].map(t=>{const [k,l]=t.split(':'); return <button key={k} onClick={()=>setDashChartTab(k)} className={`flex-1 min-w-0 px-1 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap ${dashChartTab===k?'bg-[#0071E3] text-white shadow-md':'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}>{l}</button>}) 
-                                    : ['btc:바이낸스($)', 'btc_upbit:업비트(₩)', 'btc_link:거래소'].map(t=>{const [k,l]=t.split(':'); return <button key={k} onClick={()=>setDashChartTab(k)} className={`flex-1 min-w-fit px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${dashChartTab===k?'bg-[#0071E3] text-white shadow-md':'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}>{l}</button>})
+                                    ? ['price:은($)', 'shanghai:국내/상하이', 'gold:금($)', 'ratio:금은비'].map(t=>{const [k,l]=t.split(':'); return <button key={k} onClick={()=>setDashChartTab(k)} className={`flex-1 min-w-0 px-1 sm:px-3 py-2 sm:py-2.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap leading-tight flex items-center justify-center ${dashChartTab===k?'bg-[#0071E3] text-white shadow-md':'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}>{l}</button>}) 
+                                    : ['btc:바이낸스($)', 'btc_upbit:업비트(₩)', 'btc_link:거래소'].map(t=>{const [k,l]=t.split(':'); return <button key={k} onClick={()=>setDashChartTab(k)} className={`flex-1 min-w-fit px-3 py-2 sm:py-2.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap leading-tight flex items-center justify-center ${dashChartTab===k?'bg-[#0071E3] text-white shadow-md':'bg-[#F2F2F7] dark:bg-[#2C2C2E] text-gray-500 dark:text-gray-400'}`}>{l}</button>})
                                 }
                             </div>
-                            {/* [수정 3] 차트 영역 높이 안정화: md:min-h-0 -> md:min-h-[250px]로 변경하여 화면이 작아져도 차트가 찌그러지지 않도록 보호 */}
                             <div className={`${isPopup ? 'h-[400px] lg:h-auto lg:flex-1 lg:min-h-0' : 'h-[350px] md:h-auto md:flex-1 md:min-h-[250px]'} rounded-2xl overflow-hidden border border-slate-100 dark:border-white/5 relative bg-white dark:bg-[#1C1C1E]`}>
-                                {/* [수정 2] 구리 탭 조건 제거 (TVC:COPPER) */}
                                 {analysisMode === 'silver' ? (dashChartTab === 'price' ? <MiniChart symbol="FX_IDC:XAGUSD" theme={isDark?'dark':'light'}/> : dashChartTab === 'gold' ? <MiniChart symbol="TVC:GOLD" theme={isDark?'dark':'light'}/> : dashChartTab === 'shanghai' ? (
                                     <div className="h-full w-full flex flex-col p-3 bg-[#FAFAFA] dark:bg-[#151517] overflow-y-auto custom-scrollbar">
                                         <div className="w-full space-y-4">
-                                            {/* Header */}
                                             <div className="flex items-center justify-between px-1">
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-red-400 to-rose-600 flex items-center justify-center shadow-lg shadow-red-500/20">
@@ -1182,7 +1154,6 @@
                                                 <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500">엄선된 정보 소스</span>
                                             </div>
 
-                                            {/* Section 1: Price & Market */}
                                             <div className="space-y-2">
                                                 <div className="flex items-center gap-1.5 px-1 mb-1 opacity-80">
                                                     <i className="fa-solid fa-fire text-[10px] text-rose-500"></i>
@@ -1203,7 +1174,6 @@
                                                 </div>
                                             </div>
 
-                                            {/* Section 2: Community */}
                                             <div className="space-y-2 pt-2 border-t border-dashed border-slate-200 dark:border-white/5">
                                                 <div className="flex items-center gap-1.5 px-1 mb-1 opacity-80">
                                                     <i className="fa-solid fa-users text-[10px] text-indigo-500"></i>
@@ -1228,7 +1198,6 @@
                                 ) : <MiniChart symbol="TVC:GOLDSILVER" theme={isDark?'dark':'light'}/>) : (dashChartTab === 'btc' ? <MiniChart symbol="BINANCE:BTCUSDT" theme={isDark?'dark':'light'}/> : dashChartTab === 'btc_upbit' ? <MiniChart symbol="UPBIT:BTCKRW" theme={isDark?'dark':'light'}/> : (
                                     <div className="h-full w-full flex flex-col p-3 bg-[#FAFAFA] dark:bg-[#151517] overflow-y-auto custom-scrollbar">
                                         <div className="w-full space-y-4">
-                                            {/* Header */}
                                             <div className="flex items-center justify-between px-1">
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-orange-400 to-amber-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
@@ -1239,7 +1208,6 @@
                                                 <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500">실시간 데이터</span>
                                             </div>
 
-                                            {/* Section 1: Exchanges */}
                                             <div className="space-y-2">
                                                 <div className="flex items-center gap-1.5 px-1 mb-1 opacity-80">
                                                     <i className="fa-solid fa-arrow-trend-up text-[10px] text-orange-500"></i>
@@ -1264,7 +1232,6 @@
                                                 </div>
                                             </div>
 
-                                            {/* Section 2: Analysis Tools */}
                                             <div className="space-y-2 pt-2 border-t border-dashed border-slate-200 dark:border-white/5">
                                                 <div className="flex items-center gap-1.5 px-1 mb-1 opacity-80">
                                                     <i className="fa-solid fa-chart-simple text-[10px] text-blue-500"></i>
@@ -1299,15 +1266,12 @@
 
             const renderRoutine = () => (
                 <div className="flex flex-col lg:flex-row gap-6 h-full min-h-[600px]">
-                    {/* Left Column: Routine Cards */}
                     <div className="flex-1 min-w-0">
-                        {/* Header / Tabs */}
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex bg-[#E5E5EA] dark:bg-[#2C2C2E] p-1 rounded-xl">
                                 <button onClick={() => setLinkMode('investment')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${linkMode === 'investment' ? 'bg-white dark:bg-[#636366] text-black force-dark-white shadow-sm' : 'text-gray-400'}`}>투자 루틴</button>
                                 <button onClick={() => setLinkMode('blogs')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${linkMode === 'blogs' ? 'bg-white dark:bg-[#636366] text-black force-dark-white shadow-sm' : 'text-gray-400'}`}>인사이트 블로그</button>
                             </div>
-                            {/* Mobile Edit Button (Hidden on PC) */}
                             <div className="lg:hidden">
                                 <button onClick={() => setIsRoutineEditMode(!isRoutineEditMode)} className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${isRoutineEditMode ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-[#2C2C2E] text-slate-600 dark:text-slate-300 border border-gray-200 dark:border-white/10'}`}>
                                     <i className={`fa-solid ${isRoutineEditMode ? 'fa-check' : 'fa-pen-to-square'}`}></i>
@@ -1315,7 +1279,6 @@
                             </div>
                         </div>
 
-                        {/* Grid Layout (3 Columns on PC) */}
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                             {Object.entries(linkMode === 'blogs' ? blogInsightLinks : routineLinks).map(([category, links], idx) => (
                                 <div key={idx} className="bg-white dark:bg-[#1C1C1E] rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-white/5 hover:shadow-md transition-all group flex flex-col h-full">
@@ -1346,9 +1309,7 @@
                         </div>
                     </div>
 
-                    {/* Right Column: Sticky Sidebar (Memo & Tools) */}
                     <div className="w-full lg:w-[320px] xl:w-[360px] flex-shrink-0 flex flex-col gap-4">
-                        {/* Action Card */}
                         <div className="bg-white dark:bg-[#1C1C1E] p-4 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm lg:sticky lg:top-4 z-10">
                             <div className="flex justify-between items-center mb-4">
                                  <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400">루틴 관리 도구</h4>
@@ -1368,7 +1329,6 @@
                                 </div>
                             )}
 
-                            {/* Memo Pad */}
                             <div className="bg-[#FFF9C4] dark:bg-[#3d3d1f] p-4 rounded-xl border border-yellow-200 dark:border-yellow-900/30 relative min-h-[300px] flex flex-col">
                                 <h4 className="text-xs font-bold text-yellow-800 dark:text-yellow-200 mb-2 flex items-center gap-2"><i className="fa-regular fa-lightbulb"></i> 루틴 메모장</h4>
                                 <textarea className="flex-1 w-full bg-transparent border-none outline-none text-xs text-slate-700 dark:text-slate-200 resize-none font-medium leading-relaxed" placeholder="오늘의 투자 아이디어, 할 일 등을 기록하세요..." value={routineMemo} onChange={(e) => setRoutineMemo(e.target.value)}></textarea>
@@ -1379,16 +1339,13 @@
                 </div>
             );
 
-            // [수정] renderDashboard 함수를 이전의 그리드 레이아웃(상단 2:1 비율, 하단 1:1 비율)으로 복구
             const renderDashboard = () => (
                 <div className="space-y-4 lg:space-y-6">
-                    {/* Top Ticker */}
                     <div className="h-10 sm:h-12 w-full bg-white dark:bg-[#1C1C1E] border border-gray-100 dark:border-white/5 rounded-2xl overflow-hidden shadow-sm flex items-center mb-2 lg:mb-6">
                          <div className="bg-[#0071E3] h-full px-4 flex items-center justify-center"><i className="fa-solid fa-globe text-white"></i></div>
                          <TradingViewTicker theme={isDark ? 'dark' : 'light'} />
                     </div>
 
-                    {/* Top Row: Analysis (2) + Performance (1) */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
                          <AppleCard 
                             title="시장 심층 분석" 
@@ -1410,7 +1367,6 @@
                          </AppleCard>
                     </div>
 
-                    {/* Bottom Row: Market Map (1) + News (1) */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
                          <AppleCard 
                             title="글로벌 마켓" 
@@ -1443,16 +1399,13 @@
                          </AppleCard>
                     </div>
 
-                    {/* Expanded Modal */}
                     {expandedView && (
                          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4 animate-fade-in">
-                             {/* [수정] 팝업 높이 조정: h-[92vh] -> h-[85vh] (너무 길어 보이지 않도록 최적화) */}
                              <div className="bg-white dark:bg-[#1C1C1E] w-full max-w-7xl h-[85vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col relative border border-gray-200 dark:border-white/10">
                                  <div className="px-5 py-3 border-b border-gray-100 dark:border-white/5 flex justify-between items-center bg-white dark:bg-[#1C1C1E] flex-shrink-0">
                                      <div className="flex items-center gap-4 flex-1 min-w-0">
                                          <h2 className="text-xl font-bold text-slate-900 force-dark-white flex items-center gap-2 whitespace-nowrap">
                                              <i className="fa-solid fa-maximize text-indigo-500"></i> 
-                                             {/* [수정] 제목 간소화: 시장 분석 및 성과 종합 상세 -> 자산 분석 종합 */}
                                              {expandedView === 'combined_analysis' ? "자산 분석 종합" : 
                                               expandedView === 'market_map_combined' ? "시장 데이터 상세" :
                                               expandedView === 'schedule_news_combined' ? "IPO 일정 & 뉴스" : ""}
@@ -1489,16 +1442,12 @@
                                  <div className="flex-1 overflow-hidden p-4 sm:p-6 bg-[#F5F5F7] dark:bg-black relative">
                                      {expandedView === 'combined_analysis' && (
                                          <div className="flex flex-col gap-4 h-full">
-                                            {/* [수정] Grid 비율 변경: lg:grid-cols-2 -> lg:grid-cols-3 */}
                                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full">
-                                                {/* [수정] 좌측 패널(내용 많음): lg:col-span-2 적용 (2/3 비중) */}
                                                 <div className="lg:col-span-2 bg-white dark:bg-[#1C1C1E] p-4 sm:p-6 rounded-3xl border border-gray-200 dark:border-white/5 shadow-sm overflow-y-auto custom-scrollbar h-full">
                                                     {renderAnalysisContent(true)}
                                                 </div>
-                                                {/* [수정] 우측 패널(차트): lg:col-span-1 적용 (1/3 비중) */}
                                                 <div className="lg:col-span-1 bg-white dark:bg-[#1C1C1E] p-4 sm:p-6 rounded-3xl border border-gray-200 dark:border-white/5 shadow-sm h-full flex flex-col">
                                                     <h3 className="text-lg font-bold mb-4 text-slate-800 dark:text-white flex-shrink-0">수익 구조 시각화</h3>
-                                                    {/* 차트 영역이 너무 길어지지 않도록 flex-1 유지하되 내용물에 맞게 조정 */}
                                                     <div className="flex-1 min-h-0 flex flex-col justify-center">
                                                         <BridgeChart {...performanceChartData} isDark={isDark} />
                                                     </div>
@@ -1523,7 +1472,6 @@
                 </div>
             );
 
-            // [추가 복원] renderTableContent 함수 복원
             const renderTableContent = (isPopup = false) => (
                 <div className={`overflow-x-auto ${isPopup ? 'h-full' : ''}`}>
                     <table className="w-full text-[11px] sm:text-[12px] text-left border-collapse table-auto min-w-max">
@@ -1627,7 +1575,6 @@
                          </div>
                     </AppleCard>
 
-                    {/* 2. IPO/스팩 청약 증거금 계산기 */}
                     <AppleCard title="IPO/스팩 청약 증거금 계산기" subTitle="청약 수량별 필요 증거금 확인" className="h-full">
                          <div className="space-y-4">
                              <div className="grid grid-cols-2 gap-3">
@@ -1642,7 +1589,6 @@
                          </div>
                     </AppleCard>
 
-                    {/* 3. 실시간 환율 계산기 */}
                     <AppleCard title="실시간 환율 계산기" subTitle="주요 통화 간편 변환" className="h-full">
                          <div className="space-y-4">
                              <div className="flex items-center gap-2"><select className="apple-input !w-24 !text-center" value={exchInputs.base} onChange={e=>setExchInputs({...exchInputs, base:e.target.value})}>{Object.keys(DEFAULT_EXCHANGE_RATES).map(c=><option key={c} value={c}>{c}</option>)}</select><i className="fa-solid fa-arrow-right text-gray-400"></i><select className="apple-input !w-24 !text-center" value={exchInputs.target} onChange={e=>setExchInputs({...exchInputs, target:e.target.value})}>{Object.keys(DEFAULT_EXCHANGE_RATES).map(c=><option key={c} value={c}>{c}</option>)}</select></div>
@@ -1651,7 +1597,6 @@
                          </div>
                     </AppleCard>
                     
-                    {/* 4. 금/은 단위 변환기 */}
                     <AppleCard title="금/은 단위 변환기" subTitle="돈 ↔ 그램 ↔ 트로이온스" className="h-full">
                          <div className="space-y-4">
                              <div className="flex bg-[#F2F2F7] dark:bg-[#2C2C2E] p-1 rounded-lg mb-2">{['don', 'gram', 'oz'].map(u => <button key={u} onClick={() => setUnitConv({...unitConv, base: u, value: ''})} className={`flex-1 py-1.5 rounded-md text-xs font-bold ${unitConv.base === u ? 'bg-white dark:bg-[#636366] shadow-sm text-black force-dark-white' : 'text-gray-400'}`}>{u === 'don' ? '돈' : u === 'gram' ? 'g' : 'oz'}</button>)}</div>
@@ -1660,7 +1605,6 @@
                          </div>
                     </AppleCard>
 
-                    {/* 5. 물타기(평단가) 계산기 */}
                     <AppleCard title="물타기(평단가) 계산기" subTitle="추가 매수 시 평단 변화 확인" className="h-full">
                          <div className="flex flex-col h-full">
                              <div className="flex-1 space-y-2 overflow-y-auto max-h-[200px] mb-4 pr-1">{avgRows.map((row, idx) => ( <div key={row.id} className="flex gap-2 items-center animate-fade-in"> <span className="text-[10px] font-bold text-gray-400 w-4">{idx+1}</span> <input className="apple-input !py-1.5 !text-xs flex-1" placeholder="수량" value={row.q} onChange={e=>handleAvgChange(row.id, 'q', e.target.value)} /> <input className="apple-input !py-1.5 !text-xs flex-1" placeholder="단가" value={row.p} onChange={e=>handleAvgChange(row.id, 'p', e.target.value)} /> {avgRows.length > 1 && <button onClick={() => handleRemoveAvgRow(row.id)} className="w-6 h-6 rounded-full bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition flex items-center justify-center"><i className="fa-solid fa-minus text-[10px]"></i></button>} </div> ))} <button onClick={handleAddAvgRow} className="w-full py-1.5 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-xs text-gray-500 hover:text-indigo-500 hover:border-indigo-300 transition flex items-center justify-center gap-1"><i className="fa-solid fa-plus"></i> 추가 매수 입력</button></div>
@@ -1672,16 +1616,13 @@
 
             const renderSimulation = () => (
                 <div className="space-y-6">
-                    {/* Result Dashboard Card (Image Style) - Compact Version */}
                     {simResult.summary && (
                         <div className={`relative w-full overflow-hidden rounded-[24px] p-5 sm:p-8 text-white shadow-xl transition-all ${simResult.summary.isSuccess ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-emerald-500/20' : 'bg-gradient-to-br from-rose-400 to-rose-600 shadow-rose-500/20'}`}>
-                            {/* Background Pattern */}
                             <div className="absolute -right-10 -bottom-16 opacity-10 transform rotate-12 pointer-events-none">
                                 <i className={`fa-solid ${simResult.summary.isSuccess ? 'fa-sack-dollar' : 'fa-file-invoice-dollar'} text-[200px]`}></i>
                             </div>
 
                             <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-                                {/* Left: Asset Info */}
                                 <div className="space-y-2 flex-1 min-w-0 w-full">
                                     <div className="flex items-center gap-2 opacity-90 mb-0.5">
                                         <i className="fa-solid fa-flag-checkered text-base"></i>
@@ -1702,7 +1643,6 @@
                                     </div>
                                 </div>
 
-                                {/* Right: Lifespan Info - Added lg:mr-24 to prevent overlap with settings button */}
                                 <div className="flex items-center gap-4 bg-white/15 backdrop-blur-md rounded-2xl p-4 sm:p-6 border border-white/20 w-full lg:w-auto min-w-[240px] shadow-inner lg:mr-24">
                                     <div className="flex-1">
                                         <div className="text-[9px] sm:text-[10px] font-bold text-white/70 tracking-widest uppercase mb-0.5">Asset Lifespan</div>
@@ -1721,11 +1661,10 @@
                                 </div>
                             </div>
 
-                            {/* Settings Button (Absolute) - Fixed Z-Index & Click Issue */}
                             <button 
                                 onClick={(e) => { 
-                                    e.stopPropagation(); // 이벤트 버블링 방지
-                                    setTempSimInputs({ ...simInputs }); // 객체 복사로 안전하게 초기화
+                                    e.stopPropagation(); 
+                                    setTempSimInputs({ ...simInputs }); 
                                     setIsSimInputModalOpen(true); 
                                 }}
                                 className="absolute top-5 right-5 sm:top-8 sm:right-8 z-50 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-3 py-1.5 rounded-full font-bold text-[11px] sm:text-xs transition-all shadow-lg border border-white/20 flex items-center gap-1.5 hover:scale-105 active:scale-95 cursor-pointer"
@@ -1736,12 +1675,10 @@
                         </div>
                     )}
 
-                    {/* Main Chart */}
                     <AppleCard title="자산 흐름 시뮬레이션" subTitle="연령별 자산 변화 및 고갈 시점 예측" rightContent={<div className="text-[10px] text-gray-400 font-medium bg-gray-100 dark:bg-[#2C2C2E] px-2 py-1 rounded-lg">인플레이션 {simInputs.inflationRate}% 적용</div>}>
                         <SimulationChart history={simResult.history} />
                     </AppleCard>
 
-                    {/* Input Modal */}
                     {isSimInputModalOpen && tempSimInputs && (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
                             <div className="bg-white dark:bg-[#1C1C1E] w-full max-w-5xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200 dark:border-white/10">
@@ -1754,7 +1691,6 @@
                                 </div>
                                 <div className="flex-1 overflow-y-auto p-6 bg-[#F5F5F7] dark:bg-black/20">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        {/* 1. 기본 설정 (Basic Info) */}
                                         <div className="bg-white dark:bg-[#2C2C2E] p-5 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm">
                                             <h3 className="text-sm font-black text-slate-800 dark:text-white mb-4 flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-white/5">
                                                 <div className="w-6 h-6 rounded-md bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center"><i className="fa-solid fa-user-gear text-[10px]"></i></div>
@@ -1767,7 +1703,6 @@
                                             </div>
                                         </div>
 
-                                        {/* 2. 자산 현황 (Assets) */}
                                         <div className="bg-white dark:bg-[#2C2C2E] p-5 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm">
                                             <h3 className="text-sm font-black text-slate-800 dark:text-white mb-4 flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-white/5">
                                                 <div className="w-6 h-6 rounded-md bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center"><i className="fa-solid fa-sack-dollar text-[10px]"></i></div>
@@ -1782,7 +1717,6 @@
                                             </div>
                                         </div>
 
-                                        {/* 3. 소득 설정 (Income) */}
                                         <div className="bg-white dark:bg-[#2C2C2E] p-5 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm">
                                             <h3 className="text-sm font-black text-slate-800 dark:text-white mb-4 flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-white/5">
                                                 <div className="w-6 h-6 rounded-md bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center"><i className="fa-solid fa-money-bill-trend-up text-[10px]"></i></div>
@@ -1821,7 +1755,6 @@
                                             </div>
                                         </div>
 
-                                        {/* 4. 지출 설정 (Expense) */}
                                         <div className="bg-white dark:bg-[#2C2C2E] p-5 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm">
                                             <h3 className="text-sm font-black text-slate-800 dark:text-white mb-4 flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-white/5">
                                                 <div className="w-6 h-6 rounded-md bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 flex items-center justify-center"><i className="fa-solid fa-cart-shopping text-[10px]"></i></div>
@@ -1858,7 +1791,6 @@
                         </div>
                     )}
 
-                    {/* 인라인 시뮬레이션 표 */}
                     <div className="mt-6 bg-white dark:bg-slate-800 p-3 rounded-xl border dark:border-slate-700 shadow-sm relative">
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                             <div className="flex items-center">
@@ -1900,11 +1832,9 @@
                 </div>
             );
 
-            // --- 렌더링 시작 ---
             return (
                 <div className={`min-h-screen transition-colors duration-200 ${isDark ? 'dark bg-black' : 'bg-[#F5F5F7]'}`}>
                     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
-                        {/* Header & Navigation */}
                         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fade-in">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0071E3] to-[#005bb5] flex items-center justify-center shadow-lg shadow-blue-500/30">
