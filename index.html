@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Investment Navigator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
@@ -16,6 +16,7 @@
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         body { font-family: 'Pretendard', sans-serif; overflow-x: hidden; background-color: #F5F5F7; }
         .dark body { background-color: #000000; }
+        .safe-pb { padding-bottom: env(safe-area-inset-bottom); }
         .apple-card { background: #fff; border-radius: 24px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow: hidden; }
         .dark .apple-card { background: #1C1C1E; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 24px rgba(0,0,0,0.25); }
         .apple-input { width: 100%; background: #F2F2F7; border: none; border-radius: 12px; padding: 12px 16px; font-size: 14px; font-weight: 600; color: #1D1D1F; text-align: right; outline: none; transition: all 0.2s; }
@@ -42,7 +43,7 @@
         const DEFAULT_EXCHANGE_RATES = { 'KRW': { krw: 1 }, 'USD': { krw: 1380 }, 'JPY': { krw: 8.90 }, 'EUR': { krw: 1480 }, 'CNY': { krw: 195 }, 'ARS': { krw: 1.35 }, 'INR': { krw: 16.5 } };
         
         const DEFAULT_ROUTINE_LINKS = { 
-            "🌅 아침 필수 체크": [ { name: "미국 시장 점검", url: "https://kr.investing.com/portfolio/", icon: "fa-list-check", color: "text-blue-500", bg: "bg-blue-50" }, { name: "Finviz 맵", url: "https://finviz.com/map.ashx", icon: "fa-map", color: "text-emerald-500", bg: "bg-emerald-50" }, { name: "글로벌마켓캡", url: "https://companiesmarketcap.com/assets-by-market-cap", icon: "fa-chart-pie", color: "text-indigo-500", bg: "bg-indigo-50" }, { name: "필라델피아 반도체", url: "https://kr.investing.com/indices/phlx-semiconductor", icon: "fa-microchip", color: "text-teal-500", bg: "bg-teal-50" }, { name: "공포 탐욕 지수", url: "https://edition.cnn.com/markets/fear-and-greed", icon: "fa-gauge-high", color: "text-orange-500", bg: "bg-orange-50" }, { name: "크립토 지표 (MVRV)", url: "https://www.bitcoinmagazinepro.com/charts/mvrv-zscore/", icon: "fa-chart-area", color: "text-amber-500", bg: "bg-amber-50" }, { name: "SILVER (은 실시간)", url: "https://www.investing.com/commodities/silver", icon: "fa-coins", color: "text-slate-500", bg: "bg-slate-100" }, { name: "은시세(순수한금)", url: "https://blog.naver.com/wolfkickbox", icon: "fa-gem", color: "text-yellow-600", bg: "bg-yellow-50" }, { name: "실버팩토리 (카페)", url: "https://cafe.naver.com/7silverfactory7", icon: "fa-comments", color: "text-slate-600", bg: "bg-slate-50" }, { name: "달러와 금 (카페)", url: "https://cafe.daum.net/DollarnGold", icon: "fa-comments", color: "text-blue-600", bg: "bg-blue-50" } ],
+            "🌅 아침 필수 체크": [ { name: "인베스팅닷컴", url: "https://kr.investing.com/portfolio/", icon: "fa-list-check", color: "text-blue-500", bg: "bg-blue-50" }, { name: "Finviz 맵", url: "https://finviz.com/map.ashx", icon: "fa-map", color: "text-emerald-500", bg: "bg-emerald-50" }, { name: "글로벌마켓캡", url: "https://companiesmarketcap.com/assets-by-market-cap", icon: "fa-chart-pie", color: "text-indigo-500", bg: "bg-indigo-50" }, { name: "필라델피아 반도체", url: "https://kr.investing.com/indices/phlx-semiconductor", icon: "fa-microchip", color: "text-teal-500", bg: "bg-teal-50" }, { name: "공포 탐욕 지수", url: "https://edition.cnn.com/markets/fear-and-greed", icon: "fa-gauge-high", color: "text-orange-500", bg: "bg-orange-50" }, { name: "크립토 지표 (MVRV)", url: "https://www.bitcoinmagazinepro.com/charts/mvrv-zscore/", icon: "fa-chart-area", color: "text-amber-500", bg: "bg-amber-50" }, { name: "SILVER (은 실시간)", url: "https://www.investing.com/commodities/silver", icon: "fa-coins", color: "text-slate-500", bg: "bg-slate-100" }, { name: "은시세(순수한금)", url: "https://blog.naver.com/wolfkickbox", icon: "fa-gem", color: "text-yellow-600", bg: "bg-yellow-50" }, { name: "실버팩토리 (카페)", url: "https://cafe.naver.com/7silverfactory7", icon: "fa-comments", color: "text-slate-600", bg: "bg-slate-50" }, { name: "달러와 금 (카페)", url: "https://cafe.daum.net/DollarnGold", icon: "fa-comments", color: "text-blue-600", bg: "bg-blue-50" } ],
             "💰 공모주 & 실적": [ { name: "38 커뮤니케이션", url: "http://www.38.co.kr/", icon: "fa-building", color: "text-purple-500", bg: "bg-purple-50" }, { name: "DART (전자공시)", url: "https://dart.fss.or.kr/", icon: "fa-file-signature", color: "text-yellow-600", bg: "bg-yellow-50" }, { name: "KIND (기업공시)", url: "https://kind.krx.co.kr/", icon: "fa-file-invoice", color: "text-blue-500", bg: "bg-blue-50" }, { name: "KRX 정보데이터", url: "http://data.krx.co.kr/", icon: "fa-database", color: "text-indigo-500", bg: "bg-indigo-50" }, { name: "Seibro (증권정보)", url: "https://seibro.or.kr/", icon: "fa-server", color: "text-indigo-600", bg: "bg-indigo-50" }, { name: "외국인 국적분류", url: "https://data.krx.co.kr/contents/MDC/HARD/hardController/MDCHARD053.cmd", icon: "fa-globe", color: "text-blue-600", bg: "bg-blue-50" } ],
             "📈 국내 시장 심층": [ { name: "Npay 증권", url: "https://stock.naver.com/", icon: "fa-n", color: "text-green-500", bg: "bg-green-50" }, { name: "매일경제신문", url: "https://media.naver.com/press/009/newspaper", icon: "fa-newspaper", color: "text-orange-600", bg: "bg-orange-50" }, { name: "버틀러 (Butler)", url: "https://www.butler.works/ko/home", icon: "fa-chart-line", color: "text-purple-600", bg: "bg-purple-50" }, { name: "한경 컨센서스", url: "https://markets.hankyung.com/consensus", icon: "fa-book-open", color: "text-red-500", bg: "bg-red-50" }, { name: "SMIC (서울대)", url: "http://snusmic.com/research/", icon: "fa-graduation-cap", color: "text-slate-700", bg: "bg-slate-100" }, { name: "FDA 승인 실시간", url: "https://www.youtube.com/user/USFoodandDrugAdmin", icon: "fa-video", color: "text-red-600", bg: "bg-red-50" }, { name: "주식/부동산 모아봐", url: "http://moabbs.com/blogs/lists", icon: "fa-users", color: "text-orange-600", bg: "bg-orange-50" }, { name: "전자잡지 (모아진)", url: "https://lib.ice.go.kr/elib/module/elib/moazine.do?menu_idx=37", icon: "fa-book-open", color: "text-yellow-600", bg: "bg-yellow-50" } ],
             "🏡 일상 & 부동산": [ { name: "호갱노노", url: "https://hogangnono.com/", icon: "fa-map-pin", color: "text-red-500", bg: "bg-red-50" }, { name: "네이버 부동산", url: "https://land.naver.com/", icon: "fa-building", color: "text-green-600", bg: "bg-green-50" }, { name: "밸류맵 (토지)", url: "https://www.valueupmap.com/", icon: "fa-map", color: "text-orange-500", bg: "bg-orange-50" }, { name: "대법원 인터넷등기소", url: "http://www.iros.go.kr/", icon: "fa-scale-balanced", color: "text-slate-700", bg: "bg-slate-100" }, { name: "민원24 (정부24)", url: "https://www.gov.kr/", icon: "fa-id-card", color: "text-blue-600", bg: "bg-blue-50" }, { name: "국세청 홈택스", url: "https://www.hometax.go.kr/", icon: "fa-file-invoice-dollar", color: "text-blue-700", bg: "bg-blue-50" }, { name: "네이버 지도", url: "https://map.naver.com/", icon: "fa-location-dot", color: "text-green-500", bg: "bg-green-50" }, { name: "구글 지도", url: "https://maps.google.com/", icon: "fa-location-dot", color: "text-amber-500", bg: "bg-amber-50" } ]
@@ -80,8 +81,24 @@
         const DEFAULT_FAVORITES = [ { code: "005930", name: "삼성전자" }, { code: "005380", name: "현대차" }, { code: "TSLA", name: "테슬라" } ];
 
         // --- HELPERS ---
-        const formatNumber = (num) => Math.round(num || 0).toLocaleString('ko-KR');
-        const formatManwon = (num) => Math.round((num || 0) / 10000).toLocaleString('ko-KR') + '만원';
+        const safeJsonParse = (key, fallback) => {
+            try {
+                const saved = localStorage.getItem(key);
+                return saved ? JSON.parse(saved) : fallback;
+            } catch (e) {
+                console.error(`Error parsing ${key} from localStorage`, e);
+                return fallback;
+            }
+        };
+
+        const formatNumber = (num) => {
+            if (num === null || num === undefined || isNaN(num)) return '0';
+            return Math.round(num).toLocaleString('ko-KR');
+        };
+        const formatManwon = (num) => {
+            if (num === null || num === undefined || isNaN(num)) return '0원';
+            return Math.round(num / 10000).toLocaleString('ko-KR') + '만원';
+        };
         const parseFormattedNumber = (val) => parseFloat(String(val).replace(/,/g, '')) || 0;
         const calculateKgPrice = (don) => (parseFormattedNumber(don) * (1000 / 3.75));
         const getPremiumColor = (val) => val < 0 ? 'text-blue-500' : val < 5 ? 'text-slate-900 dark:text-white' : val < 10 ? 'text-green-500' : 'text-red-500';
@@ -99,21 +116,6 @@
                     </div>
                 )}
                 <div className="flex-1 min-w-0 min-h-0 overflow-y-auto scrollbar-hide">{children}</div>
-            </div>
-        );
-
-        const AppleStatBox = ({ label, value, subValue, valueClassName, rightDetail }) => (
-            <div className="flex flex-col min-w-0 h-full justify-between">
-                <div className="flex justify-between items-start">
-                    <div className="flex flex-col">
-                        <span className="text-xs font-bold text-gray-400 dark:text-gray-500 mb-0.5 truncate">{label}</span>
-                        <div className="flex items-baseline gap-1 flex-wrap">
-                            <span className={`text-xl font-extrabold ${valueClassName || 'text-slate-900 dark:text-white'}`}>{value}</span>
-                            {subValue && <span className="text-xs text-gray-400">{subValue}</span>}
-                        </div>
-                    </div>
-                    {rightDetail && <div className="text-[10px] text-gray-500 dark:text-gray-400 text-right leading-tight">{rightDetail}</div>}
-                </div>
             </div>
         );
 
@@ -154,134 +156,108 @@
             return <div ref={ref} className="h-full w-full"></div>;
         });
 
-        const BridgeChart = memo(({ data, labels, colors, percents, growthRate, isDark }) => {
-            const canvasRef = useRef(null); const chartRef = useRef(null);
+        const BridgeChart = memo(({ data, labels, colors, percents, growthRate, isDark, qty }) => {
+            const canvasRef = useRef(null); 
+            const chartRef = useRef(null);
+
             useEffect(() => {
-                if (!canvasRef.current || !data) return;
+                if (typeof Chart === 'undefined') { console.warn("Chart.js not loaded"); return; }
+                if (!canvasRef.current || !data || !Array.isArray(data)) return;
                 if (chartRef.current) chartRef.current.destroy();
                 const ctx = canvasRef.current.getContext('2d');
                 
-                const lineData = data.map((d, i) => {
-                    if (i === 0 || i === data.length - 1) return d[1];
+                const safeData = data.map(d => {
+                    if (Array.isArray(d)) return [d[0] || 0, d[1] || 0];
+                    return d || 0;
+                });
+                const lineData = safeData.map((d, i) => {
+                    if (i === 0 || i === safeData.length - 1) return d[1];
                     return null;
                 });
 
-                chartRef.current = new Chart(ctx, {
-                    type: 'bar',
-                    data: { 
-                        labels, 
-                        datasets: [
-                            { 
-                                label: '평가금액',
-                                data: data, 
-                                backgroundColor: colors, 
-                                borderRadius: 4, 
-                                borderSkipped: false,
-                                order: 2
-                            },
-                            {
-                                type: 'line',
-                                label: 'Growth Flow',
-                                data: lineData,
-                                borderColor: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)',
-                                borderDash: [6, 4],
-                                pointRadius: 3,
-                                pointBackgroundColor: isDark?'#fff':'#333',
-                                borderWidth: 1.5,
-                                fill: false,
-                                spanGaps: true, 
-                                order: 1
-                            }
-                        ] 
-                    },
-                    options: { 
-                        responsive: true, maintainAspectRatio: false, 
-                        layout: { padding: { top: 50, left: 15, right: 15, bottom: 20 } },
-                        plugins: { 
-                            legend: { display: false }, 
-                            datalabels: { display: false }, 
-                            tooltip: { 
-                                callbacks: { 
-                                    label: (ctx) => { 
-                                        const raw = ctx.raw;
-                                        if (!Array.isArray(raw)) return '';
-                                        const index = ctx.dataIndex;
-                                        const isTotal = index === 0 || index === ctx.chart.data.labels.length - 1;
-                                        const start = raw[0];
-                                        const end = raw[1];
-                                        const diff = end - start;
-                                        const valToDisplay = isTotal ? end : diff;
-                                        const label = isTotal ? '평가금액' : '변동분';
-                                        const manwon = Math.round(valToDisplay / 10000);
-                                        const sign = (valToDisplay > 0 && !isTotal) ? '+' : '';
-                                        const formatted = `${sign}${manwon.toLocaleString()}만원`;
-                                        return `${label}: ${formatted}`; 
+                try {
+                    chartRef.current = new Chart(ctx, {
+                        type: 'bar',
+                        data: { 
+                            labels, 
+                            datasets: [
+                                { label: '평가금액', data: safeData, backgroundColor: colors, borderRadius: 4, borderSkipped: false, order: 2 },
+                                { type: 'line', label: 'Growth Flow', data: lineData, borderColor: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)', borderDash: [6, 4], pointRadius: 3, pointBackgroundColor: isDark?'#fff':'#333', borderWidth: 1.5, fill: false, spanGaps: true, order: 1 }
+                            ] 
+                        },
+                        options: { 
+                            responsive: true, maintainAspectRatio: false, 
+                            layout: { padding: { top: 50, left: 15, right: 15, bottom: 20 } },
+                            plugins: { 
+                                legend: { display: false }, datalabels: { display: false }, 
+                                tooltip: { 
+                                    callbacks: { 
+                                        label: (ctx) => { 
+                                            const raw = ctx.raw;
+                                            if (!Array.isArray(raw)) return '';
+                                            const index = ctx.dataIndex;
+                                            const isTotal = index === 0 || index === ctx.chart.data.labels.length - 1;
+                                            const start = raw[0], end = raw[1];
+                                            const diff = end - start;
+                                            const valToDisplayUnit = isTotal ? end : diff;
+                                            const totalVal = valToDisplayUnit * (qty || 0);
+                                            const manwon = Math.round(totalVal / 10000);
+                                            const label = isTotal ? '총 평가액' : '변동 기여분';
+                                            const sign = (totalVal > 0 && !isTotal) ? '+' : '';
+                                            return `${label}: ${sign}${manwon.toLocaleString()}만원`; 
+                                        } 
                                     } 
                                 } 
-                            } 
-                        }, 
-                        scales: { x: { grid: { display: false }, ticks: { color: isDark ? '#aaa' : '#666', font: {size: 11, weight:'bold'} } }, y: { display: false } } 
-                    },
-                    plugins: [{
-                        id: 'customLabels',
-                        afterDraw: (chart) => {
-                             const { ctx } = chart;
-                             const meta = chart.getDatasetMeta(0);
-                             
-                             meta.data.forEach((bar, index) => {
-                                 const value = data[index][1];
-                                 const isTotal = index === 0 || index === data.length - 1;
-                                 
-                                 ctx.save();
-                                 ctx.textAlign = 'center';
-                                 ctx.textBaseline = 'bottom';
-                                 
-                                 const labelY = bar.y - 12;
+                            }, 
+                            scales: { x: { grid: { display: false }, ticks: { color: isDark ? '#aaa' : '#666', font: {size: 11, weight:'bold'} } }, y: { display: false } } 
+                        },
+                        plugins: [{
+                            id: 'customLabels',
+                            afterDraw: (chart) => {
+                                const { ctx } = chart;
+                                const meta = chart.getDatasetMeta(0);
+                                if (!meta.data.length) return;
+                                
+                                meta.data.forEach((bar, index) => {
+                                    const value = safeData[index][1];
+                                    const isTotal = index === 0 || index === safeData.length - 1;
+                                    ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+                                    const labelY = bar.y - 12;
 
-                                 if (isTotal) {
-                                     ctx.font = 'bold 11px Pretendard';
-                                     ctx.fillStyle = isDark ? '#fff' : '#1D1D1F';
-                                     const displayVal = Math.round(value/10000).toLocaleString(); 
-                                     ctx.fillText(displayVal, bar.x, labelY);
-                                 } else {
-                                     if (percents && percents[index] !== null) {
-                                         const pct = percents[index];
-                                         const text = (pct > 0 ? '+' : '') + pct.toFixed(1) + '%';
-                                         
-                                         ctx.font = 'bold 11px Pretendard';
-                                         ctx.fillStyle = pct >= 0 ? (isDark ? '#FF453A' : '#FF3B30') : '#0071E3';
-                                         ctx.fillText(text, bar.x, labelY);
-                                     }
-                                 }
-                                 ctx.restore();
-                             });
-                             
-                             if (growthRate !== undefined) {
-                                 const startBar = meta.data[0]; 
-                                 const endBar = meta.data[meta.data.length - 1];
-                                 const midX = (startBar.x + endBar.x) / 2; 
-                                 
-                                 const lineMidY = Math.min(startBar.y, endBar.y) - 30; 
-                                 const midY = lineMidY; 
-                                 
-                                 const text = (growthRate > 0 ? '+' : '') + growthRate.toFixed(1) + '%';
-                                 ctx.save(); ctx.font = 'bold 12px Pretendard';
-                                 const textWidth = ctx.measureText(text).width + 16; const textHeight = 24;
-                                 
-                                 ctx.fillStyle = isDark ? '#333' : '#fff';
-                                 ctx.shadowColor = 'rgba(0,0,0,0.15)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 3;
-                                 ctx.beginPath(); ctx.roundRect(midX - textWidth/2, midY - textHeight/2, textWidth, textHeight, 12); ctx.fill();
-                                 
-                                 ctx.shadowColor = 'transparent';
-                                 ctx.strokeStyle = growthRate >= 0 ? '#FF3B30' : '#0071E3'; ctx.lineWidth = 1.5; ctx.stroke();
-                                 ctx.fillStyle = growthRate >= 0 ? '#FF3B30' : '#0071E3'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, midX, midY);
-                                 ctx.restore();
-                             }
-                        }
-                    }]
-                });
+                                    if (isTotal) {
+                                        ctx.font = 'bold 11px Pretendard'; ctx.fillStyle = isDark ? '#fff' : '#1D1D1F';
+                                        ctx.fillText(Math.round(value/10000).toLocaleString(), bar.x, labelY);
+                                    } else {
+                                        if (percents && percents[index] !== null) {
+                                            const pct = percents[index] || 0;
+                                            const text = (pct > 0 ? '+' : '') + pct.toFixed(1) + '%';
+                                            ctx.font = 'bold 11px Pretendard'; ctx.fillStyle = pct >= 0 ? (isDark ? '#FF453A' : '#FF3B30') : '#0071E3';
+                                            ctx.fillText(text, bar.x, labelY);
+                                        }
+                                    }
+                                    ctx.restore();
+                                });
+                                
+                                if (growthRate !== undefined && !isNaN(growthRate)) {
+                                    const startBar = meta.data[0]; const endBar = meta.data[meta.data.length - 1];
+                                    if(startBar && endBar) {
+                                        const midX = (startBar.x + endBar.x) / 2; const midY = Math.min(startBar.y, endBar.y) - 30;
+                                        const text = (growthRate > 0 ? '+' : '') + growthRate.toFixed(1) + '%';
+                                        ctx.save(); ctx.font = 'bold 12px Pretendard';
+                                        const textWidth = ctx.measureText(text).width + 16; const textHeight = 24;
+                                        ctx.fillStyle = isDark ? '#333' : '#fff'; ctx.shadowColor = 'rgba(0,0,0,0.15)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 3;
+                                        ctx.beginPath(); ctx.roundRect(midX - textWidth/2, midY - textHeight/2, textWidth, textHeight, 12); ctx.fill();
+                                        ctx.shadowColor = 'transparent'; ctx.strokeStyle = growthRate >= 0 ? '#FF3B30' : '#0071E3'; ctx.lineWidth = 1.5; ctx.stroke();
+                                        ctx.fillStyle = growthRate >= 0 ? '#FF3B30' : '#0071E3'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, midX, midY);
+                                        ctx.restore();
+                                    }
+                                }
+                            }
+                        }]
+                    });
+                } catch(err) { console.error("Chart failed:", err); }
                 return () => { if (chartRef.current) chartRef.current.destroy(); };
-            }, [data, labels, colors, isDark, percents, growthRate]);
+            }, [data, labels, colors, isDark, percents, growthRate, qty]);
             return <div className="w-full h-full"><canvas ref={canvasRef}></canvas></div>;
         });
 
@@ -298,47 +274,50 @@
         // --- MAIN APP ---
         function App() {
             const [activeTab, setActiveTab] = useState('dashboard');
+            const [activeTool, setActiveTool] = useState('target');
             const [isDark, setIsDark] = useState(false);
             const [analysisMode, setAnalysisMode] = useState('silver');
             const [expandedView, setExpandedView] = useState(null);
             const [donPrice, setDonPrice] = useState('');
             const [linkMode, setLinkMode] = useState('investment');
+            
+            // State
             const [routineMemo, setRoutineMemo] = useState(() => localStorage.getItem('invNav_routineMemo') || '');
-            const [routineLinks, setRoutineLinks] = useState(() => JSON.parse(localStorage.getItem('invNav_routineLinks')) || DEFAULT_ROUTINE_LINKS);
+            const [routineLinks, setRoutineLinks] = useState(() => safeJsonParse('invNav_routineLinks', DEFAULT_ROUTINE_LINKS));
+            const [blogLinks, setBlogLinks] = useState(() => safeJsonParse('invNav_blogLinks', DEFAULT_BLOG_LINKS));
+            const [activeRoutineTab, setActiveRoutineTab] = useState(''); 
             const [isRoutineEditMode, setIsRoutineEditMode] = useState(false);
             const [newRoutine, setNewRoutine] = useState({ category: '', name: '', url: '' });
             const [isInputModalOpen, setIsInputModalOpen] = useState(false);
 
-            // UPDATED: Stock Target inputs - Only 2 modes now (Market Cap / Direct Price)
-            const [targetInputs, setTargetInputs] = useState({ 
-                mode: 'cap', // 'cap' or 'price'
-                currentPrice: '', 
-                shares: '', 
-                currentCap: '', 
-                targetCap: '', // for cap mode
-                targetPriceInput: '' // for price mode
-            });
+            const [targetInputs, setTargetInputs] = useState({ mode: 'cap', currentPrice: '', shares: '', currentCap: '', targetCap: '', targetPriceInput: '' });
             const [ipoCalcInputs, setIpoCalcInputs] = useState({ price: '', qty: '', marginRate: 50 });
             const [avgRows, setAvgRows] = useState([{ id: 1, q: '', p: '' }]);
             const [exchInputs, setExchInputs] = useState({ base: 'USD', target: 'KRW', amount: '' });
             const [unitConv, setUnitConv] = useState({ type: 'weight', value: '', base: 'don' });
 
             const [silverInputs, setSilverInputs] = useState(() => {
-                const saved = JSON.parse(localStorage.getItem('invNav_silver_v12'));
+                const saved = safeJsonParse('invNav_silver_v12', null);
                 const defaults = { currentExch: '1,450', currentUsdPrice: '60.00', currentDomesticPrice: '3,000,000', currentShanghaiPrice: '16,000', avgPrice: '1,530,000', avgExch: '1,080' };
-                if (saved) return { ...saved, holdingQty: '1' };
-                return { ...defaults, holdingQty: '1' };
+                return saved ? { ...saved, holdingQty: '1' } : { ...defaults, holdingQty: '1' };
             });
 
             const [btcInputs, setBtcInputs] = useState(() => {
-                const saved = JSON.parse(localStorage.getItem('invNav_btc_v15'));
+                const saved = safeJsonParse('invNav_btc_v15', null);
                 const defaults = { currentBtcUsd: '74,000', currentDomesticPrice: '100,000,000', avgPrice: '70,000,000', avgExch: '1,331', currentExch: '1,450' };
-                if (saved) return { ...saved, holdingQty: '0.1' };
-                return { ...defaults, holdingQty: '0.1' };
+                return saved ? { ...saved, holdingQty: '0.1' } : { ...defaults, holdingQty: '0.1' };
             });
 
-            const [favorites, setFavorites] = useState(() => JSON.parse(localStorage.getItem('invNav_favorites_v5')) || DEFAULT_FAVORITES);
+            const [favorites, setFavorites] = useState(() => safeJsonParse('invNav_favorites_v5', DEFAULT_FAVORITES));
 
+            // Effects
+            useEffect(() => {
+                const currentData = linkMode === 'investment' ? routineLinks : blogLinks;
+                const keys = Object.keys(currentData);
+                if (keys.length > 0) setActiveRoutineTab(keys[0]);
+            }, [linkMode]);
+
+            useEffect(() => { localStorage.setItem('invNav_blogLinks', JSON.stringify(blogLinks)); }, [blogLinks]);
             useEffect(() => { if (isDark) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); }, [isDark]);
             useEffect(() => { localStorage.setItem('invNav_routineMemo', routineMemo); }, [routineMemo]);
             useEffect(() => { localStorage.setItem('invNav_favorites_v5', JSON.stringify(favorites)); }, [favorites]);
@@ -353,66 +332,43 @@
                 setter(parts.join('.'));
             };
             const applyKgPrice = () => { const kgVal = calculateKgPrice(donPrice); if (kgVal > 0) setSilverInputs(p => ({...p, currentDomesticPrice: Math.round(kgVal).toLocaleString('ko-KR')})); };
-            const handleAddRoutineLink = () => { const { category, name, url } = newRoutine; if (!category || !name || !url) return; const isBlog = linkMode === 'blogs'; const setter = isBlog ? setBlogInsightLinks : setRoutineLinks; setter(prev => ({ ...prev, [category]: [...prev[category], { name, url, icon: "fa-link", color: "text-slate-700" }] })); setNewRoutine({ category: '', name: '', url: '' }); };
-            const handleDeleteRoutineLink = (cat, idx) => { const isBlog = linkMode === 'blogs'; const setter = isBlog ? setBlogInsightLinks : setRoutineLinks; setter(prev => ({ ...prev, [cat]: prev[cat].filter((_, i) => i !== idx) })); };
+            const handleAddRoutineLink = () => { const { category, name, url } = newRoutine; if (!category || !name || !url) return; const isBlog = linkMode === 'blogs'; const setter = isBlog ? setBlogLinks : setRoutineLinks; setter(prev => ({ ...prev, [category]: [...prev[category], { name, url, icon: "fa-link", color: "text-slate-700" }] })); setNewRoutine({ category: '', name: '', url: '' }); };
+            const handleDeleteRoutineLink = (cat, idx) => { const isBlog = linkMode === 'blogs'; const setter = isBlog ? setBlogLinks : setRoutineLinks; setter(prev => ({ ...prev, [cat]: prev[cat].filter((_, i) => i !== idx) })); };
 
+            const currentRoutineData = linkMode === 'investment' ? routineLinks : blogLinks;
+
+            // Calculations
             const avgResult = useMemo(() => { let q=0, a=0; avgRows.forEach(r=>{const _q=parseFormattedNumber(r.q), _p=parseFormattedNumber(r.p); q+=_q; a+=_q*_p;}); return {totalQ:q, totalAmt:a, avg:q?a/q:0}; }, [avgRows]);
             
-            // UPDATED: Target Result logic simplified to 2 modes (Cap, Price)
             const targetResult = useMemo(() => {
-                const p = parseFormattedNumber(targetInputs.currentPrice);
-                const s = parseFormattedNumber(targetInputs.shares);
-                const cmc = parseFloat(targetInputs.currentCap) || 0;
-                
-                let tp = 0; // target price
-                let rate = 0; // target rate (%)
-                let tmc = 0; // target market cap
-
+                const p = parseFormattedNumber(targetInputs.currentPrice); const s = parseFormattedNumber(targetInputs.shares); const cmc = parseFloat(targetInputs.currentCap) || 0;
+                let tp = 0, rate = 0, tmc = 0; 
                 if (targetInputs.mode === 'cap') {
-                    tmc = parseFloat(targetInputs.targetCap) || 0;
-                    if (cmc && p) {
-                        rate = ((tmc - cmc) / cmc) * 100;
-                        tp = p * (tmc / cmc);
-                    }
-                } else if (targetInputs.mode === 'price') {
-                    tp = parseFormattedNumber(targetInputs.targetPriceInput);
-                    if (p) {
-                        rate = ((tp - p) / p) * 100;
-                        if (cmc) tmc = cmc * (tp / p);
-                    }
+                    tmc = parseFloat(targetInputs.targetCap) || 0; if (cmc && p) { rate = ((tmc - cmc) / cmc) * 100; tp = p * (tmc / cmc); }
+                } else {
+                    tp = parseFormattedNumber(targetInputs.targetPriceInput); if (p) { rate = ((tp - p) / p) * 100; if (cmc) tmc = cmc * (tp / p); }
                 }
-
-                return { 
-                    targetPrice: tp, 
-                    rate, 
-                    expectedVal: tp * s, 
-                    expectedProfit: (tp - p) * s, 
-                    targetCap: tmc 
-                };
+                return { targetPrice: tp, rate, expectedVal: tp * s, expectedProfit: (tp - p) * s, targetCap: tmc };
             }, [targetInputs]);
             
             const profitData = useMemo(() => {
                 const isSilver = analysisMode === 'silver';
                 const inputs = isSilver ? silverInputs : btcInputs;
-                
-                // Ensure currentExch has a default if empty, crucial for BTC
                 const curExch = parseFormattedNumber(inputs.currentExch) || parseFormattedNumber(inputs.avgExch) || 1400; 
                 const avgExch = parseFormattedNumber(inputs.avgExch) || 1400; 
                 const curUsd = parseFormattedNumber(isSilver ? inputs.currentUsdPrice : inputs.currentBtcUsd);
                 const avgPriceRaw = parseFormattedNumber(inputs.avgPrice);
                 const userQty = parseFormattedNumber(inputs.holdingQty);
                 const curDomestic = parseFormattedNumber(inputs.currentDomesticPrice);
-                
-                const unitMult = 1; 
-                const factor = isSilver ? TROY_OZ_TO_KG : 1;
+                const unitMult = 1; const factor = isSilver ? TROY_OZ_TO_KG : 1;
 
                 const unitBaseCost = avgPriceRaw * unitMult;
                 const unitValAtBuyExch = curUsd * avgExch * factor;
-                const unitValAtCurExch = curUsd * curExch * factor; // Now uses correctly populated curExch
+                const unitValAtCurExch = curUsd * curExch * factor; 
                 const unitActualVal = curDomestic * unitMult;
 
                 const unitPriceEffect = unitValAtBuyExch - unitBaseCost;
-                const unitExchEffect = unitValAtCurExch - unitValAtBuyExch; // (curExch - avgExch) * USD Value
+                const unitExchEffect = unitValAtCurExch - unitValAtBuyExch; 
                 const unitPremiumEffect = unitActualVal - unitValAtCurExch;
                 const unitTotalProfit = unitActualVal - unitBaseCost;
                 const profitRate = unitBaseCost ? (unitTotalProfit / unitBaseCost) * 100 : 0;
@@ -420,45 +376,24 @@
                 const pricePct = unitBaseCost ? (unitPriceEffect / unitBaseCost) * 100 : 0;
                 const exchPct = unitBaseCost ? (unitExchEffect / unitBaseCost) * 100 : 0;
                 const kPremPct = unitValAtCurExch ? (unitPremiumEffect / unitValAtCurExch) * 100 : 0; 
-                const sPremPct = isSilver ? ((parseFormattedNumber(silverInputs.currentShanghaiPrice) - (curUsd * 7.25 * TROY_OZ_TO_KG)) / (curUsd * 7.25 * TROY_OZ_TO_KG)) * 100 : 0;
+                
+                const shanghaiBase = (curUsd * 7.25 * TROY_OZ_TO_KG);
+                const sPremPct = (isSilver && shanghaiBase) ? ((parseFormattedNumber(silverInputs.currentShanghaiPrice) - shanghaiBase) / shanghaiBase) * 100 : 0;
 
-                const start = unitBaseCost;
-                const s1 = start + unitPriceEffect;
-                const s2 = s1 + unitExchEffect;
-                const end = s2 + unitPremiumEffect;
-
-                const chartData = [
-                    [0, start], [start, s1], [s1, s2], [s2, end], [0, end]
-                ];
+                const start = unitBaseCost; const s1 = start + unitPriceEffect; const s2 = s1 + unitExchEffect; const end = s2 + unitPremiumEffect;
+                const chartData = [[0, start], [start, s1], [s1, s2], [s2, end], [0, end]];
                 const percents = [null, pricePct, exchPct, kPremPct, null];
                 
                 const intlToKrw1kg = curUsd * curExch * (isSilver ? TROY_OZ_TO_KG : 1);
-                
-                const domToUsdUnit = isSilver 
-                    ? (curDomestic / curExch) / TROY_OZ_TO_KG 
-                    : (curDomestic / curExch); 
-                
-                // FIXED: Use direct 7.25 USD/CNY rate for consistency with premium calc
-                // Shanghai (Yuan/kg) / 7.25 (Yuan/USD) / 32.15 (oz/kg) = USD/oz
-                const shanghaiToUsdOz = isSilver 
-                    ? (parseFormattedNumber(silverInputs.currentShanghaiPrice) / 7.25) / TROY_OZ_TO_KG 
-                    : 0;
-                
+                const domToUsdUnit = (curExch) ? (isSilver ? (curDomestic / curExch) / TROY_OZ_TO_KG : (curDomestic / curExch)) : 0;
+                const shanghaiToUsdOz = isSilver ? (parseFormattedNumber(silverInputs.currentShanghaiPrice) / 7.25) / TROY_OZ_TO_KG : 0;
                 const totalExchEffect = unitExchEffect * userQty;
 
                 return { 
-                    actualRate: profitRate, kPremiumPercent: kPremPct, sPremiumPercent: sPremPct, 
-                    totalProfit: unitTotalProfit * userQty, 
-                    totalValuation: unitActualVal * userQty, 
-                    avgPrice: unitBaseCost, 
-                    qty: userQty,
-                    chartData,
-                    percents,
-                    intlToKrw1kg, domToUsdUnit, shanghaiToUsdOz,
-                    priceContrib: unitPriceEffect * userQty,
-                    exchContrib: totalExchEffect,
-                    premContrib: unitPremiumEffect * userQty,
-                    totalExchEffect
+                    actualRate: profitRate || 0, kPremiumPercent: kPremPct || 0, sPremiumPercent: sPremPct || 0, 
+                    totalProfit: (unitTotalProfit * userQty) || 0, totalValuation: (unitActualVal * userQty) || 0, 
+                    avgPrice: unitBaseCost, qty: userQty, chartData, percents, intlToKrw1kg, domToUsdUnit, shanghaiToUsdOz,
+                    priceContrib: (unitPriceEffect * userQty) || 0, exchContrib: totalExchEffect || 0, premContrib: (unitPremiumEffect * userQty) || 0, totalExchEffect
                 };
             }, [analysisMode, silverInputs, btcInputs]);
 
@@ -473,30 +408,19 @@
                                 </div>
                                 <div className="bg-slate-50 dark:bg-[#2C2C2E] p-2.5 rounded-2xl flex flex-col items-center justify-center shadow-sm h-full">
                                     <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-0.5">상하이($/oz)</span>
-                                    {/* Single line for Price + Premium */}
                                     <div className="flex items-center gap-1">
                                         <span className="text-lg font-black text-slate-900 dark:text-white leading-none">{profitData.shanghaiToUsdOz.toFixed(2)}</span>
-                                        <span className={`text-[10px] font-bold ${profitData.sPremiumPercent >= 0 ? 'text-red-500' : 'text-blue-500'}`}>
-                                            ({profitData.sPremiumPercent > 0 ? '+' : ''}{profitData.sPremiumPercent.toFixed(2)}%)
-                                        </span>
+                                        <span className={`text-[10px] font-bold ${profitData.sPremiumPercent >= 0 ? 'text-red-500' : 'text-blue-500'}`}>({profitData.sPremiumPercent > 0 ? '+' : ''}{profitData.sPremiumPercent.toFixed(2)}%)</span>
                                     </div>
                                 </div>
                                 <div className="bg-red-50 dark:bg-red-900/20 p-2.5 rounded-2xl flex flex-col items-center justify-center shadow-sm border border-red-100 dark:border-red-900/30 h-full">
                                     <span className="text-[10px] font-bold text-red-500 dark:text-red-400 mb-0.5">국내($/oz)</span>
                                     <div className="flex flex-col items-center">
-                                        {/* Line 1: USD Value + Premium */}
                                         <div className="flex items-center gap-1 mb-1">
-                                            <span className="text-lg font-black text-slate-900 dark:text-white leading-none">
-                                                {profitData.domToUsdUnit.toFixed(2)}
-                                            </span>
-                                            <span className={`text-[10px] font-bold ${profitData.kPremiumPercent >= 0 ? 'text-red-500' : 'text-blue-500'}`}>
-                                                ({profitData.kPremiumPercent > 0 ? '+' : ''}{profitData.kPremiumPercent.toFixed(2)}%)
-                                            </span>
+                                            <span className="text-lg font-black text-slate-900 dark:text-white leading-none">{profitData.domToUsdUnit.toFixed(2)}</span>
+                                            <span className={`text-[10px] font-bold ${profitData.kPremiumPercent >= 0 ? 'text-red-500' : 'text-blue-500'}`}>({profitData.kPremiumPercent > 0 ? '+' : ''}{profitData.kPremiumPercent.toFixed(2)}%)</span>
                                         </div>
-                                        {/* Line 2: KRW Value - Red, Bold */}
-                                        <span className="text-sm font-black text-red-600 dark:text-red-400 leading-none">
-                                            {silverInputs.currentDomesticPrice}
-                                        </span>
+                                        <span className="text-sm font-black text-red-600 dark:text-red-400 leading-none">{silverInputs.currentDomesticPrice}</span>
                                     </div>
                                 </div>
                             </>
@@ -509,19 +433,11 @@
                                 <div className="col-span-2 bg-red-50 dark:bg-red-900/20 p-2.5 rounded-2xl flex flex-col items-center justify-center shadow-sm border border-red-100 dark:border-red-900/30 h-full">
                                     <span className="text-[10px] font-bold text-red-500 dark:text-red-400 mb-0.5">국내($/원)</span>
                                     <div className="flex flex-col items-center">
-                                         {/* Line 1: USD Value + Premium */}
                                         <div className="flex items-center gap-1 mb-1">
-                                            <span className="text-lg font-black text-slate-900 dark:text-white leading-none">
-                                                {formatNumber(profitData.domToUsdUnit)}
-                                            </span>
-                                            <span className={`text-[10px] font-bold ${profitData.kPremiumPercent >= 0 ? 'text-red-500' : 'text-blue-500'}`}>
-                                                ({profitData.kPremiumPercent > 0 ? '+' : ''}{profitData.kPremiumPercent.toFixed(2)}%)
-                                            </span>
+                                            <span className="text-lg font-black text-slate-900 dark:text-white leading-none">{formatNumber(profitData.domToUsdUnit)}</span>
+                                            <span className={`text-[10px] font-bold ${profitData.kPremiumPercent >= 0 ? 'text-red-500' : 'text-blue-500'}`}>({profitData.kPremiumPercent > 0 ? '+' : ''}{profitData.kPremiumPercent.toFixed(2)}%)</span>
                                         </div>
-                                        {/* Line 2: KRW Value */}
-                                        <span className="text-sm font-black text-red-600 dark:text-red-400 leading-none">
-                                            {btcInputs.currentDomesticPrice}
-                                        </span>
+                                        <span className="text-sm font-black text-red-600 dark:text-red-400 leading-none">{btcInputs.currentDomesticPrice}</span>
                                     </div>
                                 </div>
                             </>
@@ -544,14 +460,8 @@
                             <div className="space-y-3">
                                 <div className="flex items-center gap-2 text-sm font-bold text-slate-500"><i className="fa-solid fa-money-bill-transfer"></i> 환율 설정</div>
                                 <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="text-[10px] text-gray-400 mb-1 block">매입 환율 (Avg)</label>
-                                        <input className="apple-input" value={analysisMode==='silver'?silverInputs.avgExch:btcInputs.avgExch} onChange={e=>analysisMode==='silver'?handleCommaChange(e,v=>setSilverInputs({...silverInputs,avgExch:v})):handleCommaChange(e,v=>setBtcInputs({...btcInputs,avgExch:v}))} />
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] text-gray-400 mb-1 block">실시간 (자동/수동)</label>
-                                        <input className="apple-input bg-gray-100 dark:bg-[#2C2C2E]" value={analysisMode==='silver'?silverInputs.currentExch:btcInputs.currentExch} onChange={e=>analysisMode==='silver'?handleCommaChange(e,v=>setSilverInputs({...silverInputs,currentExch:v})):handleCommaChange(e,v=>setBtcInputs({...btcInputs,currentExch:v}))} />
-                                    </div>
+                                    <div><label className="text-[10px] text-gray-400 mb-1 block">매입 환율 (Avg)</label><input className="apple-input" value={analysisMode==='silver'?silverInputs.avgExch:btcInputs.avgExch} onChange={e=>analysisMode==='silver'?handleCommaChange(e,v=>setSilverInputs({...silverInputs,avgExch:v})):handleCommaChange(e,v=>setBtcInputs({...btcInputs,avgExch:v}))} /></div>
+                                    <div><label className="text-[10px] text-gray-400 mb-1 block">실시간 (자동/수동)</label><input className="apple-input bg-gray-100 dark:bg-[#2C2C2E]" value={analysisMode==='silver'?silverInputs.currentExch:btcInputs.currentExch} onChange={e=>analysisMode==='silver'?handleCommaChange(e,v=>setSilverInputs({...silverInputs,currentExch:v})):handleCommaChange(e,v=>setBtcInputs({...btcInputs,currentExch:v}))} /></div>
                                 </div>
                             </div>
                             <div className="space-y-3">
@@ -586,17 +496,17 @@
                     <div className="space-y-3">
                         <div>
                             <div className="text-[10px] font-bold text-slate-500 mb-1">글로벌 거래소</div>
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-2 gap-1.5">
                                 {[{n:'바이낸스',u:'https://www.binance.com/ko'},{n:'코인베이스',u:'https://www.coinbase.com/'},{n:'업비트',u:'https://upbit.com/'},{n:'코빗',u:'https://www.korbit.co.kr/'}].map((l,i)=>(
-                                    <a key={i} href={l.u} target="_blank" className="bg-slate-50 dark:bg-white/5 p-2 rounded-lg text-center text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 transition">{l.n}</a>
+                                    <a key={i} href={l.u} target="_blank" className="bg-slate-50 dark:bg-white/5 py-1.5 px-2 rounded-lg text-center text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 transition">{l.n}</a>
                                 ))}
                             </div>
                         </div>
                         <div className="pt-2 border-t dark:border-white/10">
                             <div className="text-[10px] font-bold text-slate-500 mb-1">시장 데이터</div>
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-2 gap-1.5">
                                 {[{n:'코인마켓캡',u:'https://coinmarketcap.com/ko/'},{n:'김프가',u:'https://kimpga.com/'},{n:'코인글래스',u:'https://www.coinglass.com/ko'},{n:'크립토퀀트',u:'https://cryptoquant.com/'}].map((l,i)=>(
-                                    <a key={i} href={l.u} target="_blank" className="bg-slate-50 dark:bg-white/5 p-2 rounded-lg text-center text-xs font-bold text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition">{l.n}</a>
+                                    <a key={i} href={l.u} target="_blank" className="bg-slate-50 dark:bg-white/5 py-1.5 px-2 rounded-lg text-center text-xs font-bold text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition">{l.n}</a>
                                 ))}
                             </div>
                         </div>
@@ -608,18 +518,21 @@
                 <div className="h-full w-full flex flex-col p-2 overflow-y-auto custom-scrollbar">
                     <div className="space-y-3">
                         <div>
-                            <div className="text-[10px] font-bold text-slate-500 mb-1">시세 확인</div>
-                            <div className="grid grid-cols-2 gap-2">
-                                {[{n:'스태커스',u:'https://cafe.naver.com/twostepstock'},{n:'순수한금',u:'https://blog.naver.com/wolfkickbox'},{n:'실버테크',u:'http://www.e-silvertech.com/'},{n:'대성금속',u:'https://www.dsmetalmall.com/sp2/goods_data_list.htm?cate_code=021001'},{n:'EastMoney',u:'https://wap.eastmoney.com/quote/stock/113.agm.html'},{n:'SMM',u:'https://www.metal.com/en'}].map((l,i)=>(
-                                    <a key={i} href={l.u} target="_blank" className="bg-slate-50 dark:bg-white/5 p-2 rounded-lg text-center text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 transition">{l.n}</a>
+                            <div className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-2">시세 확인</div>
+                            <div className="grid grid-cols-3 gap-1.5">
+                                {[
+                                    {n:'스태커스',u:'https://cafe.naver.com/twostepstock'}, {n:'순수한금',u:'https://blog.naver.com/wolfkickbox'}, {n:'실버테크',u:'http://www.e-silvertech.com/'},
+                                    {n:'대성금속',u:'https://www.dsmetalmall.com/sp2/goods_data_list.htm?cate_code=021001'}, {n:'은현물(상하이)',u:'https://en.sge.com.cn/data_SilverBenchmarkPrice'}, {n:'은선물(상하이)',u:'https://wap.eastmoney.com/quote/stock/113.agm.html'}
+                                ].map((l,i)=>(
+                                    <a key={i} href={l.u} target="_blank" className="bg-slate-50 dark:bg-white/5 py-1.5 rounded-lg text-center text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 transition truncate px-1">{l.n}</a>
                                 ))}
                             </div>
                         </div>
                         <div className="pt-2 border-t dark:border-white/10">
-                            <div className="text-[10px] font-bold text-slate-500 mb-1">커뮤니티</div>
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-2">커뮤니티</div>
+                            <div className="grid grid-cols-3 gap-1.5">
                                 {[{n:'실버팩토리',u:'https://cafe.naver.com/7silverfactory7'},{n:'달러와 금',u:'https://cafe.daum.net/DollarnGold'},{n:'불리온스타',u:'https://www.bullionstar.us/blogs/'}].map((l,i)=>(
-                                    <a key={i} href={l.u} target="_blank" className="bg-slate-50 dark:bg-white/5 p-2 rounded-lg text-center text-xs font-bold text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition">{l.n}</a>
+                                    <a key={i} href={l.u} target="_blank" className="bg-slate-50 dark:bg-white/5 py-1.5 rounded-lg text-center text-xs font-bold text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition truncate px-1">{l.n}</a>
                                 ))}
                             </div>
                         </div>
@@ -628,7 +541,7 @@
             );
 
             return (
-                <div className={`min-h-screen ${isDark ? 'dark bg-black' : 'bg-[#F5F5F7]'} transition-colors duration-300`}>
+                <div className={`min-h-screen ${isDark ? 'dark bg-black' : 'bg-[#F5F5F7]'} transition-colors duration-300 safe-pb`}>
                     <div className="max-w-7xl mx-auto p-4 space-y-6">
                         <header className="flex justify-between items-center">
                             <div className="flex items-center gap-2">
@@ -649,13 +562,26 @@
                         <main>
                             {activeTab === 'dashboard' && (
                                 <div className="space-y-4">
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <a href="https://stock.naver.com/" target="_blank" className="bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-white/5 rounded-xl p-3 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-white/5 transition shadow-sm">
+                                            <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center"><i className="fa-solid fa-chart-simple text-green-600 text-xs"></i></div>
+                                            <span className="text-xs md:text-sm font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap truncate">N Pay 증권</span>
+                                        </a>
+                                        <a href="https://kr.investing.com/portfolio/?portfolioID=MjUyaWE%2FYTVlMTsyZTQ%3D" target="_blank" className="bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-white/5 rounded-xl p-3 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-white/5 transition shadow-sm">
+                                            <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center"><i className="fa-solid fa-bullhorn text-orange-600 text-xs"></i></div>
+                                            <span className="text-xs md:text-sm font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap truncate">인베스팅닷컴</span>
+                                        </a>
+                                        <a href="https://www.38.co.kr/html/fund/?o=k" target="_blank" className="bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-white/5 rounded-xl p-3 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-white/5 transition shadow-sm">
+                                            <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center"><i className="fa-solid fa-building text-purple-600 text-xs"></i></div>
+                                            <span className="text-xs md:text-sm font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap truncate">38커뮤니케이션</span>
+                                        </a>
+                                    </div>
                                     <div className="h-10 w-full bg-white dark:bg-[#1C1C1E] border border-gray-100 dark:border-white/5 rounded-xl overflow-hidden shadow-sm flex items-center">
                                          <div className="bg-blue-500 h-full px-3 flex items-center"><i className="fa-solid fa-globe text-white text-xs"></i></div>
                                          <TradingViewTicker theme={isDark ? 'dark' : 'light'} />
                                     </div>
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                        {/* Card 1: Inputs & Main Chart */}
-                                        <AppleCard title="자산 & 시세" className="h-[600px]" rightContent={
+                                        <AppleCard title="자산 & 시세" className="h-[500px] lg:h-[600px]" rightContent={
                                             <div className="flex gap-2">
                                                 <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
                                                     <button onClick={()=>setAnalysisMode('silver')} className={`px-2 py-0.5 text-xs rounded ${analysisMode==='silver'?'bg-white shadow text-black':'text-gray-500'}`}>은</button>
@@ -666,87 +592,36 @@
                                         }>
                                             {renderInputsSimplified()}
                                         </AppleCard>
-
-                                        {/* Card 2: Asset Performance (Restructured Layout: 1x4 Grid) */}
-                                        <AppleCard title="자산 성과 분석" className="h-[600px]">
+                                        <AppleCard title="자산 성과 분석" className="h-[500px] lg:h-[600px]">
                                             <div className="flex flex-col h-full gap-4">
-                                                
-                                                {/* Top 4 Metrics - 1x4 Grid for Space Efficiency */}
-                                                <div className="grid grid-cols-4 gap-2 flex-shrink-0">
+                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 flex-shrink-0">
                                                     <div className="bg-gray-50 dark:bg-[#2C2C2E] rounded-xl p-2 flex flex-col items-center justify-center shadow-sm">
                                                         <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 mb-1">수익률</span>
-                                                        <span className={`text-sm md:text-base font-black ${profitData.actualRate >= 0 ? 'text-red-500' : 'text-blue-500'}`}>
-                                                            {profitData.actualRate > 0 ? '+' : ''}{profitData.actualRate.toFixed(1)}%
-                                                        </span>
+                                                        <span className={`text-sm md:text-base font-black ${profitData.actualRate >= 0 ? 'text-red-500' : 'text-blue-500'}`}>{profitData.actualRate > 0 ? '+' : ''}{profitData.actualRate.toFixed(1)}%</span>
                                                     </div>
                                                     <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-xl p-2 flex flex-col items-center justify-center shadow-sm border border-indigo-100 dark:border-indigo-800/30">
                                                         <span className="text-[10px] font-bold text-indigo-500 dark:text-indigo-300 mb-1">이론가</span>
-                                                        <span className="text-sm md:text-base font-black text-indigo-700 dark:text-indigo-200">
-                                                            {formatNumber(profitData.intlToKrw1kg)}
-                                                        </span>
+                                                        <span className="text-sm md:text-base font-black text-indigo-700 dark:text-indigo-200">{formatNumber(profitData.intlToKrw1kg)}</span>
                                                     </div>
                                                     <div className="bg-gray-50 dark:bg-[#2C2C2E] rounded-xl p-2 flex flex-col items-center justify-center shadow-sm">
                                                         <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 mb-1">평가손익</span>
-                                                        <span className={`text-sm md:text-base font-black ${profitData.totalProfit >= 0 ? 'text-red-500' : 'text-blue-500'}`}>
-                                                            {formatManwon(profitData.totalProfit)}
-                                                        </span>
+                                                        <span className={`text-sm md:text-base font-black ${profitData.totalProfit >= 0 ? 'text-red-500' : 'text-blue-500'}`}>{formatManwon(profitData.totalProfit)}</span>
                                                     </div>
                                                     <div className="bg-gray-50 dark:bg-[#2C2C2E] rounded-xl p-2 flex flex-col items-center justify-center shadow-sm">
                                                         <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 mb-1">총평가금</span>
-                                                        <span className="text-sm md:text-base font-black text-slate-900 dark:text-white">
-                                                            {formatManwon(profitData.totalValuation)}
-                                                        </span>
+                                                        <span className="text-sm md:text-base font-black text-slate-900 dark:text-white">{formatManwon(profitData.totalValuation)}</span>
                                                     </div>
                                                 </div>
-
-                                                {/* Summary Section (Chart) */}
-                                                <div className="flex-1 min-h-0 relative">
-                                                    <div className="absolute inset-0">
-                                                        <BridgeChart 
-                                                            data={profitData.chartData} 
-                                                            labels={['매입가','국제시세','환율효과','프리미엄','현재가']} 
-                                                            colors={['#D1D1D6', '#FF3B30', '#0071E3', '#FF9F0A', profitData.totalProfit >= 0 ? '#FF3B30' : '#0071E3']} 
-                                                            percents={profitData.percents} 
-                                                            growthRate={profitData.actualRate} 
-                                                            isDark={isDark} 
-                                                        />
-                                                    </div>
-                                                </div>
-                                                
-                                                {/* Bottom Summary Cards */}
-                                                <div className="bg-gray-50 dark:bg-[#2C2C2E] rounded-2xl p-3 grid grid-cols-3 gap-2 h-[70px] flex-shrink-0">
-                                                    <div className="flex flex-col items-center justify-center border-r border-gray-200 dark:border-white/5">
-                                                        <span className="text-[10px] text-gray-500 dark:text-gray-400 mb-1">국제시세 기여</span>
-                                                        <span className={`text-sm font-bold ${profitData.priceContrib >= 0 ? 'text-red-500' : 'text-blue-500'}`}>
-                                                            {formatManwon(profitData.priceContrib)}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex flex-col items-center justify-center border-r border-gray-200 dark:border-white/5">
-                                                        <span className="text-[10px] text-gray-500 dark:text-gray-400 mb-1">환율 기여</span>
-                                                        <span className={`text-sm font-bold ${profitData.exchContrib >= 0 ? 'text-blue-500' : 'text-blue-500'}`}>
-                                                            {formatManwon(profitData.exchContrib)}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex flex-col items-center justify-center">
-                                                        <span className="text-[10px] text-gray-500 dark:text-gray-400 mb-1">프리미엄 잔존</span>
-                                                        <span className={`text-sm font-bold text-orange-500`}>
-                                                            +{formatManwon(profitData.premContrib)}
-                                                        </span>
-                                                    </div>
-                                                </div>
+                                                <div className="flex-1 min-h-0 relative"><div className="absolute inset-0"><BridgeChart data={profitData.chartData} labels={['매입가','국제시세','환율효과','프리미엄','현재가']} colors={['#D1D1D6', '#FF3B30', '#0071E3', '#FF9F0A', profitData.totalProfit >= 0 ? '#FF3B30' : '#0071E3']} percents={profitData.percents} growthRate={profitData.actualRate} isDark={isDark} qty={profitData.qty} /></div></div>
                                             </div>
                                         </AppleCard>
                                     </div>
-
-                                    {/* Middle Row: Charts & Info */}
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-auto md:h-[320px]">
                                         {analysisMode === 'silver' ? (
                                             <>
                                                 <AppleCard title="금 시세 ($)" subTitle="FX_IDC:XAUUSD" className="h-[300px] md:h-full"><MiniChart symbol="FX_IDC:XAUUSD" theme={isDark?'dark':'light'}/></AppleCard>
                                                 <AppleCard title="금은비" subTitle="Gold/Silver Ratio" className="h-[300px] md:h-full"><MiniChart symbol="TVC:GOLDSILVER" theme={isDark?'dark':'light'}/></AppleCard>
-                                                <AppleCard title="국내/상하이 정보" subTitle="주요 링크" className="h-[300px] md:h-full">
-                                                    {renderShanghaiInfo()}
-                                                </AppleCard>
+                                                <AppleCard title="국내/상하이 정보" subTitle="주요 링크" className="h-[300px] md:h-full">{renderShanghaiInfo()}</AppleCard>
                                             </>
                                         ) : (
                                             <>
@@ -756,7 +631,6 @@
                                             </>
                                         )}
                                     </div>
-
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-auto md:h-[600px]">
                                         <AppleCard title="S&P 500 Map" className="h-[400px] md:h-full" onExpand={()=>setExpandedView('heatmap')}><TradingViewHeatmap theme={isDark?'dark':'light'} /></AppleCard>
                                         <AppleCard title="IPO & 일정" className="h-[500px] md:h-full" onExpand={()=>setExpandedView('calendar')} rightContent={<div className="text-[9px] bg-yellow-100 px-1.5 py-0.5 rounded text-yellow-800">Calendar</div>}><IpoCalendarWidget isDark={isDark} /></AppleCard>
@@ -764,151 +638,181 @@
                                 </div>
                             )}
                             
-                            {/* --- RESTORED ROUTINE TAB (2x2 Grid) --- */}
                             {activeTab === 'routine' && (
-                                <div className="flex flex-col lg:flex-row gap-6 h-[80vh]">
-                                    <div className="flex-1 min-w-0 overflow-y-auto pr-1 custom-scrollbar">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <div className="flex bg-[#E5E5EA] dark:bg-[#2C2C2E] p-1 rounded-xl">
-                                                <button onClick={() => setLinkMode('investment')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${linkMode === 'investment' ? 'bg-white dark:bg-[#636366] text-black force-dark-white shadow-sm' : 'text-gray-400'}`}>투자 루틴</button>
-                                                <button onClick={() => setLinkMode('blogs')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${linkMode === 'blogs' ? 'bg-white dark:bg-[#636366] text-black force-dark-white shadow-sm' : 'text-gray-400'}`}>인사이트 블로그</button>
-                                            </div>
-                                            <div className="lg:hidden">
-                                                <button onClick={() => setIsRoutineEditMode(!isRoutineEditMode)} className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all ${isRoutineEditMode ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-[#2C2C2E] text-slate-600 dark:text-slate-300 border border-gray-200 dark:border-white/10'}`}>
-                                                    <i className={`fa-solid ${isRoutineEditMode ? 'fa-check' : 'fa-pen-to-square'}`}></i>
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {Object.entries(linkMode === 'blogs' ? DEFAULT_BLOG_LINKS : DEFAULT_ROUTINE_LINKS).map(([cat, links], idx) => (
-                                                <AppleCard key={cat} title={cat.split('(')[0]} className="h-full">
-                                                    <div className="grid grid-cols-2 gap-2">
-                                                        {links.map((link, i) => (
-                                                            <div key={i} className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition border border-transparent hover:border-gray-100 dark:hover:border-white/10 group relative">
-                                                                <div className={`w-7 h-7 rounded-md flex items-center justify-center ${link.bg || 'bg-slate-100'} flex-shrink-0`}>
-                                                                    <i className={`fa-solid ${link.icon || 'fa-link'} ${link.color || 'text-slate-500'} text-[11px]`}></i>
-                                                                </div>
-                                                                <a href={link.url} target="_blank" className="flex-1 text-xs font-bold text-slate-600 dark:text-slate-300 truncate">{link.name}</a>
-                                                                <i className="fa-solid fa-arrow-up-right-from-square text-[9px] text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity ml-auto"></i>
-                                                                {isRoutineEditMode && (
-                                                                    <button onClick={() => handleDeleteRoutineLink(cat, i)} className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-red-100 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition shadow-sm z-10">
-                                                                        <i className="fa-solid fa-minus text-[10px]"></i>
-                                                                    </button>
-                                                                )}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </AppleCard>
-                                            ))}
+                                <div className="flex flex-col h-[calc(100vh-140px)]">
+                                    <div className="flex justify-center mb-4 shrink-0">
+                                        <div className="flex bg-[#E5E5EA] dark:bg-[#2C2C2E] p-1 rounded-xl">
+                                            <button onClick={() => setLinkMode('investment')} className={`px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition-all ${linkMode === 'investment' ? 'bg-white dark:bg-[#636366] text-black force-dark-white shadow-sm' : 'text-gray-400'}`}>투자 루틴</button>
+                                            <button onClick={() => setLinkMode('blogs')} className={`px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition-all ${linkMode === 'blogs' ? 'bg-white dark:bg-[#636366] text-black force-dark-white shadow-sm' : 'text-gray-400'}`}>인사이트 블로그</button>
                                         </div>
                                     </div>
-
-                                    {/* Right Column: Tools Sidebar */}
-                                    <div className="w-full lg:w-[320px] flex-shrink-0 flex flex-col gap-4">
-                                        <div className="bg-white dark:bg-[#1C1C1E] p-4 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm lg:sticky lg:top-4 z-10">
-                                            <div className="flex justify-between items-center mb-4">
-                                                <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400">루틴 관리 도구</h4>
-                                                <button onClick={() => setIsRoutineEditMode(!isRoutineEditMode)} className={`hidden lg:flex px-3 py-1.5 rounded-lg text-xs font-bold items-center gap-2 transition-all ${isRoutineEditMode ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-[#3A3A3C] text-slate-600 dark:text-slate-300'}`}>
-                                                    <i className={`fa-solid ${isRoutineEditMode ? 'fa-check' : 'fa-pen-to-square'}`}></i>
-                                                    {isRoutineEditMode ? '완료' : '편집 모드'}
-                                                </button>
-                                            </div>
-                                            
-                                            {isRoutineEditMode && (
-                                                <div className="space-y-3 mb-4 animate-fade-in bg-indigo-50 dark:bg-indigo-900/10 p-3 rounded-xl border border-indigo-100 dark:border-indigo-800/30">
-                                                    <div className="text-[10px] font-bold text-indigo-500 mb-1">새 링크 추가</div>
-                                                    <select className="apple-input !py-1.5 !text-xs !bg-white dark:!bg-white/10 text-left" value={newRoutine.category} onChange={(e) => setNewRoutine({ ...newRoutine, category: e.target.value })}>
-                                                        <option value="">카테고리 선택</option>
-                                                        {Object.keys(linkMode === 'blogs' ? DEFAULT_BLOG_LINKS : DEFAULT_ROUTINE_LINKS).map(k => <option key={k} value={k}>{k}</option>)}
-                                                    </select>
-                                                    <input type="text" className="apple-input !py-1.5 !text-xs !bg-white dark:!bg-white/10 text-left" placeholder="이름" value={newRoutine.name} onChange={(e) => setNewRoutine({ ...newRoutine, name: e.target.value })} />
-                                                    <input type="text" className="apple-input !py-1.5 !text-xs !bg-white dark:!bg-white/10 text-left" placeholder="URL" value={newRoutine.url} onChange={(e) => setNewRoutine({ ...newRoutine, url: e.target.value })} />
-                                                    <button onClick={handleAddRoutineLink} className="w-full bg-indigo-600 text-white rounded-lg py-2 text-xs font-bold hover:bg-indigo-700 transition">추가하기</button>
+                                    <div className="flex space-x-2 bg-gray-200 dark:bg-[#1C1C1E] p-1.5 rounded-xl mb-4 overflow-x-auto shrink-0 scrollbar-hide">
+                                        {Object.keys(currentRoutineData).map(key => (
+                                            <button key={key} onClick={() => setActiveRoutineTab(key)} className={`px-4 py-2.5 rounded-lg text-xs md:text-sm font-bold whitespace-nowrap transition-all ${activeRoutineTab === key ? 'bg-white dark:bg-[#3A3A3C] text-black dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}>{key.split('(')[0]}</button>
+                                        ))}
+                                        <div className="w-px bg-gray-300 dark:bg-gray-700 mx-1"></div>
+                                        <button onClick={() => setActiveRoutineTab('memo')} className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs md:text-sm font-bold whitespace-nowrap transition-all ${activeRoutineTab === 'memo' ? 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-200 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'}`}><i className="fa-solid fa-pen-to-square"></i> 메모 & 관리</button>
+                                    </div>
+                                    <div className="flex-1 overflow-y-auto custom-scrollbar pb-4">
+                                        <div className="max-w-3xl mx-auto h-full">
+                                            {activeRoutineTab === 'memo' ? (
+                                                <div className="space-y-6 animate-fade-in">
+                                                    <div className="bg-[#FFF9C4] dark:bg-[#3d3d1f] p-6 rounded-3xl border border-yellow-200 dark:border-yellow-900/30 relative min-h-[400px] flex flex-col shadow-sm">
+                                                        <div className="flex justify-between items-center mb-4"><h4 className="text-base font-bold text-yellow-800 dark:text-yellow-200 flex items-center gap-2"><i className="fa-regular fa-lightbulb"></i> 루틴 메모장</h4><span className="text-[10px] bg-yellow-200 dark:bg-yellow-900/60 px-2 py-1 rounded-full text-yellow-800 dark:text-yellow-200">Auto Save</span></div>
+                                                        <textarea className="flex-1 w-full bg-transparent border-none outline-none text-sm text-slate-700 dark:text-slate-200 resize-none font-medium leading-loose" placeholder="오늘의 투자 아이디어, 할 일 등을 자유롭게 기록하세요..." value={routineMemo} onChange={(e) => setRoutineMemo(e.target.value)}></textarea>
+                                                    </div>
+                                                    <AppleCard title="링크 추가 및 관리" subTitle="새로운 즐겨찾기 등록">
+                                                        <div className="space-y-4">
+                                                            <div className="flex gap-2"><select className="apple-input !py-3 !text-sm bg-gray-50 dark:bg-black/20" value={newRoutine.category} onChange={(e) => setNewRoutine({ ...newRoutine, category: e.target.value })}><option value="">카테고리 선택</option>{Object.keys(currentRoutineData).map(k => <option key={k} value={k}>{k}</option>)}</select></div>
+                                                            <div className="grid grid-cols-2 gap-2"><input type="text" className="apple-input !py-3 !text-sm bg-gray-50 dark:bg-black/20 text-left" placeholder="사이트 이름" value={newRoutine.name} onChange={(e) => setNewRoutine({ ...newRoutine, name: e.target.value })} /><input type="text" className="apple-input !py-3 !text-sm bg-gray-50 dark:bg-black/20 text-left" placeholder="URL (https://...)" value={newRoutine.url} onChange={(e) => setNewRoutine({ ...newRoutine, url: e.target.value })} /></div>
+                                                            <button onClick={handleAddRoutineLink} className="w-full bg-indigo-600 text-white rounded-xl py-3 text-sm font-bold hover:bg-indigo-700 transition shadow-md">추가하기</button>
+                                                            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-white/10"><div className="flex justify-between items-center mb-2"><span className="text-xs font-bold text-gray-500">삭제 모드</span><button onClick={() => setIsRoutineEditMode(!isRoutineEditMode)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${isRoutineEditMode ? 'bg-red-500 text-white' : 'bg-gray-100 dark:bg-white/10 text-gray-500'}`}>{isRoutineEditMode ? '종료' : '활성화'}</button></div><p className="text-[10px] text-gray-400">삭제 모드를 켜고 각 카테고리 탭에서 링크를 삭제할 수 있습니다.</p></div>
+                                                        </div>
+                                                    </AppleCard>
+                                                </div>
+                                            ) : (
+                                                <div className="animate-fade-in h-full">
+                                                    {currentRoutineData[activeRoutineTab] && (
+                                                        <AppleCard title={activeRoutineTab.split('(')[0]} subTitle={activeRoutineTab.includes('(') ? activeRoutineTab.match(/\(([^)]+)\)/)[1] : "Links"} className="h-full">
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                                {currentRoutineData[activeRoutineTab].map((link, i) => (
+                                                                    <div key={i} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 transition border border-gray-100 dark:border-white/5 hover:border-blue-100 dark:hover:border-blue-900/30 group relative bg-white dark:bg-white/[0.02]">
+                                                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${link.bg || 'bg-slate-100 dark:bg-white/10'} flex-shrink-0 shadow-sm`}><i className={`fa-solid ${link.icon || 'fa-link'} ${link.color || 'text-slate-500 dark:text-slate-300'} text-base`}></i></div>
+                                                                        <a href={link.url} target="_blank" className="flex-1 text-sm font-bold text-slate-700 dark:text-slate-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{link.name}</a>
+                                                                        <div className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 dark:bg-white/5 text-gray-300 group-hover:text-blue-500 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 transition-all"><i className="fa-solid fa-arrow-up-right-from-square text-xs"></i></div>
+                                                                        {isRoutineEditMode && (<button onClick={() => handleDeleteRoutineLink(activeRoutineTab, i)} className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md hover:scale-110 transition z-10"><i className="fa-solid fa-minus text-[10px]"></i></button>)}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </AppleCard>
+                                                    )}
                                                 </div>
                                             )}
-
-                                            {/* Memo Pad */}
-                                            <div className="bg-[#FFF9C4] dark:bg-[#3d3d1f] p-4 rounded-xl border border-yellow-200 dark:border-yellow-900/30 relative min-h-[300px] flex flex-col">
-                                                <h4 className="text-xs font-bold text-yellow-800 dark:text-yellow-200 mb-2 flex items-center gap-2"><i className="fa-regular fa-lightbulb"></i> 루틴 메모장</h4>
-                                                <textarea className="flex-1 w-full bg-transparent border-none outline-none text-xs text-slate-700 dark:text-slate-200 resize-none font-medium leading-relaxed" placeholder="오늘의 투자 아이디어, 할 일 등을 기록하세요..." value={routineMemo} onChange={(e) => setRoutineMemo(e.target.value)}></textarea>
-                                                <div className="absolute bottom-2 right-3 text-[9px] text-yellow-600/50 dark:text-yellow-400/50">자동 저장됨</div>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             )}
 
-                            {/* --- RESTORED TOOLS TAB --- */}
                             {activeTab === 'tools' && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    <AppleCard title="주식 목표가 계산기" subTitle="시총 비례 또는 지정가 분석">
-                                        <div className="space-y-4">
-                                            {/* Mode Selection */}
-                                            <div className="flex bg-white rounded-lg p-1 border border-gray-200 shadow-sm">
-                                                <button onClick={() => setTargetInputs({ ...targetInputs, mode: 'cap' })} className={`flex-1 text-xs py-2 rounded-md transition-all font-bold ${targetInputs.mode === 'cap' ? 'bg-white text-black ring-1 ring-black/5 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>시총 비례</button>
-                                                <button onClick={() => setTargetInputs({ ...targetInputs, mode: 'price' })} className={`flex-1 text-xs py-2 rounded-md transition-all font-bold ${targetInputs.mode === 'price' ? 'bg-white text-black ring-1 ring-black/5 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>가격 직접</button>
-                                            </div>
-                                            
-                                            {/* Inputs */}
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="text-[10px] text-gray-400 mb-1.5 block font-bold">현재가</label>
-                                                    <input className="apple-input bg-gray-50 border border-gray-100" placeholder="0" value={targetInputs.currentPrice} onChange={e => handleCommaChange(e, v => setTargetInputs({ ...targetInputs, currentPrice: v }))} />
-                                                </div>
-                                                <div>
-                                                    <label className="text-[10px] text-gray-400 mb-1.5 block font-bold">보유 수량</label>
-                                                    <input className="apple-input bg-gray-50 border border-gray-100" placeholder="0" value={targetInputs.shares} onChange={e => handleCommaChange(e, v => setTargetInputs({ ...targetInputs, shares: v }))} />
-                                                </div>
-                                                <div>
-                                                    <label className="text-[10px] text-gray-400 mb-1.5 block font-bold">현재 시총(조)</label>
-                                                    <input className="apple-input bg-gray-50 border border-gray-100 text-center placeholder-gray-300" type="number" placeholder="예: 15.5" value={targetInputs.currentCap} onChange={e => setTargetInputs({ ...targetInputs, currentCap: e.target.value })} />
-                                                </div>
-                                                
-                                                {/* Conditional Input based on Mode */}
-                                                <div>
-                                                    <label className="text-[10px] text-gray-400 mb-1.5 block font-bold">
-                                                        {targetInputs.mode === 'cap' ? '목표 시총(조)' : '목표 단가'}
-                                                    </label>
-                                                    {targetInputs.mode === 'cap' ? (
-                                                        <input className="apple-input bg-gray-50 border border-gray-100 text-center placeholder-gray-300" type="number" placeholder="예: 30" value={targetInputs.targetCap} onChange={e => setTargetInputs({ ...targetInputs, targetCap: e.target.value })} />
-                                                    ) : (
-                                                        <input className="apple-input bg-gray-50 border border-gray-100 text-center placeholder-gray-300" placeholder="0" value={targetInputs.targetPriceInput} onChange={e => handleCommaChange(e, v => setTargetInputs({ ...targetInputs, targetPriceInput: v }))} />
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {/* Results */}
-                                            <div className="bg-[#F2F4F8] dark:bg-white/5 p-4 rounded-xl space-y-3 mt-2">
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-xs font-bold text-gray-500">목표 도달 단가</span>
-                                                    <div className="flex items-center gap-1">
-                                                        <span className="text-xs font-bold text-red-500">({targetResult.rate.toFixed(1)}%)</span>
-                                                        <span className="text-sm font-black text-black dark:text-white">{formatNumber(targetResult.targetPrice)}원</span>
+                                <div className="flex flex-col h-[calc(100vh-140px)]">
+                                    <div className="flex space-x-2 bg-gray-200 dark:bg-[#1C1C1E] p-1.5 rounded-xl mb-6 overflow-x-auto shrink-0 scrollbar-hide">
+                                         {[{ id: 'target', label: '주식 목표가', icon: 'fa-bullseye' }, { id: 'ipo', label: 'IPO/청약', icon: 'fa-building' }, { id: 'exchange', label: '환율 계산', icon: 'fa-money-bill-transfer' }, { id: 'average', label: '평단가', icon: 'fa-calculator' }, { id: 'unit', label: '단위 변환', icon: 'fa-scale-balanced' }].map(tool => (
+                                            <button key={tool.id} onClick={() => setActiveTool(tool.id)} className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs md:text-sm font-bold whitespace-nowrap transition-all flex-1 justify-center ${activeTool === tool.id ? 'bg-white dark:bg-[#3A3A3C] text-black dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}><i className={`fa-solid ${tool.icon}`}></i>{tool.label}</button>
+                                         ))}
+                                    </div>
+                                    <div className="flex-1 overflow-y-auto custom-scrollbar pb-4">
+                                        <div className="max-w-2xl mx-auto">
+                                            {activeTool === 'target' && (
+                                                <AppleCard title="주식 목표가 계산기" subTitle="시총 비례 또는 지정가 분석">
+                                                    <div className="space-y-6">
+                                                        <div className="flex bg-gray-100 dark:bg-[#2C2C2E] rounded-xl p-1 border border-gray-200 dark:border-white/5">
+                                                            <button onClick={() => setTargetInputs({ ...targetInputs, mode: 'cap' })} className={`flex-1 text-sm py-2.5 rounded-lg transition-all font-bold ${targetInputs.mode === 'cap' ? 'bg-white dark:bg-[#3A3A3C] text-black dark:text-white shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>시총 비례</button>
+                                                            <button onClick={() => setTargetInputs({ ...targetInputs, mode: 'price' })} className={`flex-1 text-sm py-2.5 rounded-lg transition-all font-bold ${targetInputs.mode === 'price' ? 'bg-white dark:bg-[#3A3A3C] text-black dark:text-white shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>가격 직접</button>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-6">
+                                                            <div><label className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 block">현재가</label><input className="apple-input bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 !py-3 !text-base" placeholder="0" value={targetInputs.currentPrice} onChange={e => handleCommaChange(e, v => setTargetInputs({ ...targetInputs, currentPrice: v }))} /></div>
+                                                            <div><label className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 block">보유 수량</label><input className="apple-input bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 !py-3 !text-base" placeholder="0" value={targetInputs.shares} onChange={e => handleCommaChange(e, v => setTargetInputs({ ...targetInputs, shares: v }))} /></div>
+                                                            <div><label className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 block">현재 시총(조)</label><input className="apple-input bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-center placeholder-gray-300 !py-3 !text-base" type="number" placeholder="예: 15.5" value={targetInputs.currentCap} onChange={e => setTargetInputs({ ...targetInputs, currentCap: e.target.value })} /></div>
+                                                            <div><label className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 block">{targetInputs.mode === 'cap' ? '목표 시총(조)' : '목표 단가'}</label>{targetInputs.mode === 'cap' ? (<input className="apple-input bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-center placeholder-gray-300 !py-3 !text-base" type="number" placeholder="예: 30" value={targetInputs.targetCap} onChange={e => setTargetInputs({ ...targetInputs, targetCap: e.target.value })} />) : (<input className="apple-input bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-center placeholder-gray-300 !py-3 !text-base" placeholder="0" value={targetInputs.targetPriceInput} onChange={e => handleCommaChange(e, v => setTargetInputs({ ...targetInputs, targetPriceInput: v }))} />)}</div>
+                                                        </div>
+                                                        <div className="bg-[#F2F4F8] dark:bg-white/5 p-6 rounded-2xl space-y-4">
+                                                            <div className="flex justify-between items-center"><span className="text-sm font-bold text-gray-500 dark:text-gray-400">목표 도달 단가</span><div className="flex items-center gap-2"><span className="text-sm font-bold text-red-500">({targetResult.rate.toFixed(1)}%)</span><span className="text-xl font-black text-black dark:text-white">{formatNumber(targetResult.targetPrice)}원</span></div></div>
+                                                            {targetInputs.mode === 'price' && (<div className="flex justify-between items-center"><span className="text-sm font-bold text-gray-500 dark:text-gray-400">예상 시가총액</span><span className="text-base font-bold text-black dark:text-white">{targetResult.targetCap ? targetResult.targetCap.toFixed(1) + '조' : '-'}</span></div>)}
+                                                            <div className="flex justify-between items-center"><span className="text-sm font-bold text-gray-500 dark:text-gray-400">예상 평가금액</span><span className="text-base font-bold text-black dark:text-white">{formatNumber(targetResult.expectedVal)}원</span></div>
+                                                            <div className="h-px bg-gray-200 dark:bg-white/10 w-full my-2"></div>
+                                                            <div className="flex justify-between items-center"><span className="text-sm font-bold text-gray-500 dark:text-gray-400">예상 수익금</span><span className="text-2xl font-black text-blue-500">{formatNumber(targetResult.expectedProfit)}원</span></div>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                {targetInputs.mode === 'price' && (
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-xs font-bold text-gray-500">예상 시가총액</span>
-                                                    <span className="text-sm font-bold text-black dark:text-white">{targetResult.targetCap ? targetResult.targetCap.toFixed(1) + '조' : '-'}</span>
-                                                </div>
-                                                )}
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-xs font-bold text-gray-500">예상 평가금액</span>
-                                                    <span className="text-sm font-bold text-black dark:text-white">{formatNumber(targetResult.expectedVal)}원</span>
-                                                </div>
-                                                <div className="h-px bg-gray-200 dark:bg-white/10 w-full my-1"></div>
-                                                <div className="flex justify-between items-center pt-1">
-                                                    <span className="text-xs font-bold text-gray-500">예상 수익금</span>
-                                                    <span className="text-lg font-black text-blue-500">{formatNumber(targetResult.expectedProfit)}원</span>
-                                                </div>
-                                            </div>
+                                                </AppleCard>
+                                            )}
+                                            {activeTool === 'ipo' && (
+                                                <AppleCard title="IPO/스팩 청약 증거금 계산기" subTitle="청약 수량별 필요 증거금 확인">
+                                                    <div className="space-y-6">
+                                                        <div className="grid grid-cols-2 gap-6">
+                                                            <div><label className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 block">공모가 (원)</label><input className="apple-input bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-center !py-3 !text-base" placeholder="2,000" value={ipoCalcInputs.price} onChange={e=>handleCommaChange(e,v=>setIpoCalcInputs({...ipoCalcInputs,price:v}))} /></div>
+                                                            <div><label className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 block">청약 수량 (주)</label><input className="apple-input bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 text-center !py-3 !text-base" placeholder="10" value={ipoCalcInputs.qty} onChange={e=>handleCommaChange(e,v=>setIpoCalcInputs({...ipoCalcInputs,qty:v}))} /></div>
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 block">증거금률 선택</label>
+                                                            <div className="flex bg-gray-100 dark:bg-[#2C2C2E] rounded-xl p-1 border border-gray-200 dark:border-white/5">
+                                                                <button onClick={()=>setIpoCalcInputs({...ipoCalcInputs, marginRate:50})} className={`flex-1 text-sm py-2.5 rounded-lg transition-all font-bold ${ipoCalcInputs.marginRate===50?'bg-white dark:bg-[#3A3A3C] text-black dark:text-white shadow-sm':'text-gray-400 hover:text-gray-600'}`}>50% (일반)</button>
+                                                                <button onClick={()=>setIpoCalcInputs({...ipoCalcInputs, marginRate:100})} className={`flex-1 text-sm py-2.5 rounded-lg transition-all font-bold ${ipoCalcInputs.marginRate===100?'bg-white dark:bg-[#3A3A3C] text-black dark:text-white shadow-sm':'text-gray-400 hover:text-gray-600'}`}>100% (우대/스팩)</button>
+                                                            </div>
+                                                        </div>
+                                                        <div className="bg-[#F2F4F8] dark:bg-white/5 p-6 rounded-2xl space-y-4">
+                                                            <div className="flex justify-between items-center"><span className="text-sm font-bold text-gray-500 dark:text-gray-400">총 청약금액</span><span className="text-xl font-black text-black dark:text-white">{formatNumber(parseFormattedNumber(ipoCalcInputs.price)*parseFormattedNumber(ipoCalcInputs.qty))}원</span></div>
+                                                            <div className="h-px bg-gray-200 dark:bg-white/10 w-full my-2"></div>
+                                                            <div className="flex justify-between items-center"><span className="text-sm font-bold text-black dark:text-white">필요 증거금</span><span className="text-2xl font-black text-blue-600">{formatNumber(parseFormattedNumber(ipoCalcInputs.price)*parseFormattedNumber(ipoCalcInputs.qty)*(ipoCalcInputs.marginRate/100))}원</span></div>
+                                                        </div>
+                                                    </div>
+                                                </AppleCard>
+                                            )}
+                                            {activeTool === 'exchange' && (
+                                                <AppleCard title="실시간 환율 계산기" subTitle="주요 통화 간편 변환">
+                                                    <div className="space-y-6">
+                                                        <div className="flex gap-4 items-center justify-center py-4">
+                                                            <select className="apple-input !w-32 text-center bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 font-bold !py-3 !text-base rounded-xl" value={exchInputs.base} onChange={e=>setExchInputs({...exchInputs, base:e.target.value})}>{Object.keys(DEFAULT_EXCHANGE_RATES).map(k=><option key={k} value={k}>{k}</option>)}</select>
+                                                            <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center text-gray-400"><i className="fa-solid fa-arrow-right"></i></div>
+                                                            <select className="apple-input !w-32 text-center bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 font-bold !py-3 !text-base rounded-xl" value={exchInputs.target} onChange={e=>setExchInputs({...exchInputs, target:e.target.value})}>{Object.keys(DEFAULT_EXCHANGE_RATES).map(k=><option key={k} value={k}>{k}</option>)}</select>
+                                                        </div>
+                                                        <div><label className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 block">금액 ({exchInputs.base})</label><input className="apple-input !text-2xl !py-4 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 font-bold text-center" value={exchInputs.amount} onChange={e=>handleCommaChange(e, v=>setExchInputs({...exchInputs, amount:v}))} /></div>
+                                                        <div className="bg-[#F2F4F8] dark:bg-white/5 p-8 rounded-3xl text-center space-y-2">
+                                                            <span className="text-sm font-bold text-gray-500 dark:text-gray-400 block mb-2">환산 금액 ({exchInputs.target})</span>
+                                                            <span className="text-4xl font-black text-black dark:text-white block">{formatNumber(parseFormattedNumber(exchInputs.amount) * (DEFAULT_EXCHANGE_RATES[exchInputs.base].krw) / (DEFAULT_EXCHANGE_RATES[exchInputs.target].krw))}</span>
+                                                            <span className="text-xs font-bold text-gray-400 block mt-4">적용 환율: 1 {exchInputs.base} = {formatNumber((DEFAULT_EXCHANGE_RATES[exchInputs.base].krw) / (DEFAULT_EXCHANGE_RATES[exchInputs.target].krw))} {exchInputs.target}</span>
+                                                        </div>
+                                                    </div>
+                                                </AppleCard>
+                                            )}
+                                            {activeTool === 'average' && (
+                                                <AppleCard title="평단가 계산기" subTitle="물타기 시뮬레이션">
+                                                    <div className="space-y-4">
+                                                        <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                                            {avgRows.map((r,i)=>(
+                                                                <div key={r.id} className="flex gap-3 items-center bg-gray-50 dark:bg-white/5 p-3 rounded-xl border border-transparent hover:border-gray-200 dark:hover:border-white/10 transition-colors">
+                                                                    <div className="w-6 h-6 rounded-full bg-white dark:bg-white/10 flex items-center justify-center text-xs font-bold text-gray-400 shadow-sm">{i+1}</div>
+                                                                    <div className="flex-1 grid grid-cols-2 gap-3"><div><label className="text-[10px] text-gray-400 block mb-1 ml-1">수량</label><input className="apple-input !py-2 text-sm bg-white dark:bg-black/20" placeholder="수량" value={r.q} onChange={e=>{const n=[...avgRows]; n[i].q=e.target.value; setAvgRows(n)}} /></div><div><label className="text-[10px] text-gray-400 block mb-1 ml-1">단가</label><input className="apple-input !py-2 text-sm bg-white dark:bg-black/20" placeholder="단가" value={r.p} onChange={e=>{const n=[...avgRows]; n[i].p=e.target.value; setAvgRows(n)}} /></div></div>
+                                                                    {avgRows.length > 1 && (<button onClick={()=>{const n=avgRows.filter(row=>row.id!==r.id); setAvgRows(n)}} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 transition"><i className="fa-solid fa-trash text-sm"></i></button>)}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                        <button onClick={()=>setAvgRows([...avgRows,{id:Date.now(),q:'',p:''}])} className="w-full py-3 bg-gray-100 dark:bg-white/10 rounded-xl text-sm font-bold text-gray-500 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/20 transition flex items-center justify-center gap-2"><i className="fa-solid fa-plus"></i> 추가하기</button>
+                                                        <div className="bg-[#F2F4F8] dark:bg-white/5 p-6 rounded-2xl mt-4">
+                                                            <div className="flex justify-between items-end border-b border-gray-200 dark:border-white/10 pb-4 mb-4"><span className="text-sm font-bold text-gray-500 dark:text-gray-400">총 보유 수량</span><span className="text-lg font-bold text-black dark:text-white">{formatNumber(avgResult.totalQ)}주</span></div>
+                                                            <div className="flex justify-between items-end"><span className="text-sm font-bold text-gray-500 dark:text-gray-400">평균 단가</span><span className="text-3xl font-black text-blue-600">{formatNumber(avgResult.avg)}원</span></div>
+                                                            <div className="mt-2 text-right"><span className="text-xs font-bold text-gray-400">총 매수금액: {formatNumber(avgResult.totalAmt)}원</span></div>
+                                                        </div>
+                                                    </div>
+                                                </AppleCard>
+                                            )}
+                                            {activeTool === 'unit' && (
+                                                <AppleCard title="단위 변환기" subTitle="귀금속 중량 변환">
+                                                    <div className="space-y-6">
+                                                        <div className="flex bg-gray-100 dark:bg-[#2C2C2E] p-1 rounded-xl border border-gray-200 dark:border-white/5">
+                                                            <button onClick={()=>setUnitConv({...unitConv,base:'don'})} className={`flex-1 text-sm py-2.5 rounded-lg transition-all font-bold ${unitConv.base==='don'?'bg-white dark:bg-[#3A3A3C] text-black dark:text-white shadow-sm':'text-gray-400'}`}>돈 (don)</button>
+                                                            <button onClick={()=>setUnitConv({...unitConv,base:'gram'})} className={`flex-1 text-sm py-2.5 rounded-lg transition-all font-bold ${unitConv.base==='gram'?'bg-white dark:bg-[#3A3A3C] text-black dark:text-white shadow-sm':'text-gray-400'}`}>그램 (g)</button>
+                                                            <button onClick={()=>setUnitConv({...unitConv,base:'oz'})} className={`flex-1 text-sm py-2.5 rounded-lg transition-all font-bold ${unitConv.base==='oz'?'bg-white dark:bg-[#3A3A3C] text-black dark:text-white shadow-sm':'text-gray-400'}`}>온스 (oz)</button>
+                                                        </div>
+                                                        <div><label className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 block">입력 값 ({unitConv.base})</label><input className="apple-input !text-3xl !py-6 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 font-bold text-center" value={unitConv.value} onChange={e=>setUnitConv({...unitConv,value:e.target.value})} placeholder="0" /></div>
+                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                            {['don','gram','oz','kg'].filter(u=>u!==unitConv.base).map(u=>(
+                                                                <div key={u} className="bg-[#F2F4F8] dark:bg-white/5 p-4 rounded-2xl flex flex-col items-center justify-center">
+                                                                    <span className="text-xs font-bold text-gray-400 mb-1 uppercase">{u}</span>
+                                                                    <span className="text-xl font-bold text-slate-800 dark:text-white">
+                                                                        {(()=>{
+                                                                            let v=parseFloat(unitConv.value)||0; 
+                                                                            if(unitConv.base==='don'){ if(u==='gram')v*=3.75; else if(u==='oz')v*=0.1205; else v*=0.00375; } else if(unitConv.base==='gram'){ if(u==='don')v/=3.75; else if(u==='oz')v/=31.1035; else v/=1000; } else { if(u==='gram')v*=31.1035; else if(u==='don')v*=8.294; else v*=0.0311; } 
+                                                                            return v.toLocaleString(undefined,{maximumFractionDigits:4});
+                                                                        })()}
+                                                                    </span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </AppleCard>
+                                            )}
                                         </div>
-                                    </AppleCard>
-                                    <AppleCard title="IPO/스팩 청약 증거금 계산기" subTitle="청약 수량별 필요 증거금 확인"><div className="space-y-4"><div className="grid grid-cols-2 gap-4"><div><label className="text-[10px] text-gray-400 mb-1.5 block font-bold">공모가 (원)</label><input className="apple-input bg-gray-50 border border-gray-100 text-center" placeholder="2,000" value={ipoCalcInputs.price} onChange={e=>handleCommaChange(e,v=>setIpoCalcInputs({...ipoCalcInputs,price:v}))} /></div><div><label className="text-[10px] text-gray-400 mb-1.5 block font-bold">청약 수량 (주)</label><input className="apple-input bg-gray-50 border border-gray-100 text-center" placeholder="10" value={ipoCalcInputs.qty} onChange={e=>handleCommaChange(e,v=>setIpoCalcInputs({...ipoCalcInputs,qty:v}))} /></div></div><div className="space-y-1.5"><label className="text-[10px] text-gray-400 block font-bold">증거금률 선택</label><div className="flex bg-white rounded-lg p-1 border border-gray-200 shadow-sm"><button onClick={()=>setIpoCalcInputs({...ipoCalcInputs, marginRate:50})} className={`flex-1 text-xs py-2 rounded-md transition-all font-bold ${ipoCalcInputs.marginRate===50?'bg-white text-black ring-1 ring-black/5 shadow-sm':'text-gray-400 hover:text-gray-600'}`}>50% (일반)</button><button onClick={()=>setIpoCalcInputs({...ipoCalcInputs, marginRate:100})} className={`flex-1 text-xs py-2 rounded-md transition-all font-bold ${ipoCalcInputs.marginRate===100?'bg-white text-black ring-1 ring-black/5 shadow-sm':'text-gray-400 hover:text-gray-600'}`}>100% (우대/스팩)</button></div></div><div className="bg-[#F2F4F8] dark:bg-white/5 p-4 rounded-xl space-y-3 mt-2"><div className="flex justify-between items-center"><span className="text-xs font-bold text-gray-500">총 청약금액</span><span className="text-sm font-black text-black dark:text-white">{formatNumber(parseFormattedNumber(ipoCalcInputs.price)*parseFormattedNumber(ipoCalcInputs.qty))}원</span></div><div className="flex justify-between items-center"><span className="text-sm font-bold text-black dark:text-white">필요 증거금</span><span className="text-lg font-black text-blue-600">{formatNumber(parseFormattedNumber(ipoCalcInputs.price)*parseFormattedNumber(ipoCalcInputs.qty)*(ipoCalcInputs.marginRate/100))}원</span></div></div></div></AppleCard>
-                                    <AppleCard title="실시간 환율 계산기" subTitle="주요 통화 간편 변환"><div className="space-y-4"><div className="flex gap-2 items-center justify-center"><select className="apple-input !w-24 text-center bg-gray-50 border border-gray-100 font-bold" value={exchInputs.base} onChange={e=>setExchInputs({...exchInputs, base:e.target.value})}>{Object.keys(DEFAULT_EXCHANGE_RATES).map(k=><option key={k} value={k}>{k}</option>)}</select><i className="fa-solid fa-arrow-right text-gray-300 mx-2"></i><select className="apple-input !w-24 text-center bg-gray-50 border border-gray-100 font-bold" value={exchInputs.target} onChange={e=>setExchInputs({...exchInputs, target:e.target.value})}>{Object.keys(DEFAULT_EXCHANGE_RATES).map(k=><option key={k} value={k}>{k}</option>)}</select></div><div><label className="text-[10px] text-gray-400 mb-1.5 block font-bold">금액 ({exchInputs.base})</label><input className="apple-input !text-lg !py-3 bg-gray-50 border border-gray-100" value={exchInputs.amount} onChange={e=>handleCommaChange(e, v=>setExchInputs({...exchInputs, amount:v}))} /></div><div className="bg-[#F2F4F8] dark:bg-white/5 p-5 rounded-xl text-center space-y-1"><span className="text-xs font-bold text-gray-500 block mb-1">환산 금액 ({exchInputs.target})</span><span className="text-3xl font-black text-black dark:text-white">{formatNumber(parseFormattedNumber(exchInputs.amount) * (DEFAULT_EXCHANGE_RATES[exchInputs.base].krw) / (DEFAULT_EXCHANGE_RATES[exchInputs.target].krw))}</span><span className="text-[10px] text-gray-400 block mt-2">적용 환율: {formatNumber((DEFAULT_EXCHANGE_RATES[exchInputs.base].krw) / (DEFAULT_EXCHANGE_RATES[exchInputs.target].krw))}</span></div></div></AppleCard>
-                                    <AppleCard title="평단가 계산기"><div className="space-y-2 h-[200px] overflow-y-auto pr-1">{avgRows.map((r,i)=><div key={r.id} className="flex gap-2"><input className="apple-input !py-1 text-xs flex-1" placeholder="수량" value={r.q} onChange={e=>{const n=[...avgRows]; n[i].q=e.target.value; setAvgRows(n)}} /><input className="apple-input !py-1 text-xs flex-1" placeholder="단가" value={r.p} onChange={e=>{const n=[...avgRows]; n[i].p=e.target.value; setAvgRows(n)}} /></div>)}</div><button onClick={()=>setAvgRows([...avgRows,{id:Date.now(),q:'',p:''}])} className="w-full py-2 bg-gray-100 rounded-lg text-xs font-bold text-gray-500 mt-2 hover:bg-gray-200 transition">+ 추가</button><div className="mt-4 flex justify-between items-end border-t border-gray-100 pt-3"><div className="text-left"><span className="text-xs text-gray-500 block mb-0.5">총 보유 수량</span><span className="text-sm font-bold text-black dark:text-white">{formatNumber(avgResult.totalQ)}주</span></div><div className="text-right"><span className="text-xs text-gray-500 block mb-0.5">평균 단가</span><span className="text-xl font-black text-blue-600">{formatNumber(avgResult.avg)}원</span></div></div></AppleCard>
-                                    <AppleCard title="단위 변환기"><div className="space-y-3"><div className="flex bg-gray-100 p-1 rounded"><button onClick={()=>setUnitConv({...unitConv,base:'don'})} className={`flex-1 text-xs py-1 rounded ${unitConv.base==='don'?'bg-white shadow':''}`}>돈</button><button onClick={()=>setUnitConv({...unitConv,base:'gram'})} className={`flex-1 text-xs py-1 rounded ${unitConv.base==='gram'?'bg-white shadow':''}`}>g</button><button onClick={()=>setUnitConv({...unitConv,base:'oz'})} className={`flex-1 text-xs py-1 rounded ${unitConv.base==='oz'?'bg-white shadow':''}`}>oz</button></div><input className="apple-input" value={unitConv.value} onChange={e=>setUnitConv({...unitConv,value:e.target.value})} /><div className="space-y-1 text-xs text-gray-500 px-2">{['don','gram','oz','kg'].filter(u=>u!==unitConv.base).map(u=><div key={u} className="flex justify-between border-b border-dashed border-gray-200 py-1"><span>{u}</span><span className="font-bold text-slate-700">{(()=>{let v=parseFloat(unitConv.value)||0; if(unitConv.base==='don'){if(u==='gram')v*=3.75;else if(u==='oz')v*=0.1205;else v*=0.00375;} else if(unitConv.base==='gram'){if(u==='don')v/=3.75;else if(u==='oz')v/=31.1035;else v/=1000;} else{if(u==='gram')v*=31.1035;else if(u==='don')v*=8.294;else v*=0.0311;} return v.toLocaleString(undefined,{maximumFractionDigits:4});})()}</span></div>)}</div></div></AppleCard>
+                                    </div>
                                 </div>
                             )}
                             {activeTab === 'simulation' && (
@@ -926,7 +830,6 @@
                                 </div>
                             </div>
                         )}
-                        {/* --- RENDER MODAL --- */}
                         {isInputModalOpen && renderInputModal()}
                     </div>
                 </div>
