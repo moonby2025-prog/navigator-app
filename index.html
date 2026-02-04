@@ -280,6 +280,9 @@
             const [expandedView, setExpandedView] = useState(null);
             const [donPrice, setDonPrice] = useState('');
             const [linkMode, setLinkMode] = useState('investment');
+            // Added state for market rates
+            const [marketRates, setMarketRates] = useState({ USDCNY: 7.25, USDKRW: 1450 }); // Fallback values
+            const [isRateLoading, setIsRateLoading] = useState(false);
             
             // State
             const [routineMemo, setRoutineMemo] = useState(() => localStorage.getItem('invNav_routineMemo') || '');
@@ -310,12 +313,55 @@
 
             const [favorites, setFavorites] = useState(() => safeJsonParse('invNav_favorites_v5', DEFAULT_FAVORITES));
 
+            // Fetch Real-time Rates
+            const fetchRealtimeRates = async () => {
+                setIsRateLoading(true);
+                try {
+                    const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    const data = await response.json();
+                    
+                    const newRates = {
+                        USDCNY: data.rates.CNY,
+                        USDKRW: data.rates.KRW
+                    };
+                    setMarketRates(newRates);
+                    
+                    // Update Silver Inputs with fetched rate
+                    setSilverInputs(prev => ({
+                        ...prev,
+                        currentExch: newRates.USDKRW.toLocaleString('ko-KR', { maximumFractionDigits: 0 })
+                    }));
+                    
+                    // Update BTC Inputs with fetched rate
+                    setBtcInputs(prev => ({
+                        ...prev,
+                        currentExch: newRates.USDKRW.toLocaleString('ko-KR', { maximumFractionDigits: 0 })
+                    }));
+
+                    // Update Calculator Default Rates (Optional: update state directly if needed, but here we just update display primarily via logic)
+                    // Note: DEFAULT_EXCHANGE_RATES constant is read-only, so we use state in calculator if we want it dynamic, 
+                    // but for now, the main dashboard uses marketRates.
+                    
+                } catch (error) {
+                    console.error("Failed to fetch rates:", error);
+                    alert("환율 정보를 가져오는데 실패했습니다.");
+                } finally {
+                    setIsRateLoading(false);
+                }
+            };
+
             // Effects
             useEffect(() => {
                 const currentData = linkMode === 'investment' ? routineLinks : blogLinks;
                 const keys = Object.keys(currentData);
                 if (keys.length > 0) setActiveRoutineTab(keys[0]);
             }, [linkMode]);
+
+            useEffect(() => {
+                // Initial fetch on load
+                fetchRealtimeRates();
+            }, []);
 
             useEffect(() => { localStorage.setItem('invNav_blogLinks', JSON.stringify(blogLinks)); }, [blogLinks]);
             useEffect(() => { if (isDark) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); }, [isDark]);
@@ -377,7 +423,8 @@
                 const exchPct = unitBaseCost ? (unitExchEffect / unitBaseCost) * 100 : 0;
                 const kPremPct = unitValAtCurExch ? (unitPremiumEffect / unitValAtCurExch) * 100 : 0; 
                 
-                const shanghaiBase = (curUsd * 7.25 * TROY_OZ_TO_KG);
+                // Use dynamic market rate for Shanghai calculation
+                const shanghaiBase = (curUsd * marketRates.USDCNY * TROY_OZ_TO_KG);
                 const sPremPct = (isSilver && shanghaiBase) ? ((parseFormattedNumber(silverInputs.currentShanghaiPrice) - shanghaiBase) / shanghaiBase) * 100 : 0;
 
                 const start = unitBaseCost; const s1 = start + unitPriceEffect; const s2 = s1 + unitExchEffect; const end = s2 + unitPremiumEffect;
@@ -386,7 +433,8 @@
                 
                 const intlToKrw1kg = curUsd * curExch * (isSilver ? TROY_OZ_TO_KG : 1);
                 const domToUsdUnit = (curExch) ? (isSilver ? (curDomestic / curExch) / TROY_OZ_TO_KG : (curDomestic / curExch)) : 0;
-                const shanghaiToUsdOz = isSilver ? (parseFormattedNumber(silverInputs.currentShanghaiPrice) / 7.25) / TROY_OZ_TO_KG : 0;
+                // Use dynamic market rate for Shanghai conversion
+                const shanghaiToUsdOz = isSilver ? (parseFormattedNumber(silverInputs.currentShanghaiPrice) / marketRates.USDCNY) / TROY_OZ_TO_KG : 0;
                 const totalExchEffect = unitExchEffect * userQty;
 
                 return { 
@@ -395,7 +443,7 @@
                     avgPrice: unitBaseCost, qty: userQty, chartData, percents, intlToKrw1kg, domToUsdUnit, shanghaiToUsdOz,
                     priceContrib: (unitPriceEffect * userQty) || 0, exchContrib: totalExchEffect || 0, premContrib: (unitPremiumEffect * userQty) || 0, totalExchEffect
                 };
-            }, [analysisMode, silverInputs, btcInputs]);
+            }, [analysisMode, silverInputs, btcInputs, marketRates]); // Added marketRates dependency
 
             const renderInputsSimplified = () => (
                 <div className="flex flex-col h-full gap-4 relative">
@@ -587,6 +635,9 @@
                                                     <button onClick={()=>setAnalysisMode('silver')} className={`px-2 py-0.5 text-xs rounded ${analysisMode==='silver'?'bg-white shadow text-black':'text-gray-500'}`}>은</button>
                                                     <button onClick={()=>setAnalysisMode('bitcoin')} className={`px-2 py-0.5 text-xs rounded ${analysisMode==='bitcoin'?'bg-white shadow text-black':'text-gray-500'}`}>BTC</button>
                                                 </div>
+                                                <button onClick={fetchRealtimeRates} className="w-7 h-7 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition" title="실시간 환율 가져오기">
+                                                    <i className={`fa-solid fa-rotate-right text-xs ${isRateLoading ? 'animate-spin' : ''}`}></i>
+                                                </button>
                                                 <button onClick={()=>setIsInputModalOpen(true)} className="w-7 h-7 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition"><i className="fa-solid fa-gear text-xs"></i></button>
                                             </div>
                                         }>
@@ -830,6 +881,7 @@
                                 </div>
                             </div>
                         )}
+                        {/* --- RENDER MODAL --- */}
                         {isInputModalOpen && renderInputModal()}
                     </div>
                 </div>
