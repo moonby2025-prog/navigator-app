@@ -50,7 +50,7 @@
 
         // --- GLOBAL CONSTANTS ---
         const TROY_OZ_TO_KG = 32.1507466;
-        // [Modified] Default rates are now based on USD = 1 for consistency with API
+        // Default rates are based on USD = 1 for consistency with API
         const DEFAULT_RATES_BASE_USD = { 
             'USD': 1, 
             'KRW': 1450, 
@@ -85,9 +85,8 @@
             "📈 가치투자": [ { name: "송종식", url: "https://blog.naver.com/sjs_stock", icon: "fa-book-open", color: "text-slate-600", bg:"bg-slate-50" }, { name: "숙향", url: "https://blog.naver.com/jykim301", icon: "fa-seedling", color: "text-green-700", bg:"bg-green-50" } ]
         };
         
-        const DEFAULT_FAVORITES = [ { code: "005930", name: "삼성전자" }, { code: "005380", name: "현대차" }, { code: "TSLA", name: "테슬라" } ];
-        
-        const DEFAULT_ADV_SIM_INPUTS = { currentAge: 52, spouseCurrentAge: 48, simulationStartAge: 53, pensionStrategyUser: "normal", pensionStrategySpouse: "normal", highCostStartAge: 80, regionalInsStartAge: 60, capUserNonISA: 0.0, capSpouseNonISA: 0.0, capUserISA: 2.0, capSpouseISA: 1.0, capIPO: 6.5, returnUserNonISA: 0.0, returnSpouseNonISA: 0.0, returnUserISA: 5.0, returnSpouseISA: 5.0, returnIPO: 4.0, returnCMA: 2.0, inflationRate: 2.0, livingCostInflationRate: 1.5, taxRate1: 6.6, taxRate2: 16.5, taxRate3: 27.5, monthlyLiving: "5,000,000", pensionSelf: "1,000,000", pensionSpouse: "1,000,000", ipoProfit: "6,000,000", otherIncome: "4,500,000", stockLending: "0", rentalIncome: "850,000", tradingProfit: "0", targetLegacy: "200,000,000", extraReserve: "5,000,000", monthlyMedical: "1,000,000", monthlyRegionalIns: "0", housingMarketPrice: "5" };
+        // [Modified] Default values
+        const DEFAULT_ADV_SIM_INPUTS = { currentAge: 52, spouseCurrentAge: 48, simulationStartAge: 53, pensionStrategyUser: "normal", pensionStrategySpouse: "normal", highCostStartAge: 80, regionalInsStartAge: 60, capUserNonISA: 0.0, capSpouseNonISA: 0.0, capUserISA: 1.0, capSpouseISA: 1.0, capIPO: 5.0, returnUserNonISA: 0.0, returnSpouseNonISA: 0.0, returnUserISA: 4.0, returnSpouseISA: 4.0, returnIPO: 4.0, returnCMA: 2.0, inflationRate: 2.0, livingCostInflationRate: 1.5, taxRate1: 6.6, taxRate2: 16.5, taxRate3: 27.5, monthlyLiving: "4,000,000", pensionSelf: "1,000,000", pensionSpouse: "1,000,000", ipoProfit: "6,000,000", otherIncome: "4,500,000", stockLending: "0", rentalIncome: "850,000", tradingProfit: "0", targetLegacy: "200,000,000", extraReserve: "5,000,000", monthlyMedical: "1,000,000", monthlyRegionalIns: "0", housingMarketPrice: "5" };
 
         // --- HELPERS ---
         const safeJsonParse = (key, fallback) => {
@@ -342,8 +341,7 @@
             const [donPrice, setDonPrice] = useState('');
             const [linkMode, setLinkMode] = useState('investment');
             
-            // [Modified] Unified Exchange Rates State
-            // Initial state uses default values, updated by API later
+            // Unified Exchange Rates State
             const [exchangeRates, setExchangeRates] = useState(DEFAULT_RATES_BASE_USD);
             
             const [isRateLoading, setIsRateLoading] = useState(false);
@@ -364,7 +362,7 @@
             const [taxSubTab, setTaxSubTab] = useState('settlement'); 
 
             // Simulation State (Advanced)
-            const [simInputs, setSimInputs] = useState(() => { try { return { ...DEFAULT_ADV_SIM_INPUTS, ...JSON.parse(localStorage.getItem('invNav_simInputs_v3')) }; } catch { return DEFAULT_ADV_SIM_INPUTS; } });
+            const [simInputs, setSimInputs] = useState(() => { try { return { ...DEFAULT_ADV_SIM_INPUTS, ...JSON.parse(localStorage.getItem('invNav_simInputs_v5')) }; } catch { return DEFAULT_ADV_SIM_INPUTS; } });
             const [tempSimInputs, setTempSimInputs] = useState(null);
             const [isSimInputModalOpen, setIsSimInputModalOpen] = useState(false);
             const [simResult, setSimResult] = useState({ history: [], summary: null });
@@ -379,8 +377,11 @@
             const [exchInputs, setExchInputs] = useState({ base: 'USD', target: 'KRW', amount: '' });
             const [unitConv, setUnitConv] = useState({ type: 'weight', value: '', base: 'don' });
             
-            // --- NEW: BTC Calculator State ---
+            // BTC Calculator State
             const [btcCalc, setBtcCalc] = useState({ krw: '', qty: '' });
+            
+            // Age Calculator State (Volatile)
+            const [ageCalcBirth, setAgeCalcBirth] = useState('');
 
             const [silverInputs, setSilverInputs] = useState(() => {
                 const saved = safeJsonParse('invNav_silver_v12', null);
@@ -394,9 +395,7 @@
                 return saved ? { ...saved, holdingQty: '0.1' } : { ...defaults, holdingQty: '0.1' };
             });
 
-            const [favorites, setFavorites] = useState(() => safeJsonParse('invNav_favorites_v5', DEFAULT_FAVORITES));
-
-            // [Modified] Fetch Real-time Rates Logic
+            // Fetch Real-time Rates Logic
             const fetchRealtimeRates = async () => {
                 setIsRateLoading(true);
                 setRateError(null);
@@ -490,15 +489,14 @@
             useEffect(() => { localStorage.setItem('invNav_blogLinks', JSON.stringify(blogLinks)); }, [blogLinks]);
             useEffect(() => { if (isDark) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); }, [isDark]);
             useEffect(() => { localStorage.setItem('invNav_routineMemo', routineMemo); }, [routineMemo]);
-            useEffect(() => { localStorage.setItem('invNav_favorites_v5', JSON.stringify(favorites)); }, [favorites]);
             useEffect(() => { localStorage.setItem('invNav_routineLinks', JSON.stringify(routineLinks)); }, [routineLinks]);
             useEffect(() => { const dataToSave = { ...silverInputs, holdingQty: '' }; localStorage.setItem('invNav_silver_v12', JSON.stringify(dataToSave)); }, [silverInputs]);
             useEffect(() => { const dataToSave = { ...btcInputs, holdingQty: '' }; localStorage.setItem('invNav_btc_v15', JSON.stringify(dataToSave)); }, [btcInputs]);
             
-            // [Modified] Debouncing applied to simulation
+            // Debouncing applied to simulation (v5 storage key)
             useEffect(() => { 
                 const timer = setTimeout(() => {
-                    localStorage.setItem('invNav_simInputs_v3', JSON.stringify(simInputs)); 
+                    localStorage.setItem('invNav_simInputs_v5', JSON.stringify(simInputs)); 
                     runSimulation(); 
                 }, 400); // 0.4s delay for performance
                 return () => clearTimeout(timer);
@@ -512,7 +510,23 @@
             };
             const applyKgPrice = () => { const kgVal = calculateKgPrice(donPrice); if (kgVal > 0) setSilverInputs(p => ({...p, currentDomesticPrice: Math.round(kgVal).toLocaleString('ko-KR')})); };
             
-            // --- NEW: BTC Calculator Handlers ---
+            // Simple Age Calculation
+            const calculateAgeSimple = (birthStr) => {
+                if (!birthStr || birthStr.length !== 8) return null;
+                const y = parseInt(birthStr.substring(0, 4));
+                const m = parseInt(birthStr.substring(4, 6)) - 1;
+                const d = parseInt(birthStr.substring(6, 8));
+                const today = new Date();
+                const birth = new Date(y, m, d);
+                let age = today.getFullYear() - birth.getFullYear();
+                const mDiff = today.getMonth() - birth.getMonth();
+                if (mDiff < 0 || (mDiff === 0 && today.getDate() < birth.getDate())) {
+                    age--;
+                }
+                return age;
+            };
+
+            // BTC Calculator Handlers
             const handleBtcCalcKrwChange = (e) => {
                 const val = e.target.value.replace(/[^0-9.]/g, '');
                 const parts = val.split('.');
@@ -584,7 +598,7 @@
                 const exchPct = unitBaseCost ? (unitExchEffect / unitBaseCost) * 100 : 0;
                 const kPremPct = unitValAtCurExch ? (unitPremiumEffect / unitValAtCurExch) * 100 : 0; 
                 
-                // [Modified] Use exchangeRates state for consistency
+                // Use exchangeRates state for consistency
                 const cnyRate = exchangeRates['CNY'] || 7.25;
                 const shanghaiBase = (curUsd * cnyRate * TROY_OZ_TO_KG);
                 const sPremPct = (isSilver && shanghaiBase) ? ((parseFormattedNumber(silverInputs.currentShanghaiPrice) - shanghaiBase) / shanghaiBase) * 100 : 0;
@@ -1090,6 +1104,25 @@
                                                 <div><label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 mb-1.5 block">현재 나이 (본인)</label><input type="number" className="apple-input" value={tempSimInputs.currentAge} onChange={e=>setTempSimInputs({...tempSimInputs, currentAge: Number(e.target.value)})} /></div>
                                                 <div><label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 mb-1.5 block">배우자 나이</label><input type="number" className="apple-input" value={tempSimInputs.spouseCurrentAge} onChange={e=>setTempSimInputs({...tempSimInputs, spouseCurrentAge: Number(e.target.value)})} /></div>
                                                 <div className="col-span-2"><label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 mb-1.5 block">은퇴 시뮬레이션 시작 나이</label><input type="number" className="apple-input" value={tempSimInputs.simulationStartAge} onChange={e=>setTempSimInputs({...tempSimInputs, simulationStartAge: Number(e.target.value)})} /></div>
+                                            </div>
+                                            
+                                            {/* Age Calculator (Volatile) */}
+                                            <div className="mt-4 pt-4 border-t border-dashed border-gray-200 dark:border-white/10">
+                                                <label className="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 mb-2 flex items-center gap-1"><i className="fa-solid fa-cake-candles"></i> 만 나이 계산기 (단순확인용)</label>
+                                                <div className="flex gap-2">
+                                                    <input 
+                                                        className="apple-input !py-2 !text-xs flex-1 text-center bg-indigo-50/50 dark:bg-indigo-900/10 placeholder-gray-400" 
+                                                        placeholder="생년월일 8자리 (예: 19800101)" 
+                                                        value={ageCalcBirth} 
+                                                        maxLength={8}
+                                                        onChange={(e) => setAgeCalcBirth(e.target.value.replace(/[^0-9]/g, ''))} 
+                                                    />
+                                                    <div className="bg-indigo-100 dark:bg-indigo-900/40 px-3 rounded-xl flex items-center justify-center min-w-[70px] border border-indigo-200 dark:border-indigo-500/30">
+                                                        <span className="text-xs font-black text-indigo-700 dark:text-indigo-300">
+                                                            {ageCalcBirth.length === 8 ? `만 ${calculateAgeSimple(ageCalcBirth)}세` : '-'}
+                                                        </span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                         {/* 2. Assets */}
