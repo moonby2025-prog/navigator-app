@@ -184,7 +184,7 @@
                         type: 'bar',
                         data: { labels, datasets: [{ label: '평가금액', data: safeData, backgroundColor: colors, borderRadius: 4, order: 2 }, { type: 'line', label: 'Flow', data: lineData, borderColor: isDark?'rgba(255,255,255,0.4)':'rgba(0,0,0,0.4)', borderDash:[6,4], pointRadius:3, fill:false, spanGaps:true, order:1 }] },
                         options: { 
-                            responsive: true, maintainAspectRatio: false, layout: { padding: { top: 50, left: 15, right: 15, bottom: 20 } }, 
+                            responsive: true, maintainAspectRatio: false, layout: { padding: { top: 30, left: 15, right: 15, bottom: 20 } }, 
                             plugins: { legend: { display: false }, datalabels: { display: false }, tooltip: { callbacks: { label: (ctx) => { const raw=ctx.raw; if(!Array.isArray(raw)) return ''; const index = ctx.dataIndex; const isTotal = index === 0 || index === ctx.chart.data.labels.length - 1; const valToDisplayUnit = isTotal ? raw[1] : raw[1]-raw[0]; const totalVal = valToDisplayUnit * (typeof qty === 'number' ? qty : 0); const manwon = Math.round(totalVal / 10000); const label = isTotal ? '총 평가액' : '변동 기여분'; const sign = (totalVal > 0 && !isTotal) ? '+' : ''; return `${label}: ${sign}${manwon.toLocaleString()}만원`; } } } }, 
                             scales: { x: { grid: { display: false }, ticks: { color: isDark?'#aaa':'#666', font:{size:11, weight:'bold'} } }, y: { display: false } } 
                         },
@@ -200,8 +200,12 @@
                                 }); 
                                 if (growthRate !== undefined && !isNaN(growthRate)) {
                                     const startBar = meta.data[0]; const endBar = meta.data[meta.data.length - 1];
-                                    if(startBar && endBar) {
-                                        const midX = (startBar.x + endBar.x) / 2; const midY = Math.min(startBar.y, endBar.y) - 30; const text = (growthRate > 0 ? '+' : '') + growthRate.toFixed(1) + '%';
+                                    if(startBar && endBar && startBar.x && endBar.x) { // Safety check for coordinates
+                                        const midX = (startBar.x + endBar.x) / 2;
+                                        // 수정됨: 점선(상단 연결선)의 중간 지점에서 '아래'로 25px 이동
+                                        const midY = (startBar.y + endBar.y) / 2 + 25; 
+                                        const text = (growthRate > 0 ? '+' : '') + growthRate.toFixed(1) + '%';
+                                        
                                         ctx.save(); ctx.font = 'bold 12px Pretendard'; const textWidth = ctx.measureText(text).width + 16; const textHeight = 24;
                                         ctx.fillStyle = isDark ? '#333' : '#fff'; ctx.shadowColor = 'rgba(0,0,0,0.15)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 3; ctx.beginPath(); ctx.roundRect(midX - textWidth/2, midY - textHeight/2, textWidth, textHeight, 12); ctx.fill();
                                         ctx.shadowColor = 'transparent'; ctx.strokeStyle = growthRate >= 0 ? '#FF3B30' : '#0071E3'; ctx.lineWidth = 1.5; ctx.stroke();
@@ -399,36 +403,23 @@
             });
 
             const [stockInputs, setStockInputs] = useState(() => {
-                const saved = safeJsonParse('invNav_stock_v6', null);
-                const defaultMemo = `[🚀 큐리옥스: 7가지 투자 포인트]
+                // 버전 업그레이드 (v6 -> v7)하여 새로운 메모 스타일 적용 유도
+                const saved = safeJsonParse('invNav_stock_v7', null);
+                const defaultMemo = `[🚀 큐리옥스: 7가지 핵심 투자 포인트]
 
-1. 세탁기 혁명 (탈원심분리)
-   - 손빨래(원심분리기) 하던 연구실에 등장한 드럼세탁기! 
-   - 100년 만에 바뀐 기술, 버튼 하나로 힘든 노동 끝.
+1. 세탁기 혁명 (탈원심분리): 100년 된 손빨래(원심분리기)를 끝낸 연구실의 드럼세탁기!
 
-2. 플루토의 마법 (S/W의 힘) ✨
-   - "새 장비 안 사셔도 됩니다." 고객의 기존 장비에 '코드'만 심으면 끝!
-   - 쓰던 액체핸들링 장비가 즉시 '원심분리기 없는' 자동화 시스템으로 변신.
+2. 플루토의 마법 (S/W): 기존 장비에 코드만 심으면 즉시 자동화 변신. (장비구매 X)
 
-3. 세포 심폐소생술 (생존율)
-   - 쥐어짜지 않고 물 흐르듯 씻겨냅니다.
-   - 세포가 다치지 않아 살아있는 상태 그대로 분석 가능.
+3. 세포 심폐소생술: 쥐어짜지 않고 물 흐르듯 씻겨 세포 생존율 극대화.
 
-4. 심판관의 선택 (FDA & 표준)
-   - 깐깐한 미국 FDA와 표준연구소(NIST)가 인정한 기술.
-   - "세포 분석은 앞으로 이게 표준이야"라고 룰이 바뀌는 중.
+4. 심판관의 선택 (FDA/NIST): 깐깐한 미국 표준연구소가 인정한 차세대 세포분석 표준.
 
-5. 전교 1등들의 선택 (빅파마)
-   - 글로벌 제약사 TOP 20곳 중 18곳이 이미 사용 중.
-   - 제일 똑똑한 애들이 먼저 쓰는 참고서.
+5. 전교 1등의 선택: 글로벌 빅파마 TOP 20 중 18곳이 이미 사용 중.
 
-6. 프린터와 잉크 (J-Curve)
-   - 장비(프린터)가 깔릴수록 전용 판(잉크)은 계속 팔립니다.
-   - 시간이 갈수록 가만히 있어도 돈이 들어오는 구조.
+6. 프린터와 잉크: 장비가 깔릴수록 소모품 매출이 쌓이는 J-Curve 구조.
 
-7. 미래의 필수품 (세포치료제)
-   - 사람 살리는 꿈의 치료제, 대중화의 열쇠는 '공정 자동화'.
-   - 큐리옥스 없이는 싸고 좋은 치료제를 만들기 어렵습니다.`;
+7. 미래의 필수품: 세포치료제 자동화 공정의 핵심 열쇠 (대중화 필수템).`;
     
                 const defaults = { 
                     symbol: 'KRX:445680', 
@@ -585,7 +576,7 @@
             useEffect(() => { localStorage.setItem('invNav_routineLinks', JSON.stringify(routineLinks)); }, [routineLinks]);
             useEffect(() => { const dataToSave = { ...silverInputs, holdingQty: '' }; localStorage.setItem('invNav_silver_v12', JSON.stringify(dataToSave)); }, [silverInputs]);
             useEffect(() => { const dataToSave = { ...btcInputs, holdingQty: '' }; localStorage.setItem('invNav_btc_v15', JSON.stringify(dataToSave)); }, [btcInputs]);
-            useEffect(() => { localStorage.setItem('invNav_stock_v6', JSON.stringify(stockInputs)); }, [stockInputs]);
+            useEffect(() => { localStorage.setItem('invNav_stock_v7', JSON.stringify(stockInputs)); }, [stockInputs]);
             
             useEffect(() => { 
                 const timer = setTimeout(() => {
@@ -724,7 +715,7 @@
                             <div className="flex-1 bg-yellow-50 dark:bg-yellow-900/10 rounded-xl p-4 border border-yellow-100 dark:border-yellow-900/30 shadow-inner flex flex-col">
                                 <label className="text-xs font-bold text-yellow-800 dark:text-yellow-200 mb-2 flex items-center gap-1"><i className="fa-regular fa-lightbulb"></i> 투자 시나리오 & 핵심 아이디어 (Thesis)</label>
                                 <textarea 
-                                    className="flex-1 w-full bg-transparent border-none outline-none text-sm text-slate-700 dark:text-slate-200 resize-none leading-relaxed custom-scrollbar placeholder-yellow-800/30 dark:placeholder-yellow-200/30"
+                                    className="flex-1 w-full bg-transparent border-none outline-none text-xs text-slate-700 dark:text-slate-200 resize-none leading-normal custom-scrollbar placeholder-yellow-800/30 dark:placeholder-yellow-200/30"
                                     placeholder={`이 종목을 매수한 이유는 무엇인가요?\n\n- 예상되는 촉매제(Catalyst)\n- 리스크 요인\n- 목표 주가 근거\n\n초심을 잃지 않도록 기록해 두세요.`}
                                     value={stockInputs.memo}
                                     onChange={e=>setStockInputs({...stockInputs, memo: e.target.value})}
