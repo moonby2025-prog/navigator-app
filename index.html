@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Investment Navigator</title>
+    <meta name="description" content="개인 투자 자산 관리 및 노후 시뮬레이션 대시보드">
+    <meta name="theme-color" content="#F5F5F7">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
@@ -14,7 +16,7 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-        body { font-family: 'Pretendard', sans-serif; overflow-x: hidden; background-color: #F5F5F7; }
+        body { font-family: 'Pretendard', sans-serif; overflow-x: hidden; background-color: #F5F5F7; touch-action: manipulation; }
         .dark body { background-color: #000000; }
         .safe-pb { padding-bottom: env(safe-area-inset-bottom); }
         .apple-card { background: #fff; border-radius: 24px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow: hidden; }
@@ -50,20 +52,7 @@
 
         // --- GLOBAL CONSTANTS ---
         const TROY_OZ_TO_KG = 32.1507466;
-        // Default rates are based on USD = 1 for consistency with API
-        const DEFAULT_RATES_BASE_USD = { 
-            'USD': 1, 
-            'KRW': 1450, 
-            'JPY': 152, 
-            'EUR': 0.95, 
-            'CNY': 7.25, 
-            'GBP': 0.79,
-            'AUD': 1.52,
-            'CAD': 1.36,
-            'CHF': 0.90,
-            'HKD': 7.83,
-            'NZD': 1.68
-        };
+        const DEFAULT_RATES_BASE_USD = { 'USD': 1, 'KRW': 1450, 'JPY': 152, 'EUR': 0.95, 'CNY': 7.25, 'GBP': 0.79, 'AUD': 1.52, 'CAD': 1.36, 'CHF': 0.90, 'HKD': 7.83, 'NZD': 1.68 };
         const TAX_THRESHOLD = 20000000;
         const ONE_HUNDRED_MILLION = 100000000;
 
@@ -85,10 +74,14 @@
             "📈 가치투자": [ { name: "송종식", url: "https://blog.naver.com/sjs_stock", icon: "fa-book-open", color: "text-slate-600", bg:"bg-slate-50" }, { name: "숙향", url: "https://blog.naver.com/jykim301", icon: "fa-seedling", color: "text-green-700", bg:"bg-green-50" } ]
         };
         
-        // [Modified] Default values
         const DEFAULT_ADV_SIM_INPUTS = { currentAge: 52, spouseCurrentAge: 48, simulationStartAge: 53, pensionStrategyUser: "normal", pensionStrategySpouse: "normal", highCostStartAge: 80, regionalInsStartAge: 60, capUserNonISA: 0.0, capSpouseNonISA: 0.0, capUserISA: 1.0, capSpouseISA: 1.0, capIPO: 5.0, returnUserNonISA: 0.0, returnSpouseNonISA: 0.0, returnUserISA: 4.0, returnSpouseISA: 4.0, returnIPO: 4.0, returnCMA: 2.0, inflationRate: 2.0, livingCostInflationRate: 1.5, taxRate1: 6.6, taxRate2: 16.5, taxRate3: 27.5, monthlyLiving: "4,000,000", pensionSelf: "1,000,000", pensionSpouse: "1,000,000", ipoProfit: "6,000,000", otherIncome: "4,500,000", stockLending: "0", rentalIncome: "850,000", tradingProfit: "0", targetLegacy: "200,000,000", extraReserve: "5,000,000", monthlyMedical: "1,000,000", monthlyRegionalIns: "0", housingMarketPrice: "5" };
 
-        // --- HELPERS ---
+        // Set Chart.js Defaults
+        if (typeof Chart !== 'undefined') {
+            Chart.defaults.font.family = 'Pretendard';
+            Chart.defaults.responsive = true;
+        }
+
         const safeJsonParse = (key, fallback) => {
             try { return JSON.parse(localStorage.getItem(key)) || fallback; } catch { return fallback; }
         };
@@ -102,7 +95,7 @@
             return Math.round(num / 10000).toLocaleString('ko-KR') + '만원';
         };
         const parseFormattedNumber = (val) => {
-            if (typeof val !== 'string') return val || 0;
+            if (typeof val !== 'string') return typeof val === 'number' ? val : 0;
             return parseFloat(String(val).replace(/,/g, '')) || 0;
         };
         const calculateKgPrice = (don) => (parseFormattedNumber(don) * (1000 / 3.75));
@@ -177,44 +170,50 @@
             const canvasRef = useRef(null); 
             const chartRef = useRef(null);
             useEffect(() => {
+                // GUARD: Check if Chart is available
                 if (typeof Chart === 'undefined' || !canvasRef.current || !data) return;
+                
                 if (chartRef.current) chartRef.current.destroy();
                 const ctx = canvasRef.current.getContext('2d');
                 
                 const safeData = data.map(d => { if (Array.isArray(d)) return [d[0] || 0, d[1] || 0]; return d || 0; });
                 const lineData = safeData.map((d, i) => { if (i === 0 || i === safeData.length - 1) return d[1]; return null; });
 
-                chartRef.current = new Chart(ctx, {
-                    type: 'bar',
-                    data: { labels, datasets: [{ label: '평가금액', data: safeData, backgroundColor: colors, borderRadius: 4, order: 2 }, { type: 'line', label: 'Flow', data: lineData, borderColor: isDark?'rgba(255,255,255,0.4)':'rgba(0,0,0,0.4)', borderDash:[6,4], pointRadius:3, fill:false, spanGaps:true, order:1 }] },
-                    options: { 
-                        responsive: true, maintainAspectRatio: false, layout: { padding: { top: 50, left: 15, right: 15, bottom: 20 } }, 
-                        plugins: { legend: { display: false }, datalabels: { display: false }, tooltip: { callbacks: { label: (ctx) => { const raw=ctx.raw; if(!Array.isArray(raw)) return ''; const index = ctx.dataIndex; const isTotal = index === 0 || index === ctx.chart.data.labels.length - 1; const valToDisplayUnit = isTotal ? raw[1] : raw[1]-raw[0]; const totalVal = valToDisplayUnit * (qty || 0); const manwon = Math.round(totalVal / 10000); const label = isTotal ? '총 평가액' : '변동 기여분'; const sign = (totalVal > 0 && !isTotal) ? '+' : ''; return `${label}: ${sign}${manwon.toLocaleString()}만원`; } } } }, 
-                        scales: { x: { grid: { display: false }, ticks: { color: isDark?'#aaa':'#666', font:{size:11, weight:'bold'} } }, y: { display: false } } 
-                    },
-                    plugins: [{ 
-                        id: 'customLabels', 
-                        afterDraw: (chart) => { 
-                            const { ctx } = chart; const meta = chart.getDatasetMeta(0); if (!meta.data.length) return;
-                            meta.data.forEach((bar, index) => { 
-                                const value = safeData[index][1]; const isTotal = index === 0 || index === safeData.length - 1; ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; const labelY = bar.y - 12;
-                                if (isTotal) { ctx.font = 'bold 11px Pretendard'; ctx.fillStyle = isDark?'#fff':'#1D1D1F'; ctx.fillText(Math.round(value/10000).toLocaleString(), bar.x, labelY); } 
-                                else { if (percents && percents[index] !== null) { const pct = percents[index] || 0; const text = (pct > 0 ? '+' : '') + pct.toFixed(1) + '%'; ctx.font = 'bold 11px Pretendard'; ctx.fillStyle = pct >= 0 ? (isDark ? '#FF453A' : '#FF3B30') : '#0071E3'; ctx.fillText(text, bar.x, labelY); } }
-                                ctx.restore(); 
-                            }); 
-                            if (growthRate !== undefined && !isNaN(growthRate)) {
-                                const startBar = meta.data[0]; const endBar = meta.data[meta.data.length - 1];
-                                if(startBar && endBar) {
-                                    const midX = (startBar.x + endBar.x) / 2; const midY = Math.min(startBar.y, endBar.y) - 30; const text = (growthRate > 0 ? '+' : '') + growthRate.toFixed(1) + '%';
-                                    ctx.save(); ctx.font = 'bold 12px Pretendard'; const textWidth = ctx.measureText(text).width + 16; const textHeight = 24;
-                                    ctx.fillStyle = isDark ? '#333' : '#fff'; ctx.shadowColor = 'rgba(0,0,0,0.15)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 3; ctx.beginPath(); ctx.roundRect(midX - textWidth/2, midY - textHeight/2, textWidth, textHeight, 12); ctx.fill();
-                                    ctx.shadowColor = 'transparent'; ctx.strokeStyle = growthRate >= 0 ? '#FF3B30' : '#0071E3'; ctx.lineWidth = 1.5; ctx.stroke();
-                                    ctx.fillStyle = growthRate >= 0 ? '#FF3B30' : '#0071E3'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, midX, midY); ctx.restore();
+                try {
+                    chartRef.current = new Chart(ctx, {
+                        type: 'bar',
+                        data: { labels, datasets: [{ label: '평가금액', data: safeData, backgroundColor: colors, borderRadius: 4, order: 2 }, { type: 'line', label: 'Flow', data: lineData, borderColor: isDark?'rgba(255,255,255,0.4)':'rgba(0,0,0,0.4)', borderDash:[6,4], pointRadius:3, fill:false, spanGaps:true, order:1 }] },
+                        options: { 
+                            responsive: true, maintainAspectRatio: false, layout: { padding: { top: 50, left: 15, right: 15, bottom: 20 } }, 
+                            plugins: { legend: { display: false }, datalabels: { display: false }, tooltip: { callbacks: { label: (ctx) => { const raw=ctx.raw; if(!Array.isArray(raw)) return ''; const index = ctx.dataIndex; const isTotal = index === 0 || index === ctx.chart.data.labels.length - 1; const valToDisplayUnit = isTotal ? raw[1] : raw[1]-raw[0]; const totalVal = valToDisplayUnit * (typeof qty === 'number' ? qty : 0); const manwon = Math.round(totalVal / 10000); const label = isTotal ? '총 평가액' : '변동 기여분'; const sign = (totalVal > 0 && !isTotal) ? '+' : ''; return `${label}: ${sign}${manwon.toLocaleString()}만원`; } } } }, 
+                            scales: { x: { grid: { display: false }, ticks: { color: isDark?'#aaa':'#666', font:{size:11, weight:'bold'} } }, y: { display: false } } 
+                        },
+                        plugins: [{ 
+                            id: 'customLabels', 
+                            afterDraw: (chart) => { 
+                                const { ctx } = chart; const meta = chart.getDatasetMeta(0); if (!meta.data.length) return;
+                                meta.data.forEach((bar, index) => { 
+                                    const value = safeData[index][1]; const isTotal = index === 0 || index === safeData.length - 1; ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; const labelY = bar.y - 12;
+                                    if (isTotal) { ctx.font = 'bold 11px Pretendard'; ctx.fillStyle = isDark?'#fff':'#1D1D1F'; ctx.fillText(Math.round(value/10000).toLocaleString(), bar.x, labelY); } 
+                                    else { if (percents && percents[index] !== null) { const pct = percents[index] || 0; const text = (pct > 0 ? '+' : '') + pct.toFixed(1) + '%'; ctx.font = 'bold 11px Pretendard'; ctx.fillStyle = pct >= 0 ? (isDark ? '#FF453A' : '#FF3B30') : '#0071E3'; ctx.fillText(text, bar.x, labelY); } }
+                                    ctx.restore(); 
+                                }); 
+                                if (growthRate !== undefined && !isNaN(growthRate)) {
+                                    const startBar = meta.data[0]; const endBar = meta.data[meta.data.length - 1];
+                                    if(startBar && endBar) {
+                                        const midX = (startBar.x + endBar.x) / 2; const midY = Math.min(startBar.y, endBar.y) - 30; const text = (growthRate > 0 ? '+' : '') + growthRate.toFixed(1) + '%';
+                                        ctx.save(); ctx.font = 'bold 12px Pretendard'; const textWidth = ctx.measureText(text).width + 16; const textHeight = 24;
+                                        ctx.fillStyle = isDark ? '#333' : '#fff'; ctx.shadowColor = 'rgba(0,0,0,0.15)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 3; ctx.beginPath(); ctx.roundRect(midX - textWidth/2, midY - textHeight/2, textWidth, textHeight, 12); ctx.fill();
+                                        ctx.shadowColor = 'transparent'; ctx.strokeStyle = growthRate >= 0 ? '#FF3B30' : '#0071E3'; ctx.lineWidth = 1.5; ctx.stroke();
+                                        ctx.fillStyle = growthRate >= 0 ? '#FF3B30' : '#0071E3'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, midX, midY); ctx.restore();
+                                    }
                                 }
-                            }
-                        } 
-                    }]
-                });
+                            } 
+                        }]
+                    });
+                } catch (err) {
+                    console.warn("Chart creation failed", err);
+                }
                 return () => { if (chartRef.current) chartRef.current.destroy(); };
             }, [data, labels, colors, isDark, percents, growthRate, qty]);
             return <div className="w-full h-full"><canvas ref={canvasRef}></canvas></div>;
@@ -224,86 +223,87 @@
             const canvasRef = useRef(null);
             const chartInstance = useRef(null);
             useEffect(() => {
-                if (!canvasRef.current || history.length === 0) return;
+                // GUARD: Check if Chart is available
+                if (typeof Chart === 'undefined' || !canvasRef.current || !history || history.length === 0) return;
 
-                // Ensure plugin is registered
                 if (typeof ChartDataLabels !== 'undefined') {
                     try { Chart.register(ChartDataLabels); } catch(e) {}
                 }
 
                 const ctx = canvasRef.current.getContext('2d');
                 if (chartInstance.current) chartInstance.current.destroy();
-                chartInstance.current = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: history.map(h => h.age + "세"),
-                        datasets: [
-                            { label: '총 자산(억)', data: history.map(h => h.total), borderColor: '#4f46e5', fill: true, backgroundColor: 'rgba(79, 70, 229, 0.1)', tension: 0.3, pointRadius: 0, borderWidth: 2, pointHoverRadius: 4 },
-                            { label: '본인 일반', data: history.map(h => h.un / ONE_HUNDRED_MILLION), borderColor: '#ef4444', borderDash: [2,2], pointRadius: 0, borderWidth: 1.5 },
-                            { label: '배우자 일반', data: history.map(h => h.sn / ONE_HUNDRED_MILLION), borderColor: '#f59e0b', borderDash: [2,2], pointRadius: 0, borderWidth: 1.5 },
-                            { label: '공모주', data: history.map(h => h.cip / ONE_HUNDRED_MILLION), borderColor: '#8b5cf6', borderDash: [4,2], pointRadius: 0, borderWidth: 1.5 },
-                            { label: '본인 ISA', data: history.map(h => h.ui / ONE_HUNDRED_MILLION), borderColor: '#10b981', pointRadius: 0, borderWidth: 1.5 },
-                            { label: '배우자 ISA', data: history.map(h => h.si / ONE_HUNDRED_MILLION), borderColor: '#3b82f6', pointRadius: 0, borderWidth: 1.5 }
-                        ]
-                    },
-                    options: { 
-                        responsive: true, 
-                        maintainAspectRatio: false, 
-                        animation: false,
-                        layout: {
-                            padding: { right: 80, top: 10, bottom: 10, left: 10 }
+                
+                try {
+                    chartInstance.current = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: history.map(h => h.age + "세"),
+                            datasets: [
+                                { label: '총 자산(억)', data: history.map(h => h.total), borderColor: '#4f46e5', fill: true, backgroundColor: 'rgba(79, 70, 229, 0.1)', tension: 0.3, pointRadius: 0, borderWidth: 2, pointHoverRadius: 4 },
+                                { label: '본인 일반', data: history.map(h => h.un / ONE_HUNDRED_MILLION), borderColor: '#ef4444', borderDash: [2,2], pointRadius: 0, borderWidth: 1.5 },
+                                { label: '배우자 일반', data: history.map(h => h.sn / ONE_HUNDRED_MILLION), borderColor: '#f59e0b', borderDash: [2,2], pointRadius: 0, borderWidth: 1.5 },
+                                { label: '공모주', data: history.map(h => h.cip / ONE_HUNDRED_MILLION), borderColor: '#8b5cf6', borderDash: [4,2], pointRadius: 0, borderWidth: 1.5 },
+                                { label: '본인 ISA', data: history.map(h => h.ui / ONE_HUNDRED_MILLION), borderColor: '#10b981', pointRadius: 0, borderWidth: 1.5 },
+                                { label: '배우자 ISA', data: history.map(h => h.si / ONE_HUNDRED_MILLION), borderColor: '#3b82f6', pointRadius: 0, borderWidth: 1.5 }
+                            ]
                         },
-                        scales: { y: { beginAtZero: true } },
-                        plugins: { 
-                            legend: { position: 'top', labels: { boxWidth: 10, font: { size: 11, weight: 'bold' }, padding: 15 } },
-                            tooltip: { 
-                                mode: 'index', 
-                                intersect: false,
-                                // 총자산(index 0)을 최상단에 고정, 나머지는 금액 내림차순 정렬
-                                itemSort: (a, b) => {
-                                    if (a.datasetIndex === 0) return -1;
-                                    if (b.datasetIndex === 0) return 1;
-                                    return b.raw - a.raw;
-                                },
-                                // 0원(소진된 자산) 숨김 처리
-                                filter: (tooltipItem) => tooltipItem.raw > 0.001,
-                                callbacks: {
-                                    label: (context) => {
-                                        let label = context.dataset.label || '';
-                                        const val = context.parsed.y !== null ? context.parsed.y.toFixed(2) + '억' : '';
-                                        
-                                        // 총자산(index 0) 강조 및 세부 항목 들여쓰기
-                                        if (context.datasetIndex === 0) {
-                                            return `💰 ${label}: ${val}`;
-                                        }
-                                        return `  • ${label}: ${val}`;
-                                    }
-                                }
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false, 
+                            animation: false,
+                            layout: {
+                                padding: { right: 80, top: 10, bottom: 10, left: 10 }
                             },
-                            datalabels: {
-                                display: function(context) {
-                                    const isLast = context.dataIndex === context.dataset.data.length - 1;
-                                    const val = context.dataset.data[context.dataIndex];
-                                    // 총자산(index 0)은 항상 표시, 나머지는 값이 0.1억 이상일 때만 표시 (0원 중첩 방지)
-                                    if (context.datasetIndex !== 0 && val < 0.1) return false;
-                                    return isLast;
+                            scales: { y: { beginAtZero: true } },
+                            plugins: { 
+                                legend: { position: 'top', labels: { boxWidth: 10, font: { size: 11, weight: 'bold' }, padding: 15 } },
+                                tooltip: { 
+                                    mode: 'index', 
+                                    intersect: false,
+                                    itemSort: (a, b) => {
+                                        if (a.datasetIndex === 0) return -1;
+                                        if (b.datasetIndex === 0) return 1;
+                                        return b.raw - a.raw;
+                                    },
+                                    filter: (tooltipItem) => tooltipItem.raw > 0.001,
+                                    callbacks: {
+                                        label: (context) => {
+                                            let label = context.dataset.label || '';
+                                            const val = context.parsed.y !== null ? context.parsed.y.toFixed(2) + '억' : '';
+                                            
+                                            if (context.datasetIndex === 0) {
+                                                return `💰 ${label}: ${val}`;
+                                            }
+                                            return `  • ${label}: ${val}`;
+                                        }
+                                    }
                                 },
-                                align: 'right',
-                                anchor: 'center',
-                                backgroundColor: isDark ? 'rgba(30,30,30,0.9)' : 'rgba(255,255,255,0.9)',
-                                borderColor: function(context) { return context.dataset.borderColor; },
-                                borderWidth: 1,
-                                borderRadius: 6,
-                                color: isDark ? '#fff' : '#000',
-                                font: { size: 10, weight: 'bold', family: 'Pretendard' },
-                                padding: 6,
-                                formatter: function(value, context) { return context.dataset.label; },
-                                clip: false,
-                                offset: 4
+                                datalabels: {
+                                    display: function(context) {
+                                        const isLast = context.dataIndex === context.dataset.data.length - 1;
+                                        const val = context.dataset.data[context.dataIndex];
+                                        if (context.datasetIndex !== 0 && val < 0.1) return false;
+                                        return isLast;
+                                    },
+                                    align: 'right',
+                                    anchor: 'center',
+                                    backgroundColor: isDark ? 'rgba(30,30,30,0.9)' : 'rgba(255,255,255,0.9)',
+                                    borderColor: function(context) { return context.dataset.borderColor; },
+                                    borderWidth: 1,
+                                    borderRadius: 6,
+                                    color: isDark ? '#fff' : '#000',
+                                    font: { size: 10, weight: 'bold', family: 'Pretendard' },
+                                    padding: 6,
+                                    formatter: function(value, context) { return context.dataset.label; },
+                                    clip: false,
+                                    offset: 4
+                                }
                             }
                         }
-                    }
-                });
+                    });
+                } catch(err) {
+                    console.warn("Simulation chart creation failed", err);
+                }
                 return () => { if (chartInstance.current) chartInstance.current.destroy(); };
             }, [history, isDark]);
             return <div className="h-[300px] lg:h-[40vh] min-h-[320px] w-full"><canvas ref={canvasRef}></canvas></div>;
@@ -319,7 +319,6 @@
              );
         });
         
-        // --- COMPONENTS: Toast ---
         const Toast = ({ message, visible, onClose }) => {
             if (!visible) return null;
             return (
@@ -335,20 +334,21 @@
         function App() {
             const [activeTab, setActiveTab] = useState('dashboard');
             const [activeTool, setActiveTool] = useState('target');
-            const [isDark, setIsDark] = useState(false);
+            const [isDark, setIsDark] = useState(() => {
+                const saved = localStorage.getItem('invNav_isDark');
+                return saved ? JSON.parse(saved) : false;
+            });
             const [analysisMode, setAnalysisMode] = useState('silver'); // 'silver' | 'bitcoin' | 'stock'
             const [expandedView, setExpandedView] = useState(null);
             const [donPrice, setDonPrice] = useState('');
             const [linkMode, setLinkMode] = useState('investment');
             
-            // Unified Exchange Rates State
             const [exchangeRates, setExchangeRates] = useState(DEFAULT_RATES_BASE_USD);
             
             const [isRateLoading, setIsRateLoading] = useState(false);
             const [rateError, setRateError] = useState(null); 
             const [isInputModalOpen, setIsInputModalOpen] = useState(false);
             
-            // State
             const [routineMemo, setRoutineMemo] = useState(() => localStorage.getItem('invNav_routineMemo') || '');
             const [routineLinks, setRoutineLinks] = useState(() => safeJsonParse('invNav_routineLinks', DEFAULT_ROUTINE_LINKS));
             const [blogLinks, setBlogLinks] = useState(() => safeJsonParse('invNav_blogLinks', DEFAULT_BLOG_LINKS));
@@ -356,13 +356,19 @@
             const [isRoutineEditMode, setIsRoutineEditMode] = useState(false);
             const [newRoutine, setNewRoutine] = useState({ category: '', name: '', url: '' });
 
-            // States for Financial Tax Tab
             const [earnedIncome, setEarnedIncome] = useState("20,000,000");
             const [finList, setFinList] = useState([{ id: 1, source: '배당금 합계', amount: 35000000 }]);
             const [taxSubTab, setTaxSubTab] = useState('settlement'); 
 
-            // Simulation State (Advanced)
-            const [simInputs, setSimInputs] = useState(() => { try { return { ...DEFAULT_ADV_SIM_INPUTS, ...JSON.parse(localStorage.getItem('invNav_simInputs_v5')) }; } catch { return DEFAULT_ADV_SIM_INPUTS; } });
+            const [simInputs, setSimInputs] = useState(() => { 
+                try { 
+                    const saved = JSON.parse(localStorage.getItem('invNav_simInputs_v5'));
+                    if (!saved) return DEFAULT_ADV_SIM_INPUTS;
+                    return { ...DEFAULT_ADV_SIM_INPUTS, ...saved }; 
+                } catch { 
+                    return DEFAULT_ADV_SIM_INPUTS; 
+                } 
+            });
             const [tempSimInputs, setTempSimInputs] = useState(null);
             const [isSimInputModalOpen, setIsSimInputModalOpen] = useState(false);
             const [simResult, setSimResult] = useState({ history: [], summary: null });
@@ -377,10 +383,7 @@
             const [exchInputs, setExchInputs] = useState({ base: 'USD', target: 'KRW', amount: '' });
             const [unitConv, setUnitConv] = useState({ type: 'weight', value: '', base: 'don' });
             
-            // BTC Calculator State
             const [btcCalc, setBtcCalc] = useState({ krw: '', qty: '' });
-            
-            // Age Calculator State (Volatile)
             const [ageCalcBirth, setAgeCalcBirth] = useState('');
 
             const [silverInputs, setSilverInputs] = useState(() => {
@@ -395,47 +398,44 @@
                 return saved ? { ...saved, holdingQty: '0.1' } : { ...defaults, holdingQty: '0.1' };
             });
 
-            // Stock Inputs (NEW)
             const [stockInputs, setStockInputs] = useState(() => {
-                // [Modified] 통합된 3단계 분류 체계 적용 (v4) -> v5로 업데이트하여 전략 필드 추가
-                const saved = safeJsonParse('invNav_stock_v5', null);
-                const defaultMemo = `[🎯 큐리옥스 투자 포인트: 기술/규제/성장 3박자]
+                const saved = safeJsonParse('invNav_stock_v6', null);
+                const defaultMemo = `[🚀 큐리옥스: 7가지 투자 포인트]
 
-## 1. ⚡ 기술 및 제품 독점력 (Technology)
-① 패러다임 시프트 & 자동화 (Paradigm Shift)
-   - 100년 된 수동 원심분리기 완전 대체 ('Laminar Wash' 독점)
-   - Venus(상용) & Pluto(보급형) 라인업으로 대량 보급(Mass Adoption) 시작
+1. 세탁기 혁명 (탈원심분리)
+   - 손빨래(원심분리기) 하던 연구실에 등장한 드럼세탁기! 
+   - 100년 만에 바뀐 기술, 버튼 하나로 힘든 노동 끝.
 
-② 기술적 해자 & 확장성 (Moat & Expansion)
-   - 세포 생존율/재현성 세계 1위 (경쟁자 없는 특허 기술)
-   - 유세포분석을 넘어 Single-cell, Proteomics로 적용 분야 지속 확장 (TAM 확대)
+2. 플루토의 마법 (S/W의 힘) ✨
+   - "새 장비 안 사셔도 됩니다." 고객의 기존 장비에 '코드'만 심으면 끝!
+   - 쓰던 액체핸들링 장비가 즉시 '원심분리기 없는' 자동화 시스템으로 변신.
 
-## 2. ⚖️ 규제 및 시장 환경 (Environment)
-③ FDA CMC 규제 강화 수혜 (Regulation)
-   - 까다로워지는 '데이터 재현성' 및 '공정 표준화' 규제의 유일한 해법(Cheat Key)
-   - 세포치료제(CGT) 제조 원가 절감 및 수율 개선의 필수재 등극
+3. 세포 심폐소생술 (생존율)
+   - 쥐어짜지 않고 물 흐르듯 씻겨냅니다.
+   - 세포가 다치지 않아 살아있는 상태 그대로 분석 가능.
 
-④ 매크로 순풍 (Macro)
-   - 금리 인하 사이클 진입 시 XBI(미국 바이오) 반등과 강력한 동조화 (베타 큼)
+4. 심판관의 선택 (FDA & 표준)
+   - 깐깐한 미국 FDA와 표준연구소(NIST)가 인정한 기술.
+   - "세포 분석은 앞으로 이게 표준이야"라고 룰이 바뀌는 중.
 
-## 3. 🚀 사업성 및 모멘텀 (Business)
-⑤ 글로벌 표준 & 레퍼런스 (Standard)
-   - 美 NIST(표준기술연구소) 컨소시엄 주도, 사실상 업계 표준(De Facto) 진입
-   - 글로벌 Top 20 빅파마 중 18곳 이상 레퍼런스 확보 (검증 완료)
+5. 전교 1등들의 선택 (빅파마)
+   - 글로벌 제약사 TOP 20곳 중 18곳이 이미 사용 중.
+   - 제일 똑똑한 애들이 먼저 쓰는 참고서.
 
-⑥ 수익 구조 J-Curve (Turnaround)
-   - 장비 인스톨 누적 후 고마진 전용 소모품(플레이트) 매출 폭증 구간 진입
-   - 초기 투자 회수기 도래로 인한 영업 레버리지 효과 극대화
+6. 프린터와 잉크 (J-Curve)
+   - 장비(프린터)가 깔릴수록 전용 판(잉크)은 계속 팔립니다.
+   - 시간이 갈수록 가만히 있어도 돈이 들어오는 구조.
 
-⑦ 맨파워 (Leadership)
-   - 글로벌 베테랑 C-level 영입을 통한 미국 시장 직접 공략 가속화`;
+7. 미래의 필수품 (세포치료제)
+   - 사람 살리는 꿈의 치료제, 대중화의 열쇠는 '공정 자동화'.
+   - 큐리옥스 없이는 싸고 좋은 치료제를 만들기 어렵습니다.`;
     
                 const defaults = { 
                     symbol: 'KRX:445680', 
                     name: '큐리옥스바이오시스템즈', 
                     memo: defaultMemo,
-                    // Strategy Fields
                     entryPrice: '25,000',
+                    currentPrice: '28,500',
                     targetPrice: '40,000',
                     stopLoss: '22,000',
                     quantity: '100'
@@ -443,78 +443,53 @@
                 return saved ? { ...defaults, ...saved } : defaults;
             });
 
-            // Fetch Real-time Rates Logic
-            const fetchRealtimeRates = async () => {
+            // isManual: true if user clicked the refresh button, false if automatic load on start
+            const fetchRealtimeRates = async (isManual = false) => {
                 setIsRateLoading(true);
-                setRateError(null);
+                if (isManual) setRateError(null); // Clear error if user is retrying
+                
                 try {
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 5000); 
-
                     const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD', { signal: controller.signal });
                     clearTimeout(timeoutId);
-
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    const data = await response.json();
                     
-                    // Update global exchange rates state
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    
+                    const data = await response.json();
                     if (data && data.rates) {
                         setExchangeRates(prev => ({ ...prev, ...data.rates }));
-                        
                         const newKrwRate = data.rates.KRW;
-                        
-                        // Update Dashboard Inputs
                         setSilverInputs(prev => ({ ...prev, currentExch: newKrwRate.toLocaleString('ko-KR', { maximumFractionDigits: 0 }) }));
                         setBtcInputs(prev => ({ ...prev, currentExch: newKrwRate.toLocaleString('ko-KR', { maximumFractionDigits: 0 }) }));
                     }
-
                 } catch (error) {
-                    console.error("Failed to fetch rates:", error);
-                    setRateError("실시간 환율 로딩 실패 (기본값 사용)");
+                    // Only show the toast error if the user explicitly asked for a refresh
+                    if (isManual) {
+                        setRateError("실시간 환율 로딩 실패 (기본값 사용)");
+                    }
                 } finally {
                     setIsRateLoading(false);
                 }
             };
 
-            // Simulation Logic
-            // [Modified] Helper function for annual insurance calculation
             const calculateAnnualRegionalIns = (age, spouseAge, pensionIncome, otherIncome, housePriceRaw) => {
-                // 1. Income Score (Yearly)
-                // Pension income is included at 50%
                 const annualScoreIncome = (pensionIncome * 0.5) + otherIncome;
-                // Simplified formula: approx 7.09% of score income / 12 months
                 const incomePremiumMonthly = (annualScoreIncome * 0.0709) / 12;
-
-                // 2. Property Score
-                // Assumes house price stays constant in real terms (or follows inflation roughly)
                 const housePrice = parseFloat(housePriceRaw) * ONE_HUNDRED_MILLION;
-                const propertyTaxBase = Math.max(0, (housePrice * 0.45) - 50000000); // 1-house deduction assumed
+                const propertyTaxBase = Math.max(0, (housePrice * 0.45) - 50000000); 
                 let propertyPremiumMonthly = 0;
-                
-                // Simplified property score calculation table approximation
                 if (propertyTaxBase > 0) {
-                     // Approx 0.045% monthly roughly matches the score table for common ranges
-                     // Or use a more precise tiered calculation if needed, but linear approx is okay for simulation
-                     // Actual score value is roughly ~1100won per score point. 
-                     // Let's use the formula from the previous auto-calc:
-                     propertyPremiumMonthly = propertyTaxBase * 0.00045; // Approx factor
+                     propertyPremiumMonthly = propertyTaxBase * 0.00045; 
                 }
-
-                // 3. Long-term Care Insurance (12.95% of Health Ins)
                 const totalMonthly = (incomePremiumMonthly + propertyPremiumMonthly) * 1.1295;
-                
-                // Floor to 1000 won
-                return Math.floor(totalMonthly / 1000) * 1000 * 12; // Return Annual Amount
+                return Math.floor(totalMonthly / 1000) * 1000 * 12; 
             };
 
-            // [Modified] Removed the static auto-calculate function for the input field
-            // Replaced with internal dynamic calculation in runSimulation
             const calculateAutoRegionalIns = (inputState, setInputState) => { 
-                // Just keep this for manual estimation if user wants to see a "Max" value
                 const annualPension = (parseFormattedNumber(inputState.pensionSelf) + parseFormattedNumber(inputState.pensionSpouse)) * 12; 
                 const annualOthers = parseFormattedNumber(inputState.ipoProfit) + parseFormattedNumber(inputState.otherIncome) + parseFormattedNumber(inputState.stockLending) + parseFormattedNumber(inputState.rentalIncome) + parseFormattedNumber(inputState.tradingProfit); 
                 const housePrice = inputState.housingMarketPrice;
-                
                 const estAnnual = calculateAnnualRegionalIns(0, 0, annualPension, annualOthers, housePrice);
                 setInputState(prev => ({ ...prev, monthlyRegionalIns: Math.round(estAnnual/12).toLocaleString('ko-KR') })); 
             };
@@ -524,8 +499,6 @@
                 let cUserNon = s.capUserNonISA * ONE_HUNDRED_MILLION; let cSpouseNon = s.capSpouseNonISA * ONE_HUNDRED_MILLION; let cUserISA = s.capUserISA * ONE_HUNDRED_MILLION; let cSpouseISA = s.capSpouseISA * ONE_HUNDRED_MILLION; let cIPO = (s.capIPO || 0) * ONE_HUNDRED_MILLION;
                 const extraReserveValue = parseFormattedNumber(s.extraReserve); 
                 const medicalCostMonthly = parseFormattedNumber(s.monthlyMedical); 
-                // [Modified] No longer using static monthlyRegionalIns input for the whole period
-                // const regionalInsMonthly = parseFormattedNumber(s.monthlyRegionalIns); 
                 const initLiving = parseFormattedNumber(s.monthlyLiving) * 12;
                 
                 const getAdjPension = (base, strategy) => { let ageAdj = 0; let mult = 1.0; if (strategy.startsWith('early')) { const y = parseInt(strategy.replace('early', '')); ageAdj = -y; mult = 1 - (y * 0.06); } else if (strategy.startsWith('defer')) { const y = parseInt(strategy.replace('defer', '')); ageAdj = y; mult = 1 + (y * 0.072); } return { start: 65 + ageAdj, amt: base * mult }; };
@@ -543,25 +516,19 @@
                     const netProfUserNon = grossUserNon * 0.846; const netProfSpouseNon = grossSpouseNon * 0.846; const netProfUserISA = grossUserISA * 0.901; const netProfSpouseISA = grossSpouseISA * 0.901; const netProfIPO = (ipoCmaProfit * 0.846) + ipoCapitalProfit;
                     const totalNetInvestmentProfit = netProfUserNon + netProfSpouseNon + netProfUserISA + netProfSpouseISA + netProfIPO;
                     
-                    // Expenses
                     let weight = 1.0; let lateLifeMedicalAnnual = 0;
                     if (age >= Math.min(userPen.start, spousePen.start)) { if (age < s.highCostStartAge - 5) weight = 1.1; else if (age < s.highCostStartAge) weight = 0.9; else { weight = 0.7; lateLifeMedicalAnnual = medicalCostMonthly * 12 * lInf; } }
                     const basicLivingAnnual = initLiving * lInf * weight;
                     
-                    // Pension Calculation (Yearly Dynamic) - Define here to be available for both Insurance and Income
                     const pensionUserAmt = (age >= userPen.start ? userPen.amt * 12 : 0);
                     const pensionSpouseAmt = (spouseAge >= spousePen.start ? spousePen.amt * 12 : 0);
-                    
                     const annualPensionInflated = (pensionUserAmt + pensionSpouseAmt) * pInf;
                     const annualOthersInflated = initOtherTotal * pInf;
                     const annualBaseIncome = annualPensionInflated + annualOthersInflated;
 
-                    // [Modified] Dynamic Regional Insurance Calculation
                     let regionalInsAnnual = 0;
                     if (age >= (s.regionalInsStartAge || 60)) {
-                        // Calculate dynamically based on THIS year's pension status
                         const baseYearRegional = calculateAnnualRegionalIns(age, spouseAge, (pensionUserAmt + pensionSpouseAmt), initOtherTotal, s.housingMarketPrice);
-                        // Apply inflation to the calculated premium
                         regionalInsAnnual = baseYearRegional * lInf; 
                     }
 
@@ -573,7 +540,6 @@
                     if (cashSurplus < 0) { let rem = Math.abs(cashSurplus); let w1 = Math.min(rem, cIPO); cIPO -= w1; rem -= w1; let w2 = Math.min(rem, cSpouseNon); cSpouseNon -= w2; rem -= w2; let w3 = Math.min(rem, cUserNon); cUserNon -= w3; rem -= w3; let w4 = Math.min(rem, cSpouseISA); cSpouseISA -= w4; rem -= w4; let w5 = Math.min(rem, cUserISA); cUserISA -= w5; rem -= w5; if (rem > 0 && !depletionYear) depletionYear = age; } else { cUserNon += cashSurplus; }
                     const currentTotalAssets = cUserNon + cSpouseNon + cUserISA + cSpouseISA + cIPO; const annualNetChange = currentTotalAssets - startTotalAssets;
                     
-                    // [Modified] Enhanced details object to separate user/spouse pension
                     history.push({ 
                         age, 
                         total: Math.max(0, currentTotalAssets / ONE_HUNDRED_MILLION), 
@@ -590,12 +556,7 @@
                         details: { 
                             taxable: { u: grossUserNon, s: grossSpouseNon, c: ipoCmaProfit }, 
                             exempt: { i: ipoCapitalProfit, ui: grossUserISA, si: grossSpouseISA }, 
-                            income: { 
-                                p: annualPensionInflated, // Total inflated pension
-                                p_user: pensionUserAmt * pInf, // User inflated
-                                p_spouse: pensionSpouseAmt * pInf, // Spouse inflated
-                                o: annualOthersInflated 
-                            }, 
+                            income: { p: annualPensionInflated, p_user: pensionUserAmt * pInf, p_spouse: pensionSpouseAmt * pInf, o: annualOthersInflated }, 
                             expense: { l: basicLivingAnnual, m: lateLifeMedicalAnnual, r: regionalInsAnnual, t: incTax, e: extraReserveValue } 
                         } 
                     });
@@ -610,24 +571,27 @@
                 setSimResult({ history, summary: { initial: s.capUserNonISA + s.capSpouseNonISA + s.capUserISA + s.capSpouseISA + s.capIPO, final: finalAssets, pv: pv, buffer: bufferText, maxAge: calculatedMaxAge, tax: totalTaxAccum, depletion: depletionYear, isSuccess: !depletionYear } });
             }, [simInputs]);
 
-            // Effects
             useEffect(() => { const currentData = linkMode === 'investment' ? routineLinks : blogLinks; const keys = Object.keys(currentData); if (keys.length > 0) setActiveRoutineTab(keys[0]); }, [linkMode]);
-            useEffect(() => { fetchRealtimeRates(); }, []);
+            
+            // Initial fetch in Silent Mode (isManual = false)
+            useEffect(() => { fetchRealtimeRates(false); }, []);
+
             useEffect(() => { localStorage.setItem('invNav_blogLinks', JSON.stringify(blogLinks)); }, [blogLinks]);
-            useEffect(() => { if (isDark) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); }, [isDark]);
+            useEffect(() => { 
+                if (isDark) document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); 
+                localStorage.setItem('invNav_isDark', JSON.stringify(isDark));
+            }, [isDark]);
             useEffect(() => { localStorage.setItem('invNav_routineMemo', routineMemo); }, [routineMemo]);
             useEffect(() => { localStorage.setItem('invNav_routineLinks', JSON.stringify(routineLinks)); }, [routineLinks]);
             useEffect(() => { const dataToSave = { ...silverInputs, holdingQty: '' }; localStorage.setItem('invNav_silver_v12', JSON.stringify(dataToSave)); }, [silverInputs]);
             useEffect(() => { const dataToSave = { ...btcInputs, holdingQty: '' }; localStorage.setItem('invNav_btc_v15', JSON.stringify(dataToSave)); }, [btcInputs]);
-            // [Modified] stockInputs 저장 키를 v5로 업데이트 (전략 필드 포함)
-            useEffect(() => { localStorage.setItem('invNav_stock_v5', JSON.stringify(stockInputs)); }, [stockInputs]);
+            useEffect(() => { localStorage.setItem('invNav_stock_v6', JSON.stringify(stockInputs)); }, [stockInputs]);
             
-            // Debouncing applied to simulation (v5 storage key)
             useEffect(() => { 
                 const timer = setTimeout(() => {
                     localStorage.setItem('invNav_simInputs_v5', JSON.stringify(simInputs)); 
                     runSimulation(); 
-                }, 400); // 0.4s delay for performance
+                }, 400);
                 return () => clearTimeout(timer);
             }, [simInputs, runSimulation]);
 
@@ -639,7 +603,6 @@
             };
             const applyKgPrice = () => { const kgVal = calculateKgPrice(donPrice); if (kgVal > 0) setSilverInputs(p => ({...p, currentDomesticPrice: Math.round(kgVal).toLocaleString('ko-KR')})); };
             
-            // Simple Age Calculation
             const calculateAgeSimple = (birthStr) => {
                 if (!birthStr || birthStr.length !== 8) return null;
                 const y = parseInt(birthStr.substring(0, 4));
@@ -655,7 +618,6 @@
                 return age;
             };
 
-            // BTC Calculator Handlers
             const handleBtcCalcKrwChange = (e) => {
                 const val = e.target.value.replace(/[^0-9.]/g, '');
                 const parts = val.split('.');
@@ -667,7 +629,6 @@
                 
                 const krwVal = parseFormattedNumber(formattedKrw);
                 const qtyVal = krwVal / price;
-                // 소수점 8자리까지, 불필요한 0 제거
                 setBtcCalc({ krw: formattedKrw, qty: qtyVal > 0 ? parseFloat(qtyVal.toFixed(8)) : '' });
             };
 
@@ -687,7 +648,6 @@
 
             const currentRoutineData = linkMode === 'investment' ? routineLinks : blogLinks;
 
-            // Calculations
             const avgResult = useMemo(() => { let q=0, a=0; avgRows.forEach(r=>{const _q=parseFormattedNumber(r.q), _p=parseFormattedNumber(r.p); q+=_q; a+=_q*_p;}); return {totalQ:q, totalAmt:a, avg:q?a/q:0}; }, [avgRows]);
             
             const targetResult = useMemo(() => {
@@ -727,7 +687,6 @@
                 const exchPct = unitBaseCost ? (unitExchEffect / unitBaseCost) * 100 : 0;
                 const kPremPct = unitValAtCurExch ? (unitPremiumEffect / unitValAtCurExch) * 100 : 0; 
                 
-                // Use exchangeRates state for consistency
                 const cnyRate = exchangeRates['CNY'] || 7.25;
                 const shanghaiBase = (curUsd * cnyRate * TROY_OZ_TO_KG);
                 const sPremPct = (isSilver && shanghaiBase) ? ((parseFormattedNumber(silverInputs.currentShanghaiPrice) - shanghaiBase) / shanghaiBase) * 100 : 0;
@@ -749,14 +708,12 @@
                 };
             }, [analysisMode, silverInputs, btcInputs, exchangeRates]);
 
-            // --- IMPORTANT: Defined BEFORE usage ---
             const renderInputsSimplified = () => {
                 const formatDecimal = (val) => {
                     const num = parseFormattedNumber(val);
                     return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 };
 
-                // STOCK MODE RENDER
                 if (analysisMode === 'stock') {
                     return (
                         <div className="flex flex-col h-full relative">
@@ -777,7 +734,6 @@
                     );
                 }
 
-                // SILVER / BTC MODE RENDER
                 return (
                     <div className="flex flex-col h-full gap-4 relative">
                         <div className="grid grid-cols-3 gap-3 flex-shrink-0">
@@ -856,7 +812,7 @@
                             <div className="space-y-3 pt-3 border-t border-dashed border-gray-200">
                                 <div className="flex items-center gap-2 text-sm font-bold text-slate-500"><i className="fa-solid fa-pen-to-square"></i> 시세 직접 입력</div>
                                 <div className="grid grid-cols-2 gap-3">
-                                    <div><label className="text-[10px] text-gray-400 mb-1 block">국제 시세</label><input className="apple-input" value={analysisMode==='silver'?silverInputs.currentUsdPrice:btcInputs.currentBtcUsd} onChange={e=>analysisMode==='silver'?setSilverInputs({...silverInputs,currentUsdPrice:e.target.value}):handleCommaChange(e, v=>setBtcInputs({...btcInputs,currentBtcUsd:v}))} /></div>
+                                    <div><label className="text-[10px] text-gray-400 mb-1 block">국제 시세</label><input className="apple-input" value={analysisMode==='silver'?silverInputs.currentUsdPrice:btcInputs.currentBtcUsd} onChange={e=>analysisMode==='silver'?handleCommaChange(e,v=>setSilverInputs({...silverInputs,currentUsdPrice:v})):handleCommaChange(e, v=>setBtcInputs({...btcInputs,currentBtcUsd:v}))} /></div>
                                     <div><label className="text-[10px] text-gray-400 mb-1 block">국내 시세 (원)</label><input className="apple-input" value={analysisMode==='silver'?silverInputs.currentDomesticPrice:btcInputs.currentDomesticPrice} onChange={e=>analysisMode==='silver'?handleCommaChange(e,v=>setSilverInputs({...silverInputs,currentDomesticPrice:v})):handleCommaChange(e,v=>setBtcInputs({...btcInputs,currentDomesticPrice:v}))} /></div>
                                     {analysisMode==='silver' && <div><label className="text-[10px] text-gray-400 mb-1 block">상하이 시세</label><input className="apple-input" value={silverInputs.currentShanghaiPrice} onChange={e=>handleCommaChange(e,v=>setSilverInputs({...silverInputs,currentShanghaiPrice:v}))} /></div>}
                                 </div>
@@ -945,7 +901,6 @@
                 </div>
             );
 
-            // STOCK MODE COMPONENT HELPERS
             const renderStockDeepDive = () => {
                 const code = stockInputs.symbol.replace('KRX:', '');
                 return (
@@ -1011,34 +966,45 @@
                 );
             };
 
-            // [New] Strategy Board Renderer
             const renderStockStrategy = () => {
                 const s = stockInputs;
                 const update = (k, v) => setStockInputs(prev => ({ ...prev, [k]: v }));
                 
                 const entry = parseFormattedNumber(s.entryPrice);
+                const current = parseFormattedNumber(s.currentPrice);
                 const target = parseFormattedNumber(s.targetPrice);
                 const stop = parseFormattedNumber(s.stopLoss);
                 const qty = parseFormattedNumber(s.quantity);
                 
-                const upsideAmt = target - entry;
-                const downsideAmt = entry - stop;
-                const upsidePct = entry ? (upsideAmt / entry) * 100 : 0;
-                const downsidePct = entry ? (downsideAmt / entry) * 100 : 0;
+                const currentProfitAmt = (current - entry) * qty;
+                const currentProfitPct = entry ? ((current - entry) / entry) * 100 : 0;
                 
-                const rrRatio = downsideAmt > 0 ? (upsideAmt / downsideAmt) : 0;
-                const isGoodRR = rrRatio >= 2; // Reward is at least 2x Risk
+                const progressToTarget = (target - entry) > 0 ? ((current - entry) / (target - entry)) * 100 : 0;
                 
-                const profitAmt = upsideAmt * qty;
-                const lossAmt = downsideAmt * qty;
+                const totalRange = target - stop;
+                const getPos = (val) => {
+                    if (totalRange <= 0) return 0;
+                    return Math.min(Math.max(((val - stop) / totalRange) * 100, 0), 100);
+                };
+                const entryPos = getPos(entry);
+                const currentPos = getPos(current);
+
+                const rrRatio = (entry - stop) > 0 ? ((target - entry) / (entry - stop)) : 0;
+                const isGoodRR = rrRatio >= 2; 
 
                 return (
                     <div className="flex flex-col h-full p-2 gap-4">
-                        {/* Input Grid */}
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                             <div className="space-y-1">
                                 <label className="text-[10px] font-bold text-gray-400 pl-1">평단가 (Entry)</label>
                                 <input className="apple-input bg-gray-50 dark:bg-white/5 !text-sm !py-2.5 text-slate-700 dark:text-slate-200" placeholder="매수가" value={s.entryPrice} onChange={e => handleCommaChange(e, v=>update('entryPrice', v))} />
+                            </div>
+                            <div className="space-y-1">
+                                <div className="flex justify-between items-center px-1">
+                                    <label className="text-[10px] font-bold text-emerald-500">현재가 (Current)</label>
+                                    {entry > 0 && <span className={`text-[10px] font-bold ${currentProfitPct >= 0 ? 'text-red-500' : 'text-blue-500'}`}>{currentProfitPct > 0 ? '+' : ''}{currentProfitPct.toFixed(1)}%</span>}
+                                </div>
+                                <input className="apple-input !text-emerald-600 dark:!text-emerald-400 bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 !text-sm !py-2.5 font-bold" placeholder="현재가" value={s.currentPrice} onChange={e => handleCommaChange(e, v=>update('currentPrice', v))} />
                             </div>
                             <div className="space-y-1">
                                 <label className="text-[10px] font-bold text-gray-400 pl-1">수량 (Qty)</label>
@@ -1047,53 +1013,67 @@
                             <div className="space-y-1">
                                 <div className="flex justify-between items-center px-1">
                                     <label className="text-[10px] font-bold text-blue-500">목표가 (Target)</label>
-                                    {entry > 0 && <span className="text-[10px] font-bold text-blue-500">+{upsidePct.toFixed(1)}%</span>}
+                                    {entry > 0 && <span className="text-[10px] font-bold text-blue-500">+{((target-entry)/entry*100).toFixed(1)}%</span>}
                                 </div>
                                 <input className="apple-input !text-blue-600 dark:!text-blue-400 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 !text-sm !py-2.5" placeholder="목표가" value={s.targetPrice} onChange={e => handleCommaChange(e, v=>update('targetPrice', v))} />
                             </div>
                             <div className="space-y-1">
                                 <div className="flex justify-between items-center px-1">
                                     <label className="text-[10px] font-bold text-rose-500">손절가 (Stop)</label>
-                                    {entry > 0 && <span className="text-[10px] font-bold text-rose-500">-{downsidePct.toFixed(1)}%</span>}
+                                    {entry > 0 && <span className="text-[10px] font-bold text-rose-500">-{((entry-stop)/entry*100).toFixed(1)}%</span>}
                                 </div>
                                 <input className="apple-input !text-rose-600 dark:!text-rose-400 bg-rose-50/50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-900/30 !text-sm !py-2.5" placeholder="손절가" value={s.stopLoss} onChange={e => handleCommaChange(e, v=>update('stopLoss', v))} />
                             </div>
                         </div>
                         
-                        {/* Strategy Dashboard */}
                         <div className="flex-1 bg-slate-50 dark:bg-white/5 rounded-2xl p-4 flex flex-col justify-between border border-slate-100 dark:border-white/5 relative overflow-hidden">
-                            {/* Visual Bar */}
-                            <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full flex overflow-hidden mb-4 relative">
-                                {/* Stop Loss Zone */}
-                                <div className="h-full bg-rose-400" style={{ width: '30%' }}></div>
-                                {/* Profit Zone */}
-                                <div className="h-full bg-blue-400 flex-1"></div>
-                                {/* Entry Marker */}
-                                <div className="absolute left-[30%] top-0 bottom-0 w-1 bg-black dark:bg-white z-10 transform -translate-x-1/2"></div>
-                                <div className="absolute left-[30%] -top-1 transform -translate-x-1/2 text-[9px] font-black text-slate-800 dark:text-white bg-slate-200 dark:bg-slate-600 px-1 rounded">ENTRY</div>
+                            <div className="mb-6">
+                                <div className="flex justify-between text-[9px] font-bold text-gray-400 mb-2 px-1">
+                                    <span>STOP ({formatNumber(stop)})</span>
+                                    <span>TARGET ({formatNumber(target)})</span>
+                                </div>
+                                <div className="w-full h-4 bg-gray-200 dark:bg-gray-700 rounded-full flex overflow-hidden relative shadow-inner">
+                                    <div className="h-full bg-rose-200 dark:bg-rose-900/30" style={{ width: `${entryPos}%` }}></div>
+                                    <div className="h-full bg-blue-100 dark:bg-blue-900/20 flex-1"></div>
+                                    <div className="absolute top-0 bottom-0 w-0.5 bg-slate-400 z-10" style={{ left: `${entryPos}%` }}></div>
+                                    <div 
+                                        className="absolute top-[-4px] bottom-[-4px] w-1.5 bg-emerald-500 z-20 shadow-[0_0_8px_rgba(16,185,129,0.6)] rounded-full transition-all duration-500" 
+                                        style={{ left: `${currentPos}%`, transform: 'translateX(-50%)' }}
+                                    >
+                                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-[9px] font-black text-emerald-600 dark:text-emerald-400 whitespace-nowrap bg-white/80 dark:bg-black/80 px-1 rounded shadow-sm">NOW</div>
+                                    </div>
+                                </div>
+                                
+                                <div className="mt-3 flex justify-between items-center">
+                                    <div className="text-[10px] font-bold text-gray-400">목표 달성률</div>
+                                    <div className="flex-1 mx-3 h-1.5 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
+                                        <div className={`h-full transition-all duration-700 ${progressToTarget>=100?'bg-emerald-400':'bg-blue-500'}`} style={{ width: `${Math.max(0, Math.min(progressToTarget, 100))}%` }}></div>
+                                    </div>
+                                    <div className={`text-[10px] font-black ${progressToTarget>=100?'text-emerald-500':'text-blue-500'}`}>{progressToTarget.toFixed(0)}%</div>
+                                </div>
                             </div>
                             
-                            <div className="flex justify-between items-end mb-2">
+                            <div className="flex justify-between items-end mb-4">
                                 <div>
-                                    <div className="text-[10px] text-gray-400 font-bold mb-0.5">손익비 (Risk/Reward)</div>
+                                    <div className="text-[10px] text-gray-400 font-bold mb-0.5">손익비 (R/R Ratio)</div>
                                     <div className={`text-3xl font-black ${isGoodRR ? 'text-emerald-500' : 'text-orange-500'}`}>1 : {rrRatio.toFixed(1)}</div>
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-[10px] text-gray-400 font-bold mb-0.5">전략 평가</div>
-                                    <div className={`px-2 py-1 rounded-lg text-xs font-bold ${isGoodRR ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'}`}>
-                                        {isGoodRR ? '진입 적합 (Good)' : '리스크 큼 (Bad)'}
+                                    <div className="text-[10px] text-gray-400 font-bold mb-0.5">현재 손익 (Real-time)</div>
+                                    <div className={`text-xl font-black ${currentProfitAmt >= 0 ? 'text-red-500' : 'text-blue-500'}`}>
+                                        {currentProfitAmt >= 0 ? '+' : ''}{formatManwon(currentProfitAmt)}
                                     </div>
                                 </div>
                             </div>
                             
                             <div className="grid grid-cols-2 gap-2 mt-auto pt-3 border-t border-gray-200 dark:border-white/10">
                                 <div className="text-center">
-                                    <span className="text-[10px] text-gray-400 block">예상 손실액</span>
-                                    <span className="text-sm font-bold text-rose-500">-{formatManwon(lossAmt)}</span>
+                                    <span className="text-[10px] text-gray-400 block">최대 손실 (Risk)</span>
+                                    <span className="text-sm font-bold text-rose-500">-{formatManwon((entry-stop)*qty)}</span>
                                 </div>
                                 <div className="text-center">
-                                    <span className="text-[10px] text-gray-400 block">예상 수익금</span>
-                                    <span className="text-sm font-bold text-blue-500">+{formatManwon(profitAmt)}</span>
+                                    <span className="text-[10px] text-gray-400 block">목표 수익 (Reward)</span>
+                                    <span className="text-sm font-bold text-blue-500">+{formatManwon((target-entry)*qty)}</span>
                                 </div>
                             </div>
                         </div>
@@ -1102,9 +1082,6 @@
             };
             
             const renderMarketIndices = () => {
-                // [Modified] 바이오/성장주 투자자를 위한 핵심 지표로 재구성
-                // 1. 미국 10년물 국채 (금리) 2. XBI (미국 바이오) 3. 주요 학회 일정
-                
                 const indices = [
                     { name: "미국 10년물 국채 금리", url: "https://kr.investing.com/rates-bonds/u.s.-10-year-bond-yield", icon: "fa-scale-unbalanced", color: "text-slate-600", desc: "바이오 밸류에이션(할인율) 핵심" },
                     { name: "XBI (S&P Biotech)", url: "https://www.google.com/finance/quote/XBI:NYSEARCA", icon: "fa-dna", color: "text-emerald-500", desc: "미국 중소형 바이오 투심 지표" },
@@ -1166,7 +1143,6 @@
                 );
             };
 
-            // --- Financial Tax Render ---
             const renderFinancialTax = () => {
                 const totalFinIncome = finList.reduce((a, c) => a + c.amount, 0);
                 const earnedIncomeValue = parseFormattedNumber(earnedIncome);
@@ -1267,7 +1243,6 @@
                 );
             };
 
-            // --- IMPORTANT: Define table rendering function BEFORE using it ---
             const renderTableContent = (isPopup = false) => (
                 <div className={`overflow-x-auto ${isPopup ? 'h-full' : ''}`}>
                     <table className="w-full text-[11px] sm:text-[12px] text-left border-collapse table-auto min-w-max">
@@ -1309,17 +1284,16 @@
                                                 </div>
                                             )}
                                         </td>
-                                        {simTableVisibleCols.taxable && <td className={`px-2 py-2.5 font-black num-font text-right ${h.taxableProfit > 20000000 ? 'text-red-500 underline' : 'text-indigo-600 dark:text-indigo-200'}`}><div className={`${showTableDetails ? 'text-[10px] mb-1' : 'text-xs'}`}>{formatNumber(h.taxableProfit)}</div>{showTableDetails && <div className="text-[8px] opacity-70 leading-tight border-t dark:border-slate-600 mt-1 pt-1 font-normal animate-fade-in">본인: {formatNumber(h.details.taxable.u)}<br/>배우자: {formatNumber(h.details.taxable.s)}<br/>CMA: {formatNumber(h.details.taxable.c)}</div>}</td>}
-                                        {simTableVisibleCols.exempt && <td className="px-2 py-2.5 text-emerald-600 dark:text-emerald-200 font-black num-font text-right"><div className={`${showTableDetails ? 'text-[10px] mb-1' : 'text-xs'}`}>{formatNumber(h.separateExemptProfit)}</div>{showTableDetails && <div className="text-[8px] opacity-70 leading-tight border-t dark:border-slate-600 mt-1 pt-1 font-normal animate-fade-in">공모주: {formatNumber(h.details.exempt.i)}<br/>본인ISA: {formatNumber(h.details.exempt.ui)}<br/>배우자ISA: {formatNumber(h.details.exempt.si)}</div>}</td>}
-                                        {/* [Modified] Income Column Details */}
+                                        {simTableVisibleCols.taxable && <td className={`px-2 py-2.5 font-black num-font text-right ${h.taxableProfit > 20000000 ? 'text-red-500 underline' : 'text-indigo-600 dark:text-indigo-200'}`}><div className={`${showTableDetails ? 'text-[10px] mb-1' : 'text-xs'}`}>{formatNumber(h.taxableProfit)}</div>{showTableDetails && <div className="text-[8px] opacity-70 leading-tight border-t dark:border-slate-600 mt-1 pt-1 font-normal animate-fade-in">본인: {formatNumber(h.details?.taxable?.u)}<br/>배우자: {formatNumber(h.details?.taxable?.s)}<br/>CMA: {formatNumber(h.details?.taxable?.c)}</div>}</td>}
+                                        {simTableVisibleCols.exempt && <td className="px-2 py-2.5 text-emerald-600 dark:text-emerald-200 font-black num-font text-right"><div className={`${showTableDetails ? 'text-[10px] mb-1' : 'text-xs'}`}>{formatNumber(h.separateExemptProfit)}</div>{showTableDetails && <div className="text-[8px] opacity-70 leading-tight border-t dark:border-slate-600 mt-1 pt-1 font-normal animate-fade-in">공모주: {formatNumber(h.details?.exempt?.i)}<br/>본인ISA: {formatNumber(h.details?.exempt?.ui)}<br/>배우자ISA: {formatNumber(h.details?.exempt?.si)}</div>}</td>}
                                         {simTableVisibleCols.income && (
                                             <td className="px-2 py-2.5 text-blue-600 dark:text-blue-300 font-black num-font text-right">
                                                 <div className={`${showTableDetails ? 'text-[10px] mb-1' : 'text-xs'}`}>{formatNumber(h.baseIncome)}</div>
                                                 {showTableDetails && (
                                                     <div className="text-[8px] opacity-70 leading-tight border-t dark:border-slate-600 mt-1 pt-1 font-normal animate-fade-in">
-                                                        <span className={h.details.income.p_user > 0 ? "text-blue-700 dark:text-blue-200 font-bold" : "text-gray-400"}>본인연금: {formatNumber(h.details.income.p_user)}</span><br/>
-                                                        <span className={h.details.income.p_spouse > 0 ? "text-blue-700 dark:text-blue-200 font-bold" : "text-gray-400"}>배우자연금: {formatNumber(h.details.income.p_spouse)}</span><br/>
-                                                        기타수입: {formatNumber(h.details.income.o)}
+                                                        <span className={h.details?.income?.p_user > 0 ? "text-blue-700 dark:text-blue-200 font-bold" : "text-gray-400"}>본인연금: {formatNumber(h.details?.income?.p_user)}</span><br/>
+                                                        <span className={h.details?.income?.p_spouse > 0 ? "text-blue-700 dark:text-blue-200 font-bold" : "text-gray-400"}>배우자연금: {formatNumber(h.details?.income?.p_spouse)}</span><br/>
+                                                        기타수입: {formatNumber(h.details?.income?.o)}
                                                     </div>
                                                 )}
                                             </td>
@@ -1329,10 +1303,10 @@
                                                 <div className={`${showTableDetails ? 'text-[10px] mb-1' : 'text-xs'}`}>{formatNumber(totalExpense)}</div>
                                                 {showTableDetails && (
                                                     <div className="text-[8px] opacity-70 leading-tight border-t dark:border-slate-600 mt-1 pt-1 font-normal animate-fade-in">
-                                                        생활비: {formatNumber(h.details.expense.l)}<br/>
-                                                        {h.details.expense.m > 0 && <>의료/간병: {formatNumber(h.details.expense.m)}<br/></>}
-                                                        {h.details.expense.r > 0 && <span className="font-bold text-orange-600 dark:text-orange-400">건보료: {formatNumber(h.details.expense.r)}<br/></span>}
-                                                        세금: {formatNumber(h.details.expense.t)}
+                                                        생활비: {formatNumber(h.details?.expense?.l)}<br/>
+                                                        {h.details?.expense?.m > 0 && <>의료/간병: {formatNumber(h.details?.expense?.m)}<br/></>}
+                                                        {h.details?.expense?.r > 0 && <span className="font-bold text-orange-600 dark:text-orange-400">건보료: {formatNumber(h.details?.expense?.r)}<br/></span>}
+                                                        세금: {formatNumber(h.details?.expense?.t)}
                                                     </div>
                                                 )}
                                             </td>
@@ -1360,7 +1334,6 @@
                 </div>
             );
 
-            // --- IMPORTANT: Render Retirement Simulation (Was missing) ---
             const renderRetirementSimulation = () => (
                 <div className="animate-fade-in pb-10 space-y-6">
                     <div className="flex justify-between items-end px-1">
@@ -1373,7 +1346,6 @@
                         </button>
                     </div>
                     
-                    {/* 1. Result Summary Card */}
                     {simResult.summary && (
                         <div className={`relative w-full overflow-hidden rounded-[24px] p-5 sm:p-8 text-white shadow-xl transition-all ${simResult.summary.isSuccess ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-emerald-500/20' : 'bg-gradient-to-br from-rose-400 to-rose-600 shadow-rose-500/20'}`}>
                             <div className="absolute -right-10 -bottom-16 opacity-10 transform rotate-12 pointer-events-none">
@@ -1394,7 +1366,6 @@
                                         <div className="text-lg sm:text-xl font-bold tracking-tight">{formatNumber(simResult.summary.pv)}원</div>
                                     </div>
                                 </div>
-                                {/* lg:mr-24 제거하여 우측 정렬 맞춤 */}
                                 <div className="flex items-center gap-4 bg-white/15 backdrop-blur-md rounded-2xl p-4 sm:p-6 border border-white/20 w-full lg:w-auto min-w-[240px] shadow-inner">
                                     <div className="flex-1">
                                         <div className="text-[9px] sm:text-[10px] font-bold text-white/70 tracking-widest uppercase mb-0.5">Asset Lifespan</div>
@@ -1415,12 +1386,10 @@
                         </div>
                     )}
 
-                    {/* 2. Main Chart */}
                     <AppleCard title="자산 흐름 시뮬레이션" subTitle="연령별 자산 변화 및 고갈 시점 예측" rightContent={<div className="text-[10px] text-gray-400 font-medium bg-gray-100 dark:bg-[#2C2C2E] px-2 py-1 rounded-lg">인플레이션 {simInputs.inflationRate}% 적용</div>}>
                         <SimulationChart history={simResult.history} isDark={isDark} />
                     </AppleCard>
 
-                    {/* 3. Inline Table */}
                     <div className="mt-6 bg-white dark:bg-slate-800 p-3 rounded-xl border dark:border-slate-700 shadow-sm relative">
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                             <div className="flex items-center">
@@ -1435,7 +1404,6 @@
                                 </div>
                             </div>
                         </div>
-                        {/* Legend for Table */}
                         <div className="flex flex-wrap gap-x-3 gap-y-1 mb-3 px-1 text-[10px] text-gray-500 dark:text-gray-400 border-b dark:border-white/5 pb-2">
                             <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-red-500"></div>본인일반</div>
                             <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-amber-500"></div>배우자일반</div>
@@ -1446,7 +1414,6 @@
                         {renderTableContent(false)}
                     </div>
 
-                    {/* Expanded Table Modal */}
                     {isSimTableExpanded && (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
                             <div className="bg-white dark:bg-[#1C1C1E] w-full max-w-7xl h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col relative border border-gray-200 dark:border-white/10">
@@ -1468,7 +1435,6 @@
                         </div>
                     )}
 
-                    {/* Settings Modal */}
                     {isSimInputModalOpen && tempSimInputs && (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
                             <div className="bg-white dark:bg-[#1C1C1E] w-full max-w-5xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200 dark:border-white/10">
@@ -1481,7 +1447,6 @@
                                 </div>
                                 <div className="flex-1 overflow-y-auto p-6 bg-[#F5F5F7] dark:bg-black/20">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        {/* 1. Basic Info */}
                                         <div className="bg-white dark:bg-[#2C2C2E] p-5 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm">
                                             <h3 className="text-sm font-black text-slate-800 dark:text-white mb-4 flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-white/5"><div className="w-6 h-6 rounded-md bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center"><i className="fa-solid fa-user-gear text-[10px]"></i></div>기본 프로필</h3>
                                             <div className="grid grid-cols-2 gap-4">
@@ -1489,8 +1454,6 @@
                                                 <div><label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 mb-1.5 block">배우자 나이</label><input type="number" className="apple-input" value={tempSimInputs.spouseCurrentAge} onChange={e=>setTempSimInputs({...tempSimInputs, spouseCurrentAge: Number(e.target.value)})} /></div>
                                                 <div className="col-span-2"><label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 mb-1.5 block">은퇴 시뮬레이션 시작 나이</label><input type="number" className="apple-input" value={tempSimInputs.simulationStartAge} onChange={e=>setTempSimInputs({...tempSimInputs, simulationStartAge: Number(e.target.value)})} /></div>
                                             </div>
-                                            
-                                            {/* Age Calculator (Volatile) */}
                                             <div className="mt-4 pt-4 border-t border-dashed border-gray-200 dark:border-white/10">
                                                 <label className="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 mb-2 flex items-center gap-1"><i className="fa-solid fa-cake-candles"></i> 만 나이 계산기 (단순확인용)</label>
                                                 <div className="flex gap-2">
@@ -1509,7 +1472,6 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        {/* 2. Assets */}
                                         <div className="bg-white dark:bg-[#2C2C2E] p-5 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm">
                                             <h3 className="text-sm font-black text-slate-800 dark:text-white mb-4 flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-white/5"><div className="w-6 h-6 rounded-md bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center"><i className="fa-solid fa-sack-dollar text-[10px]"></i></div>초기 투자 자산 (단위: 억원)</h3>
                                             <div className="grid grid-cols-2 gap-4">
@@ -1520,7 +1482,6 @@
                                                 <div className="col-span-2"><label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 mb-1.5 block">공모주/CMA 등 유동성 자산</label><input type="number" step="0.1" className="apple-input" value={tempSimInputs.capIPO} onChange={e=>setTempSimInputs({...tempSimInputs, capIPO: Number(e.target.value)})} /></div>
                                             </div>
                                         </div>
-                                        {/* 3. Income */}
                                         <div className="bg-white dark:bg-[#2C2C2E] p-5 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm">
                                             <h3 className="text-sm font-black text-slate-800 dark:text-white mb-4 flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-white/5"><div className="w-6 h-6 rounded-md bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center"><i className="fa-solid fa-money-bill-trend-up text-[10px]"></i></div>소득 및 수입원 (단위: 만원)</h3>
                                             <div className="grid grid-cols-2 gap-4">
@@ -1534,7 +1495,6 @@
                                                 <div className="col-span-2 space-y-2"><span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block"><i className="fa-solid fa-rotate"></i> 연간 수령 (기타 수익)</span><div className="grid grid-cols-2 gap-2"><div><label className="text-[9px] text-gray-400 mb-0.5 block">공모주 수익</label><input className="apple-input" value={tempSimInputs.ipoProfit} onChange={e=>handleCommaChange(e, v=>setTempSimInputs({...tempSimInputs, ipoProfit:v}))} /></div><div><label className="text-[9px] text-gray-400 mb-0.5 block">기타 잡수익</label><input className="apple-input" value={tempSimInputs.otherIncome} onChange={e=>handleCommaChange(e, v=>setTempSimInputs({...tempSimInputs, otherIncome:v}))} /></div><div><label className="text-[9px] text-gray-400 mb-0.5 block">대여금 이자</label><input className="apple-input" value={tempSimInputs.stockLending} onChange={e=>handleCommaChange(e, v=>setTempSimInputs({...tempSimInputs, stockLending:v}))} /></div><div><label className="text-[9px] text-gray-400 mb-0.5 block">임대 소득</label><input className="apple-input" value={tempSimInputs.rentalIncome} onChange={e=>handleCommaChange(e, v=>setTempSimInputs({...tempSimInputs, rentalIncome:v}))} /></div><div><label className="text-[9px] text-gray-400 mb-0.5 block">매매 차익</label><input className="apple-input" value={tempSimInputs.tradingProfit} onChange={e=>handleCommaChange(e, v=>setTempSimInputs({...tempSimInputs, tradingProfit:v}))} /></div></div></div>
                                             </div>
                                         </div>
-                                        {/* 4. Expense */}
                                         <div className="bg-white dark:bg-[#2C2C2E] p-5 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm">
                                             <h3 className="text-sm font-black text-slate-800 dark:text-white mb-4 flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-white/5"><div className="w-6 h-6 rounded-md bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 flex items-center justify-center"><i className="fa-solid fa-cart-shopping text-[10px]"></i></div>지출 및 비용 (단위: 만원)</h3>
                                             <div className="space-y-4">
@@ -1544,7 +1504,6 @@
                                                 <div className="bg-orange-50 dark:bg-orange-900/20 p-3 rounded-xl border border-orange-100 dark:border-orange-800/30">
                                                     <div className="flex justify-between items-center mb-2"><label className="text-[10px] font-bold text-orange-700 dark:text-orange-400"><i className="fa-solid fa-house-chimney-medical"></i> 지역가입 건보료 (자동 연동)</label></div>
                                                     <div className="flex items-center gap-2 mb-2 bg-white/50 dark:bg-black/10 p-1.5 rounded-lg"><label className="text-[9px] font-bold text-orange-800 dark:text-orange-300 whitespace-nowrap">납부 시작(직장퇴사):</label><input type="number" className="apple-input !py-1 !text-xs flex-1 !bg-white dark:!bg-white/10 text-center" value={tempSimInputs.regionalInsStartAge || 60} onChange={e=>setTempSimInputs({...tempSimInputs, regionalInsStartAge: Number(e.target.value)})} placeholder="60" /><span className="text-[9px] font-bold text-orange-800 dark:text-orange-300">세 부터</span></div>
-                                                    {/* [Modified] UI update: Disabled input to imply auto-calculation or use as 'Max Estimate' display */}
                                                     <div className="relative">
                                                         <input className="apple-input !bg-white dark:!bg-white/10 mb-2 opacity-70" value={tempSimInputs.monthlyRegionalIns} readOnly placeholder="시뮬레이션 시 매년 자동 계산됨" />
                                                         <div className="absolute right-3 top-2.5 text-[9px] text-orange-600/50 font-bold">*매년 소득따라 변동</div>
@@ -1556,7 +1515,6 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        {/* 5. Economic Assumptions (NEW) */}
                                         <div className="md:col-span-2 bg-white dark:bg-[#2C2C2E] p-5 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm">
                                             <h3 className="text-sm font-black text-slate-800 dark:text-white mb-4 flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-white/5"><div className="w-6 h-6 rounded-md bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center"><i className="fa-solid fa-percent text-[10px]"></i></div>수익률 및 물가상승률 가정 (연간 %)</h3>
                                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -1590,7 +1548,6 @@
                             </div>
                         </header>
                         <main className="pb-24 md:pb-0">
-                            {/* Dashboard Content */}
                             {activeTab === 'dashboard' && (
                                 <div className="space-y-4">
                                     <div className="grid grid-cols-3 gap-3">
@@ -1610,7 +1567,7 @@
                                                     <button onClick={()=>setAnalysisMode('bitcoin')} className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${analysisMode==='bitcoin'?'bg-white shadow-sm text-black':'text-gray-500'}`}>BTC</button>
                                                     <button onClick={()=>setAnalysisMode('stock')} className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${analysisMode==='stock'?'bg-white shadow-sm text-black':'text-gray-500'}`}>주식</button>
                                                 </div>
-                                                {analysisMode !== 'stock' && <button onClick={fetchRealtimeRates} className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition" title="실시간 환율 가져오기"><i className={`fa-solid fa-rotate-right text-sm ${isRateLoading ? 'animate-spin' : ''}`}></i></button>}
+                                                {analysisMode !== 'stock' && <button onClick={()=>fetchRealtimeRates(true)} className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition" title="실시간 환율 가져오기"><i className={`fa-solid fa-rotate-right text-sm ${isRateLoading ? 'animate-spin' : ''}`}></i></button>}
                                                 {analysisMode !== 'stock' && <button onClick={()=>setIsInputModalOpen(true)} className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition"><i className="fa-solid fa-gear text-sm"></i></button>}
                                             </div>
                                         }>
@@ -1672,7 +1629,6 @@
                                 </div>
                             )}
                             
-                            {/* Routine Tab */}
                             {activeTab === 'routine' && (
                                 <div className="flex flex-col h-[calc(100vh-140px)]">
                                     <div className="flex justify-center mb-4 shrink-0">
@@ -1728,7 +1684,6 @@
                                 </div>
                             )}
 
-                            {/* Tools Tab */}
                             {activeTab === 'tools' && (
                                 <div className="flex flex-col h-[calc(100vh-140px)]">
                                     <div className="flex space-x-2 bg-gray-200 dark:bg-[#1C1C1E] p-1.5 rounded-xl mb-6 overflow-x-auto shrink-0 scrollbar-hide">
@@ -1788,7 +1743,6 @@
                                                     <div className="space-y-6">
                                                         <div className="flex gap-4 items-center justify-center py-4">
                                                             <select className="apple-input !w-32 text-center bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 font-bold !py-3 !text-base rounded-xl" value={exchInputs.base} onChange={e=>setExchInputs({...exchInputs, base:e.target.value})}>
-                                                                {/* Sort keys to put USD, KRW first, then alphabetical */}
                                                                 {Object.keys(exchangeRates).sort((a,b) => {
                                                                     const priorities = ['USD', 'KRW', 'JPY', 'CNY', 'EUR'];
                                                                     const idxA = priorities.indexOf(a);
@@ -1820,7 +1774,6 @@
                                                                     const amount = parseFormattedNumber(exchInputs.amount);
                                                                     const baseRate = exchangeRates[exchInputs.base] || 1;
                                                                     const targetRate = exchangeRates[exchInputs.target] || 1;
-                                                                    // Formula: Amount * (TargetRate / BaseRate) because rates are based on USD=1
                                                                     const result = amount * (targetRate / baseRate);
                                                                     return result.toLocaleString('ko-KR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                                                                 })()}
@@ -1889,7 +1842,6 @@
                                 </div>
                             )}
                             
-                            {/* Tax Tab */}
                             {activeTab === 'tax' && (
                                 <div className="flex flex-col h-[calc(100vh-140px)]">
                                     <div className="flex justify-center mb-4 shrink-0">
@@ -1906,7 +1858,6 @@
                             )}
                         </main>
 
-                        {/* Mobile Bottom Navigation */}
                         <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white/90 dark:bg-[#1C1C1E]/90 backdrop-blur-lg border-t border-gray-200 dark:border-white/10 pb-safe z-40">
                             <div className="flex justify-around items-center h-16 px-2">
                                 {[
