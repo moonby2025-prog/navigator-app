@@ -403,8 +403,8 @@
             });
 
             const [stockInputs, setStockInputs] = useState(() => {
-                // 버전 업그레이드 (v6 -> v7)하여 새로운 메모 스타일 적용 유도
-                const saved = safeJsonParse('invNav_stock_v7', null);
+                // 버전 업그레이드 (v7 -> v8)하여 새로운 체크리스트/수수료 상태 추가
+                const saved = safeJsonParse('invNav_stock_v8', null);
                 const defaultMemo = `[🚀 큐리옥스: 7가지 핵심 투자 포인트]
 
 1. 세탁기 혁명 (탈원심분리): 100년 된 손빨래(원심분리기)를 끝낸 연구실의 드럼세탁기!
@@ -429,7 +429,10 @@
                     currentPrice: '28,500',
                     targetPrice: '40,000',
                     stopLoss: '22,000',
-                    quantity: '100'
+                    quantity: '100',
+                    // New Fields
+                    includeFee: true,
+                    checklist: [false, false, false, false, false]
                 };
                 return saved ? { ...defaults, ...saved } : defaults;
             });
@@ -576,7 +579,12 @@
             useEffect(() => { localStorage.setItem('invNav_routineLinks', JSON.stringify(routineLinks)); }, [routineLinks]);
             useEffect(() => { const dataToSave = { ...silverInputs, holdingQty: '' }; localStorage.setItem('invNav_silver_v12', JSON.stringify(dataToSave)); }, [silverInputs]);
             useEffect(() => { const dataToSave = { ...btcInputs, holdingQty: '' }; localStorage.setItem('invNav_btc_v15', JSON.stringify(dataToSave)); }, [btcInputs]);
-            useEffect(() => { localStorage.setItem('invNav_stock_v7', JSON.stringify(stockInputs)); }, [stockInputs]);
+            
+            // 수정됨: 주식(Stock) 데이터 저장 시 'quantity(보유수량)'는 보안상 100(기본값)으로 초기화하여 저장
+            useEffect(() => { 
+                const dataToSave = { ...stockInputs, quantity: '100' }; 
+                localStorage.setItem('invNav_stock_v8', JSON.stringify(dataToSave)); 
+            }, [stockInputs]);
             
             useEffect(() => { 
                 const timer = setTimeout(() => {
@@ -715,7 +723,7 @@
                             <div className="flex-1 bg-yellow-50 dark:bg-yellow-900/10 rounded-xl p-4 border border-yellow-100 dark:border-yellow-900/30 shadow-inner flex flex-col">
                                 <label className="text-xs font-bold text-yellow-800 dark:text-yellow-200 mb-2 flex items-center gap-1"><i className="fa-regular fa-lightbulb"></i> 투자 시나리오 & 핵심 아이디어 (Thesis)</label>
                                 <textarea 
-                                    className="flex-1 w-full bg-transparent border-none outline-none text-xs text-slate-700 dark:text-slate-200 resize-none leading-normal custom-scrollbar placeholder-yellow-800/30 dark:placeholder-yellow-200/30"
+                                    className="flex-1 w-full bg-transparent border-none outline-none text-[13px] text-slate-700 dark:text-slate-200 resize-none leading-[1.0] custom-scrollbar placeholder-yellow-800/30 dark:placeholder-yellow-200/30"
                                     placeholder={`이 종목을 매수한 이유는 무엇인가요?\n\n- 예상되는 촉매제(Catalyst)\n- 리스크 요인\n- 목표 주가 근거\n\n초심을 잃지 않도록 기록해 두세요.`}
                                     value={stockInputs.memo}
                                     onChange={e=>setStockInputs({...stockInputs, memo: e.target.value})}
@@ -967,104 +975,135 @@
                 const stop = parseFormattedNumber(s.stopLoss);
                 const qty = parseFormattedNumber(s.quantity);
                 
-                const currentProfitAmt = (current - entry) * qty;
-                const currentProfitPct = entry ? ((current - entry) / entry) * 100 : 0;
+                // 단순화된 계산 (수수료 옵션은 유지하되 UI는 심플하게)
+                const feeRateBuy = 0.00015;
+                const feeRateSell = 0.00215;
+                const feeCost = s.includeFee ? (entry * qty * feeRateBuy) + (current * qty * feeRateSell) : 0;
                 
-                const progressToTarget = (target - entry) > 0 ? ((current - entry) / (target - entry)) * 100 : 0;
+                const grossProfit = (current - entry) * qty;
+                const currentProfitAmt = grossProfit - feeCost;
+                const profitRate = entry ? (currentProfitAmt / (entry * qty)) * 100 : 0;
                 
+                // 목표 달성률 계산
+                const progressToTarget = (target - entry) !== 0 ? ((current - entry) / (target - entry)) * 100 : 0;
+                
+                // 위치 계산 (0% = Stop, 50% = Entry, 100% = Target 인근)
+                // 시각적 왜곡을 방지하기 위해 Entry를 기준으로 양쪽 비율 조정
                 const totalRange = target - stop;
-                const getPos = (val) => {
-                    if (totalRange <= 0) return 0;
-                    return Math.min(Math.max(((val - stop) / totalRange) * 100, 0), 100);
-                };
-                const entryPos = getPos(entry);
-                const currentPos = getPos(current);
+                let visualPos = 0;
+                
+                if (current < stop) visualPos = 0; // 손절가 이탈
+                else if (current > target) visualPos = 100; // 목표가 돌파
+                else {
+                    // Entry를 50% 지점에 고정하고 상대적 위치 계산 (비대칭 범위 대응)
+                    if (current < entry) {
+                        // 손절 ~ 진입 구간 (0~50%)
+                        const range = entry - stop;
+                        const pos = current - stop;
+                        visualPos = range > 0 ? (pos / range) * 50 : 0;
+                    } else {
+                        // 진입 ~ 목표 구간 (50~100%)
+                        const range = target - entry;
+                        const pos = current - entry;
+                        visualPos = range > 0 ? 50 + ((pos / range) * 50) : 50;
+                    }
+                }
 
-                const rrRatio = (entry - stop) > 0 ? ((target - entry) / (entry - stop)) : 0;
-                const isGoodRR = rrRatio >= 2; 
+                const rrRatio = (target - entry) > 0 && (entry - stop) > 0 
+                    ? ((target - entry) / (entry - stop)) 
+                    : 0;
 
                 return (
-                    <div className="flex flex-col h-full p-2 gap-4">
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div className="flex flex-col h-full gap-4">
+                        {/* 1. 입력부 (심플 그리드) */}
+                        <div className="grid grid-cols-2 gap-3 flex-shrink-0">
                             <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-gray-400 pl-1">평단가 (Entry)</label>
-                                <input className="apple-input bg-gray-50 dark:bg-white/5 !text-sm !py-2.5 text-slate-700 dark:text-slate-200" placeholder="매수가" value={s.entryPrice} onChange={e => handleCommaChange(e, v=>update('entryPrice', v))} />
+                                <label className="text-[10px] font-bold text-gray-400 pl-1">진입 (Entry)</label>
+                                <input className="apple-input bg-gray-50 dark:bg-white/5 !text-sm !py-2.5 text-center" value={s.entryPrice} onChange={e => handleCommaChange(e, v=>update('entryPrice', v))} />
                             </div>
                             <div className="space-y-1">
-                                <div className="flex justify-between items-center px-1">
-                                    <label className="text-[10px] font-bold text-emerald-500">현재가 (Current)</label>
-                                    {entry > 0 && <span className={`text-[10px] font-bold ${currentProfitPct >= 0 ? 'text-red-500' : 'text-blue-500'}`}>{currentProfitPct > 0 ? '+' : ''}{currentProfitPct.toFixed(1)}%</span>}
-                                </div>
-                                <input className="apple-input !text-emerald-600 dark:!text-emerald-400 bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 !text-sm !py-2.5 font-bold" placeholder="현재가" value={s.currentPrice} onChange={e => handleCommaChange(e, v=>update('currentPrice', v))} />
+                                <label className="text-[10px] font-bold text-gray-400 pl-1">현재 (Now)</label>
+                                <input className="apple-input bg-gray-50 dark:bg-white/5 !text-sm !py-2.5 text-center font-bold !text-slate-900 dark:!text-white" value={s.currentPrice} onChange={e => handleCommaChange(e, v=>update('currentPrice', v))} />
                             </div>
                             <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-gray-400 pl-1">수량 (Qty)</label>
-                                <input className="apple-input bg-gray-50 dark:bg-white/5 !text-sm !py-2.5 text-slate-700 dark:text-slate-200" placeholder="주" value={s.quantity} onChange={e => handleCommaChange(e, v=>update('quantity', v))} />
+                                <label className="text-[10px] font-bold text-blue-400 pl-1">손절 (Stop)</label>
+                                <input className="apple-input bg-blue-50/30 dark:bg-blue-900/10 !text-sm !py-2.5 text-center text-blue-600 dark:text-blue-400" value={s.stopLoss} onChange={e => handleCommaChange(e, v=>update('stopLoss', v))} />
                             </div>
                             <div className="space-y-1">
-                                <div className="flex justify-between items-center px-1">
-                                    <label className="text-[10px] font-bold text-blue-500">목표가 (Target)</label>
-                                    {entry > 0 && <span className="text-[10px] font-bold text-blue-500">+{((target-entry)/entry*100).toFixed(1)}%</span>}
-                                </div>
-                                <input className="apple-input !text-blue-600 dark:!text-blue-400 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 !text-sm !py-2.5" placeholder="목표가" value={s.targetPrice} onChange={e => handleCommaChange(e, v=>update('targetPrice', v))} />
-                            </div>
-                            <div className="space-y-1">
-                                <div className="flex justify-between items-center px-1">
-                                    <label className="text-[10px] font-bold text-rose-500">손절가 (Stop)</label>
-                                    {entry > 0 && <span className="text-[10px] font-bold text-rose-500">-{((entry-stop)/entry*100).toFixed(1)}%</span>}
-                                </div>
-                                <input className="apple-input !text-rose-600 dark:!text-rose-400 bg-rose-50/50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-900/30 !text-sm !py-2.5" placeholder="손절가" value={s.stopLoss} onChange={e => handleCommaChange(e, v=>update('stopLoss', v))} />
+                                <label className="text-[10px] font-bold text-red-400 pl-1">목표 (Target)</label>
+                                <input className="apple-input bg-red-50/30 dark:bg-red-900/10 !text-sm !py-2.5 text-center text-red-600 dark:text-red-400" value={s.targetPrice} onChange={e => handleCommaChange(e, v=>update('targetPrice', v))} />
                             </div>
                         </div>
-                        
-                        <div className="flex-1 bg-slate-50 dark:bg-white/5 rounded-2xl p-4 flex flex-col justify-between border border-slate-100 dark:border-white/5 relative overflow-hidden">
-                            <div className="mb-6">
-                                <div className="flex justify-between text-[9px] font-bold text-gray-400 mb-2 px-1">
-                                    <span>STOP ({formatNumber(stop)})</span>
-                                    <span>TARGET ({formatNumber(target)})</span>
+
+                        {/* 2. 메인 비주얼 게이지 (직관적 위치 표현) */}
+                        <div className="flex-1 bg-gradient-to-b from-gray-50 to-white dark:from-[#2C2C2E] dark:to-[#1C1C1E] rounded-2xl p-6 flex flex-col items-center justify-center border border-gray-100 dark:border-white/5 shadow-inner relative overflow-hidden">
+                            
+                            {/* 현재 수익 상태 표시 (Hero Text) */}
+                            <div className="text-center mb-8 z-10">
+                                <div className="text-xs font-bold text-gray-400 mb-1">현재 평가 손익</div>
+                                <div className={`text-3xl font-black tracking-tight ${currentProfitAmt >= 0 ? 'text-red-500' : 'text-blue-500'}`}>
+                                    {currentProfitAmt > 0 ? '+' : ''}{formatManwon(currentProfitAmt)}
                                 </div>
-                                <div className="w-full h-4 bg-gray-200 dark:bg-gray-700 rounded-full flex overflow-hidden relative shadow-inner">
-                                    <div className="h-full bg-rose-200 dark:bg-rose-900/30" style={{ width: `${entryPos}%` }}></div>
-                                    <div className="h-full bg-blue-100 dark:bg-blue-900/20 flex-1"></div>
-                                    <div className="absolute top-0 bottom-0 w-0.5 bg-slate-400 z-10" style={{ left: `${entryPos}%` }}></div>
-                                    <div 
-                                        className="absolute top-[-4px] bottom-[-4px] w-1.5 bg-emerald-500 z-20 shadow-[0_0_8px_rgba(16,185,129,0.6)] rounded-full transition-all duration-500" 
-                                        style={{ left: `${currentPos}%`, transform: 'translateX(-50%)' }}
-                                    >
-                                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-[9px] font-black text-emerald-600 dark:text-emerald-400 whitespace-nowrap bg-white/80 dark:bg-black/80 px-1 rounded shadow-sm">NOW</div>
-                                    </div>
+                                <div className={`text-sm font-bold mt-1 ${profitRate >= 0 ? 'text-red-400' : 'text-blue-400'}`}>
+                                    ({profitRate > 0 ? '+' : ''}{profitRate.toFixed(2)}%)
                                 </div>
+                                {/* 목표 달성률 표시 추가 */}
+                                <div className="mt-2 inline-flex items-center justify-center gap-1.5 px-3 py-1 bg-gray-100 dark:bg-white/10 rounded-full">
+                                    <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400">목표 달성률</span>
+                                    <span className={`text-xs font-black ${progressToTarget >= 100 ? 'text-emerald-500' : progressToTarget > 0 ? 'text-orange-500' : 'text-gray-400'}`}>
+                                        {progressToTarget.toFixed(1)}%
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* 전략 게이지 바 */}
+                            <div className="w-full h-4 bg-gray-200 dark:bg-gray-700 rounded-full relative z-10">
+                                {/* Stop 구간 (Blue) */}
+                                <div className="absolute left-0 top-0 bottom-0 w-[50%] bg-blue-200 dark:bg-blue-900/30 rounded-l-full"></div>
+                                {/* Target 구간 (Red) */}
+                                <div className="absolute right-0 top-0 bottom-0 w-[50%] bg-red-200 dark:bg-red-900/30 rounded-r-full"></div>
                                 
-                                <div className="mt-3 flex justify-between items-center">
-                                    <div className="text-[10px] font-bold text-gray-400">목표 달성률</div>
-                                    <div className="flex-1 mx-3 h-1.5 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
-                                        <div className={`h-full transition-all duration-700 ${progressToTarget>=100?'bg-emerald-400':'bg-blue-500'}`} style={{ width: `${Math.max(0, Math.min(progressToTarget, 100))}%` }}></div>
-                                    </div>
-                                    <div className={`text-[10px] font-black ${progressToTarget>=100?'text-emerald-500':'text-blue-500'}`}>{progressToTarget.toFixed(0)}%</div>
+                                {/* 진입점 (Center Marker) */}
+                                <div className="absolute left-1/2 top-[-8px] bottom-[-8px] w-0.5 bg-slate-400 z-20"></div>
+                                <div className="absolute left-1/2 top-6 -translate-x-1/2 text-[9px] font-bold text-gray-400">ENTRY</div>
+
+                                {/* 손절점 (Left Marker) */}
+                                <div className="absolute left-0 top-6 -translate-x-0 text-[9px] font-bold text-blue-500">STOP</div>
+                                
+                                {/* 목표점 (Right Marker) */}
+                                <div className="absolute right-0 top-6 translate-x-0 text-[9px] font-bold text-red-500">TARGET</div>
+
+                                {/* 현재가 커서 (Slider) */}
+                                <div 
+                                    className="absolute top-[-6px] bottom-[-6px] w-4 bg-white dark:bg-slate-300 border-2 border-slate-900 dark:border-white rounded-full shadow-lg z-30 transition-all duration-500 flex items-center justify-center"
+                                    style={{ left: `calc(${visualPos}% - 8px)` }}
+                                >
+                                    <div className={`w-1.5 h-1.5 rounded-full ${visualPos >= 50 ? 'bg-red-500' : 'bg-blue-500'}`}></div>
                                 </div>
                             </div>
                             
-                            <div className="flex justify-between items-end mb-4">
-                                <div>
-                                    <div className="text-[10px] text-gray-400 font-bold mb-0.5">손익비 (R/R Ratio)</div>
-                                    <div className={`text-3xl font-black ${isGoodRR ? 'text-emerald-500' : 'text-orange-500'}`}>1 : {rrRatio.toFixed(1)}</div>
-                                </div>
-                                <div className="text-right">
-                                    <div className="text-[10px] text-gray-400 font-bold mb-0.5">현재 손익 (Real-time)</div>
-                                    <div className={`text-xl font-black ${currentProfitAmt >= 0 ? 'text-red-500' : 'text-blue-500'}`}>
-                                        {currentProfitAmt >= 0 ? '+' : ''}{formatManwon(currentProfitAmt)}
-                                    </div>
-                                </div>
+                            {/* 배경 데코레이션 */}
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5">
+                                <i className={`fa-solid ${currentProfitAmt >= 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'} text-9xl`}></i>
                             </div>
-                            
-                            <div className="grid grid-cols-2 gap-2 mt-auto pt-3 border-t border-gray-200 dark:border-white/10">
-                                <div className="text-center">
-                                    <span className="text-[10px] text-gray-400 block">최대 손실 (Risk)</span>
-                                    <span className="text-sm font-bold text-rose-500">-{formatManwon((entry-stop)*qty)}</span>
-                                </div>
-                                <div className="text-center">
-                                    <span className="text-[10px] text-gray-400 block">목표 수익 (Reward)</span>
-                                    <span className="text-sm font-bold text-blue-500">+{formatManwon((target-entry)*qty)}</span>
+                        </div>
+
+                        {/* 3. 핵심 지표 카드 (R/R, 수량) */}
+                        <div className="grid grid-cols-2 gap-3 flex-shrink-0">
+                            <div className="bg-gray-50 dark:bg-white/5 p-3 rounded-xl border border-gray-100 dark:border-white/5 flex items-center justify-between">
+                                <span className="text-[10px] font-bold text-gray-500">손익비 (R/R)</span>
+                                <span className={`text-base font-black ${rrRatio >= 2 ? 'text-emerald-500' : 'text-orange-500'}`}>1 : {rrRatio.toFixed(1)}</span>
+                            </div>
+                            <div className="bg-gray-50 dark:bg-white/5 p-2 rounded-xl border border-gray-100 dark:border-white/5 flex items-center justify-between gap-2">
+                                <span className="text-[10px] font-bold text-gray-500 whitespace-nowrap pl-1">보유수량</span>
+                                <div className="flex items-center gap-1 flex-1 justify-end">
+                                    <input 
+                                        className="w-full bg-white dark:bg-black/20 text-right font-black text-slate-700 dark:text-slate-200 text-base p-1 rounded-lg outline-none" 
+                                        value={s.quantity} 
+                                        onChange={e => handleCommaChange(e, v=>update('quantity', v))} 
+                                        placeholder="0"
+                                    />
+                                    <span className="text-xs font-bold text-gray-400">주</span>
                                 </div>
                             </div>
                         </div>
