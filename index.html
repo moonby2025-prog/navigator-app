@@ -364,6 +364,19 @@
             return <div className="h-[240px] lg:h-[280px] w-full"><canvas ref={canvasRef}></canvas></div>;
         });
 
+        // [New] 매크로 캘린더 위젯 (주요 시장 지표 대체용)
+        const MacroCalendarWidget = memo(({ isDark }) => {
+            // 사용자 제공 CID 디코딩 결과: e61a0a5f4f0d356e840736a30c0e340919b01fe46e50f80a83a1ac5a5d8c79bb@group.calendar.google.com
+            const calId = "e61a0a5f4f0d356e840736a30c0e340919b01fe46e50f80a83a1ac5a5d8c79bb%40group.calendar.google.com";
+            const url = `https://calendar.google.com/calendar/embed?ctz=Asia%2FSeoul&showTitle=0&showPrint=0&showCalendars=0&showTz=0&mode=MONTH&src=${calId}&color=%23D81B60`;
+             
+             return (
+                 <div className={`h-full w-full relative ${isDark ? 'invert hue-rotate-180 contrast-125' : ''}`}>
+                    <iframe src={url} className="w-full h-full border-0" scrolling="no"></iframe>
+                 </div>
+             );
+        });
+
         const IpoCalendarWidget = memo(({ isDark }) => {
              const getUrl = (mode) => `https://calendar.google.com/calendar/embed?ctz=Asia%2FSeoul&showTitle=0&showPrint=0&showCalendars=0&showTz=0&mode=${mode}&src=gjbox0301%40gmail.com&color=%233F51B5&src=6ece61bb8be35674d49e32ddd31247808effcc2c6001235f154b8e9e28fab902%40group.calendar.google.com&color=%238E24AA${mode === 'AGENDA' ? '&showNav=0&showDate=0&showTabs=0' : ''}`;
              return (
@@ -994,20 +1007,23 @@
                 const code = stockInputs.symbol.replace('KRX:', '');
                 const name = stockInputs.name;
                 
-                // 12개 항목 통합 리스트
+                // 12개 항목 재배치 및 링크 업데이트 (매매동향 삭제로 11개)
                 const diveItems = [
-                    { t: '네이버 증권', u: `https://finance.naver.com/item/main.nhn?code=${code}`, i: 'fa-chart-line', c: 'emerald' },
-                    { t: '네이버 뉴스', u: `https://search.naver.com/search.naver?where=news&query=${name}`, i: 'fa-newspaper', c: 'green' },
-                    { t: '종목 토론방', u: `https://finance.naver.com/item/board.nhn?code=${code}`, i: 'fa-comments', c: 'blue' },
+                    // 1. 핵심 분석 도구 (상단 유지)
                     { t: 'FnGuide', u: `http://comp.fnguide.com/SVO2/ASP/SVD_Main.asp?pGB=1&gicode=A${code}`, i: 'fa-file-invoice-dollar', c: 'orange' },
                     { t: 'DART 공시', u: `https://dart.fss.or.kr/dsab001/main.do?autoSearch=true&textCrpNm=${stockInputs.name}`, i: 'fa-file-signature', c: 'amber' },
-                    { t: '한경 컨센', u: `http://consensus.hankyung.com/apps.analysis/analysis.list?skinType=business&sdate=&edate=&search_text=${code}`, i: 'fa-book-open', c: 'red' },
+                    { t: '한경 컨센', u: `https://markets.hankyung.com/consensus`, i: 'fa-book-open', c: 'red' },
+                    { t: 'Seibro(주식별)', u: `https://seibro.or.kr/websquare/control.jsp?w2xPath=/IPORTAL/user/etf/BIP_CNTS06030V.xml&menuNo=179`, i: 'fa-server', c: 'slate' },
                     { t: 'YouTube', u: `https://www.youtube.com/results?search_query=${name}`, i: 'fa-brands fa-youtube', c: 'red' },
                     { t: 'Google News', u: `https://www.google.com/search?q=${name}&tbm=nws`, i: 'fa-brands fa-google', c: 'slate' },
-                    { t: '종목분석', u: `https://finance.naver.com/item/coinfo.naver?code=${code}`, i: 'fa-magnifying-glass-chart', c: 'teal' },
-                    { t: '매매동향', u: `https://finance.naver.com/item/frgn.naver?code=${code}`, i: 'fa-users-viewfinder', c: 'indigo' },
-                    { t: '공매도 현황', u: `https://finance.naver.com/item/short_trade.naver?code=${code}`, i: 'fa-arrow-trend-down', c: 'purple' },
-                    { t: 'Seibro', u: `https://seibro.or.kr/`, i: 'fa-server', c: 'slate' }
+                    
+                    // 2. 네이버 모바일 주식 링크로 전면 교체
+                    // '네이버 차트시세' -> '네이버 시세' (링크 /price로 변경)
+                    { t: '네이버 시세', u: `https://stock.naver.com/domestic/stock/${code}/price`, i: 'fa-chart-line', c: 'emerald' },
+                    { t: '네이버 뉴스', u: `https://stock.naver.com/domestic/stock/${code}/news`, i: 'fa-newspaper', c: 'green' },
+                    { t: '종목 토론방', u: `https://stock.naver.com/domestic/stock/${code}/discussion?chip=all`, i: 'fa-comments', c: 'blue' },
+                    { t: '종목분석', u: `https://stock.naver.com/domestic/stock/${code}/info/company`, i: 'fa-magnifying-glass-chart', c: 'teal' },
+                    { t: '공매도 현황', u: `https://stock.naver.com/domestic/stock/${code}/shortTrade`, i: 'fa-arrow-trend-down', c: 'purple' }
                 ];
 
                 return (
@@ -1020,78 +1036,51 @@
                                 </a>
                             ))}
                          </div>
-                         <div className="mt-3 pt-2 border-t dark:border-white/10 text-center">
-                             <a href="https://www.google.com/finance" target="_blank" className="text-[10px] text-gray-400 hover:text-indigo-500 transition">구글 파이낸스 바로가기 <i className="fa-solid fa-arrow-right ml-1"></i></a>
-                         </div>
                     </div>
                 );
             };
 
             const renderStockEtfList = () => {
-                // 사용자가 확인한 실제 보유 ETF 4종으로 현행화 (Seibro 기준)
-                const etfList = [
-                    { name: "TIGER 의료기기", code: "307510", issuer: "미래에셋" },
-                    { name: "KODEX 바이오", code: "244580", issuer: "삼성" },
-                    { name: "KODEX 헬스케어", code: "266420", issuer: "삼성" },
-                    { name: "TIGER 헬스케어", code: "143860", issuer: "미래에셋" }
-                ];
-
                 const currentCode = stockInputs.symbol.replace('KRX:', '');
 
                 return (
                     <div className="h-full w-full flex flex-col p-2">
-                        {/* 1. ETF 편입 확인 도구 */}
-                        <div className="mb-3">
-                            <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1">
-                                <i className="fa-solid fa-magnifying-glass"></i> 이 종목 보유 ETF 찾기 (Tools)
-                            </div>
-                            <div className="grid grid-cols-2 gap-2">
-                                <a href="https://seibro.or.kr/websquare/control.jsp?w2xPath=/IPORTAL/user/etf/BIP_CNTS06030V.xml&menuNo=179" target="_blank" className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-900/30 p-2 rounded-lg flex items-center justify-center gap-2 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition">
-                                    <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300">Seibro (주식별)</span>
-                                    <i className="fa-solid fa-arrow-up-right-from-square text-[10px] text-indigo-400"></i>
-                                </a>
-                                <a href={`https://finance.naver.com/item/coinfo.naver?code=${currentCode}`} target="_blank" className="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-900/30 p-2 rounded-lg flex items-center justify-center gap-2 hover:bg-green-100 dark:hover:bg-green-900/40 transition">
-                                    <span className="text-xs font-bold text-green-700 dark:text-green-300">네이버 (종목분석)</span>
-                                    <i className="fa-solid fa-arrow-up-right-from-square text-[10px] text-green-400"></i>
-                                </a>
-                            </div>
+                        <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1">
+                            <i className="fa-solid fa-magnifying-glass"></i> 이 종목 보유 ETF 찾기 (Tools)
                         </div>
-
-                        {/* 2. 관련 섹터 ETF 리스트 */}
-                        <div className="flex-1 overflow-hidden flex flex-col">
-                            <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1">
-                                <i className="fa-solid fa-layer-group"></i> 관련 섹터 ETF (보유 확인)
-                            </div>
-                            <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1.5 pr-1">
-                                {/* TradingView ETF 링크 추가 */}
-                                <a href={`https://kr.tradingview.com/symbols/KRX-${currentCode}/etfs/`} target="_blank" className="flex items-center justify-between p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition group">
-                                    <div className="flex items-center gap-2 overflow-hidden">
-                                        <div className="w-1 h-8 bg-blue-600 rounded-full flex-shrink-0"></div>
-                                        <div className="flex flex-col min-w-0">
-                                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">TradingView (이 종목 포함 ETF)</span>
-                                            <span className="text-[10px] text-gray-400">전체 리스트 확인</span>
-                                        </div>
+                        <div className="flex flex-col gap-2">
+                            {/* 1. 네이버 (주식별) - 최우선 배치 */}
+                            <a href={`https://m.stock.naver.com/domestic/stock/${currentCode}/total`} target="_blank" className="bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-900/30 p-3 rounded-xl flex items-center justify-between group hover:bg-green-100 dark:hover:bg-green-900/40 transition">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-white dark:bg-white/10 flex items-center justify-center text-green-600 dark:text-green-400 shadow-sm">
+                                        <i className="fa-solid fa-n"></i>
                                     </div>
-                                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white dark:bg-white/10 shadow-sm text-gray-300 group-hover:text-blue-500 transition-colors">
-                                        <i className="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                                    </div>
-                                </a>
+                                    <span className="text-xs font-bold text-green-700 dark:text-green-300">네이버 (주식별)</span>
+                                </div>
+                                <i className="fa-solid fa-arrow-up-right-from-square text-xs text-green-400 group-hover:text-green-600 transition-colors"></i>
+                            </a>
 
-                                {etfList.map((etf, idx) => (
-                                    <a key={idx} href={`https://finance.naver.com/item/main.nhn?code=${etf.code}`} target="_blank" className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 hover:bg-gray-100 dark:hover:bg-white/10 transition group">
-                                        <div className="flex items-center gap-2 overflow-hidden">
-                                            <div className="w-1 h-8 bg-slate-300 dark:bg-slate-600 rounded-full flex-shrink-0"></div>
-                                            <div className="flex flex-col min-w-0">
-                                                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{etf.name}</span>
-                                                <span className="text-[10px] text-gray-400">{etf.issuer} | {etf.code}</span>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white dark:bg-white/10 shadow-sm text-gray-300 group-hover:text-blue-500 transition-colors">
-                                            <i className="fa-solid fa-chevron-right text-[10px]"></i>
-                                        </div>
-                                    </a>
-                                ))}
-                            </div>
+                            {/* 2. Seibro (주식별) */}
+                            <a href="https://seibro.or.kr/websquare/control.jsp?w2xPath=/IPORTAL/user/etf/BIP_CNTS06030V.xml&menuNo=179" target="_blank" className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-900/30 p-3 rounded-xl flex items-center justify-between group hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-white dark:bg-white/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm">
+                                        <i className="fa-solid fa-server"></i>
+                                    </div>
+                                    <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300">Seibro (주식별)</span>
+                                </div>
+                                <i className="fa-solid fa-arrow-up-right-from-square text-xs text-indigo-400 group-hover:text-indigo-600 transition-colors"></i>
+                            </a>
+
+                            {/* 3. TradingView (이 종목 포함 ETF) */}
+                            <a href={`https://kr.tradingview.com/symbols/KRX-${currentCode}/etfs/`} target="_blank" className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/30 p-3 rounded-xl flex items-center justify-between group hover:bg-blue-100 dark:hover:bg-blue-900/40 transition">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-white dark:bg-white/10 flex items-center justify-center text-blue-600 dark:text-blue-400 shadow-sm">
+                                        <i className="fa-solid fa-chart-line"></i>
+                                    </div>
+                                    <span className="text-xs font-bold text-blue-700 dark:text-blue-300">TradingView (이 종목 포함 ETF)</span>
+                                </div>
+                                <i className="fa-solid fa-arrow-up-right-from-square text-xs text-blue-400 group-hover:text-blue-600 transition-colors"></i>
+                            </a>
                         </div>
                     </div>
                 );
@@ -1828,7 +1817,15 @@
                                         {analysisMode === 'stock' ? (
                                             <>
                                                 <AppleCard title="딥 다이브 데이터 & 뉴스" subTitle="Analysis & News" className="h-[300px] md:h-full">{renderStockDeepDive()}</AppleCard>
-                                                <AppleCard title="주요 시장 지표" subTitle="Market Key" className="h-[300px] md:h-full">{renderMarketIndices()}</AppleCard>
+                                                {/* 주요 시장 지표 -> 구글 캘린더로 변경 (확대 기능 추가) */}
+                                                <AppleCard 
+                                                    title="주요 시장 일정" 
+                                                    subTitle="Macro Calendar" 
+                                                    className="h-[300px] md:h-full"
+                                                    onExpand={() => setExpandedView('macro')}
+                                                >
+                                                    <MacroCalendarWidget isDark={isDark} />
+                                                </AppleCard>
                                                 <AppleCard title="이 종목을 담은 ETF" subTitle="Sector & Holdings" className="h-[300px] md:h-full">{renderStockEtfList()}</AppleCard>
                                             </>
                                         ) : analysisMode === 'silver' ? (
@@ -2137,12 +2134,22 @@
                         </nav>
 
                         {expandedView && (
-                            <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur flex items-center justify-center p-4">
-                                <div className="bg-white dark:bg-[#1C1C1E] w-full max-w-6xl h-[85vh] rounded-2xl flex flex-col overflow-hidden">
-                                    <div className="p-3 border-b dark:border-white/10 flex justify-between items-center"><h3 className="font-bold dark:text-white">상세 보기</h3><button onClick={()=>setExpandedView(null)}><i className="fa-solid fa-xmark text-lg dark:text-white"></i></button></div>
-                                    <div className="flex-1 p-4 bg-gray-100 dark:bg-black">
+                            <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+                                <div className="bg-white dark:bg-[#1C1C1E] w-full max-w-6xl h-[85vh] rounded-2xl flex flex-col overflow-hidden shadow-2xl border border-gray-200 dark:border-white/10">
+                                    <div className="px-4 py-3 border-b border-gray-100 dark:border-white/10 flex justify-between items-center bg-white dark:bg-[#1C1C1E]">
+                                        <h3 className="font-bold text-lg text-slate-900 dark:text-white">
+                                            {expandedView === 'heatmap' && 'S&P 500 Market Map'}
+                                            {expandedView === 'calendar' && 'IPO & 경제 일정'}
+                                            {expandedView === 'macro' && '주요 시장 일정 (Macro Calendar)'}
+                                        </h3>
+                                        <button onClick={()=>setExpandedView(null)} className="w-8 h-8 rounded-full bg-gray-100 dark:bg-[#2C2C2E] flex items-center justify-center hover:bg-gray-200 dark:hover:bg-[#3A3A3C] transition">
+                                            <i className="fa-solid fa-xmark text-slate-500 dark:text-white"></i>
+                                        </button>
+                                    </div>
+                                    <div className="flex-1 bg-white dark:bg-[#1C1C1E] relative">
                                         {expandedView === 'heatmap' && <TradingViewHeatmap theme={isDark?'dark':'light'} />}
                                         {expandedView === 'calendar' && <IpoCalendarWidget isDark={isDark} />}
+                                        {expandedView === 'macro' && <MacroCalendarWidget isDark={isDark} />}
                                     </div>
                                 </div>
                             </div>
